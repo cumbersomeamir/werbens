@@ -5,9 +5,9 @@ import { CHANNELS, formatNumber } from "../data/analytics";
 function SocialChannelCard({ channel }) {
   const m = channel.metrics;
   return (
-    <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-werbens-dark-cyan">
+    <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-base sm:text-lg font-semibold text-werbens-dark-cyan">
           {channel.name}
         </h3>
         <span
@@ -51,7 +51,7 @@ function SocialChannelCard({ channel }) {
         <ul className="space-y-2">
           {channel.topContent.map((item, i) => (
             <li key={i} className="flex justify-between text-sm">
-              <span className="text-werbens-text truncate max-w-[140px]">
+              <span className="text-werbens-text truncate max-w-[100px] sm:max-w-[140px]">
                 {item.title}
               </span>
               <span className="text-werbens-text/70 shrink-0">
@@ -68,9 +68,9 @@ function SocialChannelCard({ channel }) {
 function AdsChannelCard({ channel }) {
   const m = channel.metrics;
   return (
-    <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-werbens-dark-cyan">
+    <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-base sm:text-lg font-semibold text-werbens-dark-cyan">
           {channel.name}
         </h3>
         <span
@@ -114,7 +114,7 @@ function AdsChannelCard({ channel }) {
         <ul className="space-y-2">
           {channel.topContent.map((item, i) => (
             <li key={i} className="flex justify-between text-sm">
-              <span className="text-werbens-text truncate max-w-[140px]">
+              <span className="text-werbens-text truncate max-w-[100px] sm:max-w-[140px]">
                 {item.title}
               </span>
               <span className="text-werbens-text/70 shrink-0">
@@ -131,9 +131,9 @@ function AdsChannelCard({ channel }) {
 function EmailChannelCard({ channel }) {
   const m = channel.metrics;
   return (
-    <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-werbens-dark-cyan">
+    <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-4 sm:p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-base sm:text-lg font-semibold text-werbens-dark-cyan">
           {channel.name}
         </h3>
         <span
@@ -177,7 +177,7 @@ function EmailChannelCard({ channel }) {
         <ul className="space-y-2">
           {channel.topContent.map((item, i) => (
             <li key={i} className="flex justify-between text-sm">
-              <span className="text-werbens-text truncate max-w-[140px]">
+              <span className="text-werbens-text truncate max-w-[100px] sm:max-w-[140px]">
                 {item.title}
               </span>
               <span className="text-werbens-text/70 shrink-0">
@@ -193,12 +193,12 @@ function EmailChannelCard({ channel }) {
 
 export function ChannelCards() {
   return (
-    <section className="px-6 pb-16" aria-label="Channel performance">
+    <section className="px-4 sm:px-6 pb-12 sm:pb-16" aria-label="Channel performance">
       <div className="mx-auto max-w-7xl">
-        <h2 className="text-xl font-semibold text-werbens-dark-cyan mb-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-werbens-dark-cyan mb-4 sm:mb-6">
           Performance by channel
         </h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <SocialChannelCard channel={CHANNELS[0]} />
           <AdsChannelCard channel={CHANNELS[1]} />
           <EmailChannelCard channel={CHANNELS[2]} />

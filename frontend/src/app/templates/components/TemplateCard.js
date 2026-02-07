@@ -9,12 +9,12 @@ export function TemplateCard({ template, onCreate }) {
         className="aspect-[4/5] w-full relative overflow-hidden"
         style={{ background: template.preview }}
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 sm:group-hover:opacity-100 transition-opacity" />
+        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 translate-y-0 sm:translate-y-full sm:group-hover:translate-y-0 transition-transform">
           <button
             type="button"
             onClick={() => onCreate(template)}
-            className="w-full py-3 rounded-xl bg-werbens-light-cyan text-werbens-dark-cyan font-semibold hover:bg-werbens-light-cyan/90 transition"
+            className="w-full py-2.5 sm:py-3 rounded-xl bg-werbens-light-cyan text-werbens-dark-cyan font-semibold hover:bg-werbens-light-cyan/90 transition min-h-[44px] text-sm sm:text-base"
           >
             Create for my brand
           </button>
@@ -23,7 +23,7 @@ export function TemplateCard({ template, onCreate }) {
           {template.category}
         </span>
       </div>
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <h3 className="font-semibold text-werbens-text">{template.title}</h3>
         <p className="text-sm text-werbens-text/60 mt-1">
           {template.category}

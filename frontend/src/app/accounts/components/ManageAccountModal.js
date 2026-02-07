@@ -16,11 +16,11 @@ export function ManageAccountModal({ platformId, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
+        className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -44,7 +44,7 @@ export function ManageAccountModal({ platformId, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 transition"
+              className="w-full py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 transition min-h-[48px]"
             >
               Done
             </button>

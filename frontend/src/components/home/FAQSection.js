@@ -29,12 +29,12 @@ export function FAQSection() {
   const [open, setOpen] = useState(null);
 
   return (
-    <section className="py-24 bg-werbens-light-cyan/30">
-      <div className="mx-auto max-w-3xl px-6">
-        <h2 className="text-4xl font-bold text-werbens-dark-cyan text-center mb-4">
+    <section className="py-12 sm:py-16 md:py-24 bg-werbens-light-cyan/30">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-werbens-dark-cyan text-center mb-3 sm:mb-4">
           Frequently asked questions
         </h2>
-        <p className="text-center text-werbens-text/80 mb-12">
+        <p className="text-center text-werbens-text/80 mb-8 sm:mb-12 text-sm sm:text-base">
           Everything you need to know about AI content creation and Werbens.
         </p>
         <div className="space-y-2">
@@ -45,7 +45,7 @@ export function FAQSection() {
             >
               <button
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full text-left px-6 py-4 flex justify-between items-center font-semibold text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5 transition"
+                className="w-full text-left px-4 sm:px-6 py-4 min-h-[52px] flex justify-between items-center font-semibold text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5 transition text-sm sm:text-base"
               >
                 {faq.q}
                 <span className="text-2xl text-werbens-dark-cyan/60">
@@ -53,7 +53,7 @@ export function FAQSection() {
                 </span>
               </button>
               {open === i && (
-                <div className="px-6 pb-4">
+                <div className="px-4 sm:px-6 pb-4">
                   <p className="text-werbens-text/80 leading-relaxed">{faq.a}</p>
                 </div>
               )}

@@ -2,6 +2,12 @@ import "./globals.css";
 import { AuthSessionProvider } from "@/components/SessionProvider";
 import { Header } from "@/components/Header";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata = {
   title: "Werbens — AI Content Creation Platform | Autonomous Social Media, Ads & Email",
   description:

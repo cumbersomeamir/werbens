@@ -21,20 +21,20 @@ export function TestimonialsSection() {
   ];
 
   return (
-    <section className="py-24 bg-white">
-      <div className="mx-auto max-w-6xl px-6">
-        <h2 className="text-4xl font-bold text-werbens-dark-cyan text-center mb-4">
+    <section className="py-12 sm:py-16 md:py-24 bg-white">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-werbens-dark-cyan text-center mb-3 sm:mb-4">
           Loved by marketing teams
         </h2>
-        <p className="text-center text-werbens-text/70 max-w-xl mx-auto mb-16">
+        <p className="text-center text-werbens-text/70 max-w-xl mx-auto mb-10 sm:mb-16 text-sm sm:text-base">
           Join thousands of brands using Werbens to scale their content
           without scaling their team.
         </p>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
           {testimonials.map((t, i) => (
             <blockquote
               key={i}
-              className="bg-werbens-light-cyan/30 rounded-2xl p-8 border border-werbens-dark-cyan/10"
+              className="bg-werbens-light-cyan/30 rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-werbens-dark-cyan/10"
             >
               <p className="text-werbens-text leading-relaxed mb-6 italic">
                 &ldquo;{t.quote}&rdquo;

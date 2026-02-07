@@ -1,10 +1,10 @@
 export function ProblemSolutionSection() {
   return (
-    <section className="py-24 bg-werbens-dark-cyan text-werbens-alt-text">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
+    <section className="py-12 sm:py-16 md:py-24 bg-werbens-dark-cyan text-werbens-alt-text">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">
               Content creation shouldn&apos;t be a bottleneck
             </h2>
             <p className="text-werbens-alt-text/80 text-lg leading-relaxed mb-6">
@@ -28,7 +28,7 @@ export function ProblemSolutionSection() {
               </li>
             </ul>
           </div>
-          <div className="bg-werbens-dark-cyan/50 rounded-3xl p-8 border border-werbens-light-cyan/20">
+          <div className="bg-werbens-dark-cyan/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-werbens-light-cyan/20">
             <h3 className="text-2xl font-bold text-werbens-light-cyan mb-4">
               Werbens fixes this
             </h3>

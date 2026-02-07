@@ -22,14 +22,14 @@ export function GoalsStep({ initialGoals, onComplete, onSkip }) {
 
   return (
     <div className="w-full max-w-2xl">
-      <h1 className="text-2xl font-bold text-werbens-dark-cyan mb-2">
+      <h1 className="text-xl sm:text-2xl font-bold text-werbens-dark-cyan mb-2">
         What do you want to create?
       </h1>
       <p className="text-werbens-text/80 mb-6">
         Helps us tailor content. Optional — you can change this anytime.
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-6 sm:mb-8">
         {GOALS.map((goal) => {
           const isSelected = goals.includes(goal.id);
           return (
@@ -37,7 +37,7 @@ export function GoalsStep({ initialGoals, onComplete, onSkip }) {
               key={goal.id}
               type="button"
               onClick={() => toggleGoal(goal.id)}
-              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition ${
+              className={`flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border-2 transition min-h-[80px] sm:min-h-0 ${
                 isSelected
                   ? "border-werbens-dark-cyan bg-werbens-dark-cyan/10 text-werbens-dark-cyan"
                   : "border-werbens-dark-cyan/20 bg-white text-werbens-text hover:border-werbens-dark-cyan/40"
@@ -50,18 +50,18 @@ export function GoalsStep({ initialGoals, onComplete, onSkip }) {
         })}
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col-reverse sm:flex-row gap-3">
         <button
           type="button"
           onClick={() => onSkip(goals)}
-          className="flex-1 py-3 rounded-xl border border-werbens-dark-cyan/20 text-werbens-dark-cyan font-medium hover:bg-werbens-dark-cyan/5 transition"
+          className="flex-1 py-3 rounded-xl border border-werbens-dark-cyan/20 text-werbens-dark-cyan font-medium hover:bg-werbens-dark-cyan/5 transition min-h-[48px]"
         >
           Skip
         </button>
         <button
           type="button"
           onClick={() => onComplete(goals)}
-          className="flex-1 py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 transition"
+          className="flex-1 py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 transition min-h-[48px]"
         >
           Finish
         </button>

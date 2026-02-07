@@ -5,14 +5,14 @@ import Link from "next/link";
 export function TemplatesAdminFlow() {
   return (
     <div>
-      <h1 className="text-3xl font-bold text-werbens-dark-cyan mb-2">
+      <h1 className="text-2xl sm:text-3xl font-bold text-werbens-dark-cyan mb-2">
         Manage templates
       </h1>
       <p className="text-werbens-text/80 mb-8">
         Add new templates, categorise them, and control sort order. Changes
         appear on the public templates page.
       </p>
-      <div className="bg-white rounded-2xl border border-werbens-dark-cyan/10 p-8">
+      <div className="bg-white rounded-2xl border border-werbens-dark-cyan/10 p-6 sm:p-8">
         <div className="space-y-6">
           <div>
             <h2 className="text-lg font-semibold text-werbens-dark-cyan mb-2">
@@ -22,11 +22,11 @@ export function TemplatesAdminFlow() {
               Upload template preview, set title, category, and sort order.
               Backend integration coming soon.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 disabled
-                className="px-4 py-2 rounded-xl bg-werbens-dark-cyan/20 text-werbens-text/50 font-medium cursor-not-allowed"
+                className="px-4 py-2.5 rounded-xl bg-werbens-dark-cyan/20 text-werbens-text/50 font-medium cursor-not-allowed min-h-[44px]"
               >
                 Add template (coming soon)
               </button>
@@ -43,7 +43,7 @@ export function TemplatesAdminFlow() {
             <button
               type="button"
               disabled
-              className="px-4 py-2 rounded-xl bg-werbens-dark-cyan/20 text-werbens-text/50 font-medium cursor-not-allowed"
+              className="px-4 py-2.5 rounded-xl bg-werbens-dark-cyan/20 text-werbens-text/50 font-medium cursor-not-allowed min-h-[44px]"
             >
               Manage categories (coming soon)
             </button>

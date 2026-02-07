@@ -14,7 +14,7 @@ export function BusinessInfoStep({ initialData, onContinue, onSkip }) {
 
   return (
     <div className="w-full max-w-md">
-      <h1 className="text-2xl font-bold text-werbens-dark-cyan mb-2">
+      <h1 className="text-xl sm:text-2xl font-bold text-werbens-dark-cyan mb-2">
         Tell us about your business
       </h1>
       <p className="text-werbens-text/80 mb-6">
@@ -70,17 +70,17 @@ export function BusinessInfoStep({ initialData, onContinue, onSkip }) {
           />
         </div>
 
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
           <button
             type="button"
             onClick={() => onSkip({ businessName, businessType, website })}
-            className="flex-1 py-3 rounded-xl border border-werbens-dark-cyan/20 text-werbens-dark-cyan font-medium hover:bg-werbens-dark-cyan/5 transition"
+            className="flex-1 py-3 rounded-xl border border-werbens-dark-cyan/20 text-werbens-dark-cyan font-medium hover:bg-werbens-dark-cyan/5 transition min-h-[48px]"
           >
             Skip
           </button>
           <button
             type="submit"
-            className="flex-1 py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 transition"
+            className="flex-1 py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 transition min-h-[48px]"
           >
             Continue
           </button>

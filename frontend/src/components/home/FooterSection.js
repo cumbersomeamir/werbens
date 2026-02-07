@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export function FooterSection() {
   return (
-    <footer className="py-16 bg-werbens-text text-werbens-alt-text">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
+    <footer className="py-10 sm:py-12 md:py-16 bg-werbens-text text-werbens-alt-text">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 md:gap-12 mb-8 sm:mb-12">
           <div>
             <p className="text-xl font-bold text-werbens-light-cyan">Werbens</p>
             <p className="mt-2 text-sm text-werbens-alt-text/70">
@@ -107,7 +107,7 @@ export function FooterSection() {
             </ul>
           </div>
         </div>
-        <div className="pt-8 border-t border-werbens-alt-text/20 text-sm text-werbens-alt-text/60">
+        <div className="pt-6 sm:pt-8 border-t border-werbens-alt-text/20 text-xs sm:text-sm text-werbens-alt-text/60 break-words">
           <p>
             © {new Date().getFullYear()} Werbens. AI content creation platform
             for social media, email marketing, and brand consistency.

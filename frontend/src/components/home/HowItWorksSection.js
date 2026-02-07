@@ -20,26 +20,26 @@ export function HowItWorksSection() {
   ];
 
   return (
-    <section className="py-24 bg-werbens-text text-werbens-alt-text">
-      <div className="mx-auto max-w-6xl px-6">
-        <h2 className="text-4xl md:text-5xl font-bold mb-4">
+    <section className="py-12 sm:py-16 md:py-24 bg-werbens-text text-werbens-alt-text">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
           Three steps to autonomous content
         </h2>
-        <p className="text-werbens-alt-text/70 text-xl max-w-2xl mb-16">
+        <p className="text-werbens-alt-text/70 text-base sm:text-lg md:text-xl max-w-2xl mb-10 sm:mb-16">
           From setup to scale in under an hour. No coding, no complex
           integrations.
         </p>
-        <div className="space-y-12">
+        <div className="space-y-8 sm:space-y-12">
           {steps.map((step, i) => (
             <div
               key={i}
-              className="flex flex-col md:flex-row gap-8 items-start border-b border-werbens-alt-text/20 pb-12 last:border-0 last:pb-0"
+              className="flex flex-col md:flex-row gap-4 sm:gap-8 items-start border-b border-werbens-alt-text/20 pb-8 sm:pb-12 last:border-0 last:pb-0"
             >
-              <span className="text-6xl font-bold text-werbens-light-cyan/50 tabular-nums">
+              <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-werbens-light-cyan/50 tabular-nums shrink-0">
                 {step.num}
               </span>
               <div>
-                <h3 className="text-2xl font-bold text-werbens-light-cyan mb-2">
+                <h3 className="text-xl sm:text-2xl font-bold text-werbens-light-cyan mb-2">
                   {step.title}
                 </h3>
                 <p className="text-werbens-alt-text/80 text-lg leading-relaxed">
@@ -49,10 +49,10 @@ export function HowItWorksSection() {
             </div>
           ))}
         </div>
-        <div className="mt-16">
+        <div className="mt-10 sm:mt-16">
           <Link
             href="/onboarding"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-werbens-light-cyan text-werbens-text font-semibold hover:bg-werbens-light-cyan/90 transition"
+            className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl bg-werbens-light-cyan text-werbens-text font-semibold hover:bg-werbens-light-cyan/90 transition min-h-[48px]"
           >
             Get started
           </Link>

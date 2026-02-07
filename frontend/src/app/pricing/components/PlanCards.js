@@ -31,11 +31,11 @@ function FeatureItem({ children }) {
 
 export function PlanCards() {
   return (
-    <section className="px-6 pb-16" aria-label="Plans">
+    <section className="px-4 sm:px-6 pb-12 sm:pb-16" aria-label="Plans">
       <div className="mx-auto max-w-4xl">
-        <div className="grid md:grid-cols-2 gap-8 md:gap-6">
+        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 md:gap-6">
           {/* Free Plan */}
-          <div className="rounded-2xl border-2 border-werbens-dark-cyan/15 bg-white p-8 shadow-sm">
+          <div className="rounded-2xl border-2 border-werbens-dark-cyan/15 bg-white p-6 sm:p-8 shadow-sm">
             <div className="flex items-baseline justify-between">
               <h2 className="text-xl font-bold text-werbens-dark-cyan">
                 Free
@@ -55,14 +55,14 @@ export function PlanCards() {
             </ul>
             <Link
               href="/onboarding"
-              className="mt-8 block w-full rounded-xl border-2 border-werbens-dark-cyan bg-white py-3 text-center font-semibold text-werbens-dark-cyan transition hover:bg-werbens-dark-cyan hover:text-white"
+              className="mt-6 sm:mt-8 block w-full rounded-xl border-2 border-werbens-dark-cyan bg-white py-3 text-center font-semibold text-werbens-dark-cyan transition hover:bg-werbens-dark-cyan hover:text-white min-h-[48px] flex items-center justify-center"
             >
               Get started free
             </Link>
           </div>
 
           {/* Paid Plan */}
-          <div className="relative rounded-2xl border-2 border-werbens-dark-cyan bg-werbens-dark-cyan/5 p-8 shadow-md ring-2 ring-werbens-dark-cyan/20">
+          <div className="relative rounded-2xl border-2 border-werbens-dark-cyan bg-werbens-dark-cyan/5 p-6 sm:p-8 shadow-md ring-2 ring-werbens-dark-cyan/20">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-werbens-dark-cyan px-4 py-1 text-sm font-semibold text-white">
               Most popular
             </div>
@@ -80,7 +80,7 @@ export function PlanCards() {
             </ul>
             <Link
               href="/onboarding"
-              className="mt-8 block w-full rounded-xl bg-werbens-dark-cyan py-3 text-center font-semibold text-white transition hover:bg-werbens-dark-cyan/90"
+              className="mt-6 sm:mt-8 block w-full rounded-xl bg-werbens-dark-cyan py-3 text-center font-semibold text-white transition hover:bg-werbens-dark-cyan/90 min-h-[48px] flex items-center justify-center"
             >
               Start paid plan
             </Link>

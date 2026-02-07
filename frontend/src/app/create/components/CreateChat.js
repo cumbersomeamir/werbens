@@ -92,9 +92,9 @@ export function CreateChat() {
   const canSend = (input.trim() || images.length > 0) && !isGenerating;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 max-w-4xl w-full mx-auto px-6">
+    <div className="flex-1 flex flex-col min-h-0 max-w-4xl w-full mx-auto px-4 sm:px-6">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto py-4 sm:py-6 space-y-4 sm:space-y-6">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-werbens-text/60 max-w-sm">
@@ -113,7 +113,7 @@ export function CreateChat() {
             className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+              className={`max-w-[90%] sm:max-w-[85%] rounded-2xl px-4 py-3 ${
                 msg.type === "user"
                   ? "bg-werbens-dark-cyan text-white"
                   : "bg-werbens-light-cyan/30 border border-werbens-dark-cyan/10 text-werbens-text"
@@ -152,7 +152,7 @@ export function CreateChat() {
       </div>
 
       {/* Input area */}
-      <div className="shrink-0 pb-6">
+      <div className="shrink-0 pb-4 sm:pb-6">
         <div className="rounded-2xl border-2 border-werbens-dark-cyan/15 bg-white shadow-sm focus-within:border-werbens-dark-cyan/40 transition">
           {/* Attached images preview */}
           {images.length > 0 && (
@@ -167,7 +167,7 @@ export function CreateChat() {
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
-                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-werbens-text text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-500 transition"
+                    className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-werbens-text text-white flex items-center justify-center text-sm hover:bg-red-500 transition touch-manipulation"
                     aria-label="Remove image"
                   >
                     ×
@@ -181,7 +181,7 @@ export function CreateChat() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="shrink-0 p-2 rounded-lg text-werbens-text/60 hover:text-werbens-dark-cyan hover:bg-werbens-light-cyan/30 transition"
+              className="shrink-0 p-2.5 rounded-lg text-werbens-text/60 hover:text-werbens-dark-cyan hover:bg-werbens-light-cyan/30 transition min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Attach image"
             >
               <ImageIcon />
@@ -213,7 +213,7 @@ export function CreateChat() {
               type="button"
               onClick={handleGenerate}
               disabled={!canSend}
-              className="shrink-0 p-2 rounded-lg bg-werbens-dark-cyan text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-werbens-dark-cyan/90 transition"
+              className="shrink-0 p-2.5 rounded-lg bg-werbens-dark-cyan text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-werbens-dark-cyan/90 transition min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Generate"
             >
               <SendIcon />

@@ -21,7 +21,7 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
           : "border-werbens-dark-cyan/10 bg-white/80"
       }`}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <div
             className={`w-14 h-14 rounded-xl ${meta.color} flex items-center justify-center text-2xl`}
@@ -39,20 +39,20 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
             )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 self-start sm:self-auto">
           {isConnected ? (
             <>
               <button
                 type="button"
                 onClick={() => onManage(platformId)}
-                className="px-4 py-2 rounded-lg border border-werbens-dark-cyan/20 text-werbens-dark-cyan text-sm font-medium hover:bg-werbens-dark-cyan/5 transition"
+                className="px-4 py-2.5 rounded-lg border border-werbens-dark-cyan/20 text-werbens-dark-cyan text-sm font-medium hover:bg-werbens-dark-cyan/5 transition min-h-[40px]"
               >
                 Manage
               </button>
               <button
                 type="button"
                 onClick={() => onRemove(platformId)}
-                className="px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition"
+                className="px-4 py-2.5 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition min-h-[40px]"
               >
                 Remove
               </button>
@@ -61,7 +61,7 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
             <button
               type="button"
               onClick={() => onConnect(platformId)}
-              className="px-4 py-2 rounded-lg bg-werbens-dark-cyan text-werbens-alt-text text-sm font-medium hover:bg-werbens-dark-cyan/90 transition"
+              className="px-4 py-2.5 rounded-lg bg-werbens-dark-cyan text-werbens-alt-text text-sm font-medium hover:bg-werbens-dark-cyan/90 transition min-h-[40px]"
             >
               Add account
             </button>

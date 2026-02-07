@@ -9,7 +9,10 @@
 }
 
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
   body {
-    @apply bg-white text-werbens-text antialiased;
+    @apply bg-white text-werbens-text antialiased overflow-x-hidden;
   }
 }

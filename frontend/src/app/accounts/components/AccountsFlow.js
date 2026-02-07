@@ -71,8 +71,8 @@ export function AccountsFlow() {
 
   return (
     <AccountsLayout>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-werbens-dark-cyan">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-werbens-dark-cyan">
           Social media accounts
         </h1>
         <p className="mt-2 text-werbens-text/80">

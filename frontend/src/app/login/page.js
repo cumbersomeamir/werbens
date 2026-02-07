@@ -145,7 +145,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right: Login form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 bg-werbens-light-cyan/30 min-h-screen">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 bg-werbens-light-cyan/30 min-h-screen">
         <div className="w-full max-w-md">
           <div className="lg:hidden text-center mb-8">
             <h1 className="text-2xl font-bold text-werbens-dark-cyan">
@@ -156,7 +156,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-werbens-dark-cyan/10">
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-werbens-dark-cyan/10">
             <h2 className="text-xl font-semibold text-werbens-text mb-1">
               {step === "phone" ? "Welcome back" : "Enter verification code"}
             </h2>
@@ -193,7 +193,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/50 transition disabled:opacity-60"
+                  className="w-full py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/50 transition disabled:opacity-60 min-h-[48px]"
                 >
                   {loading ? "Sending…" : "Continue with phone"}
                 </button>
@@ -256,7 +256,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => handleSocialLogin("Apple")}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text font-medium hover:bg-werbens-dark-cyan/5 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/30 transition"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text font-medium hover:bg-werbens-dark-cyan/5 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/30 transition min-h-[48px]"
               >
                 <svg
                   className="w-5 h-5"
@@ -271,7 +271,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => handleSocialLogin("Google")}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text font-medium hover:bg-werbens-dark-cyan/5 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/30 transition"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text font-medium hover:bg-werbens-dark-cyan/5 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/30 transition min-h-[48px]"
               >
                 <svg
                   className="w-5 h-5"

@@ -23,20 +23,20 @@ export function UseCasesSection() {
   ];
 
   return (
-    <section className="py-24 bg-werbens-dark-cyan/5">
-      <div className="mx-auto max-w-6xl px-6">
-        <h2 className="text-4xl font-bold text-werbens-dark-cyan mb-4">
+    <section className="py-12 sm:py-16 md:py-24 bg-werbens-dark-cyan/5">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-werbens-dark-cyan mb-3 sm:mb-4">
           Built for every type of content creator
         </h2>
-        <p className="text-lg text-werbens-text/80 max-w-2xl mb-16">
+        <p className="text-base sm:text-lg text-werbens-text/80 max-w-2xl mb-10 sm:mb-16">
           Whether you&apos;re a solopreneur, a marketing team, or an agency
           managing dozens of brands—Werbens adapts to your workflow.
         </p>
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
           {cases.map((c, i) => (
             <article
               key={i}
-              className="bg-white rounded-2xl p-8 shadow-lg shadow-werbens-dark-cyan/5"
+              className="bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg shadow-werbens-dark-cyan/5"
             >
               <h3 className="text-xl font-bold text-werbens-dark-cyan mb-3">
                 {c.title}

@@ -12,7 +12,7 @@ export function DateRangeSelector({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-lg border border-werbens-dark-cyan/20 bg-white px-3 py-2 text-sm text-werbens-text hover:bg-werbens-light-cyan/20 transition"
+        className="flex items-center gap-2 rounded-lg border border-werbens-dark-cyan/20 bg-white px-3 py-2.5 text-sm text-werbens-text hover:bg-werbens-light-cyan/20 transition min-h-[44px] shrink-0"
         aria-expanded={open}
         aria-haspopup="listbox"
       >
@@ -50,7 +50,7 @@ export function DateRangeSelector({ value, onChange }) {
                     onChange(range);
                     setOpen(false);
                   }}
-                  className={`block w-full px-4 py-2 text-left text-sm ${
+                  className={`block w-full px-4 py-3 text-left text-sm min-h-[44px] flex items-center ${
                     value === range
                       ? "bg-werbens-light-cyan/30 text-werbens-dark-cyan font-medium"
                       : "text-werbens-text hover:bg-werbens-light-cyan/20"

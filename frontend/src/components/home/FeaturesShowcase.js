@@ -33,23 +33,23 @@ export function FeaturesShowcase() {
   ];
 
   return (
-    <section className="py-24 bg-gradient-to-b from-white to-werbens-light-cyan/20">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-werbens-dark-cyan mb-4">
+    <section className="py-12 sm:py-16 md:py-24 bg-gradient-to-b from-white to-werbens-light-cyan/20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-werbens-dark-cyan mb-3 sm:mb-4">
             Everything you need for content at scale
           </h2>
-          <p className="text-lg text-werbens-text/80">
+          <p className="text-base sm:text-lg text-werbens-text/80">
             Werbens combines AI writing, brand management, and cross-channel
             publishing in one platform. No more juggling tools or losing your
             voice.
           </p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {features.map((f, i) => (
             <article
               key={i}
-              className="group bg-white rounded-2xl p-8 border border-werbens-dark-cyan/10 hover:border-werbens-dark-cyan/30 hover:shadow-xl hover:shadow-werbens-dark-cyan/5 transition-all duration-300"
+              className="group bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-werbens-dark-cyan/10 hover:border-werbens-dark-cyan/30 hover:shadow-xl hover:shadow-werbens-dark-cyan/5 transition-all duration-300"
             >
               <span className="text-4xl mb-4 block">{f.icon}</span>
               <h3 className="text-xl font-bold text-werbens-dark-cyan mb-2 group-hover:text-werbens-dark-cyan/90">

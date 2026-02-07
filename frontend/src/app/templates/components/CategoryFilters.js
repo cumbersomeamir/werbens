@@ -21,15 +21,15 @@ const CATEGORIES = [
 
 export function CategoryFilters({ selected, onSelect }) {
   return (
-    <section className="px-6 pb-6" aria-label="Template categories">
+    <section className="px-4 sm:px-6 pb-4 sm:pb-6 overflow-x-hidden" aria-label="Template categories">
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 -mx-1 overflow-x-auto overflow-y-hidden pb-1 sm:overflow-visible sm:pb-0">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => onSelect(cat)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+              className={`shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition min-h-[40px] ${
                 selected === cat
                   ? "bg-werbens-dark-cyan text-white"
                   : "bg-werbens-light-cyan/40 text-werbens-dark-cyan hover:bg-werbens-light-cyan/60 border border-werbens-dark-cyan/20"

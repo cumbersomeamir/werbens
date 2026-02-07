@@ -1,12 +1,12 @@
 export function SEOContentSection() {
   return (
-    <section className="py-16 bg-white border-t border-werbens-dark-cyan/10">
-      <div className="mx-auto max-w-4xl px-6">
+    <section className="py-10 sm:py-16 bg-white border-t border-werbens-dark-cyan/10">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <article className="prose prose-lg max-w-none">
-          <h2 className="text-2xl font-bold text-werbens-dark-cyan mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-werbens-dark-cyan mb-4">
             Why choose Werbens for AI content creation?
           </h2>
-          <p className="text-werbens-text/90 leading-relaxed mb-4">
+          <p className="text-werbens-text/90 leading-relaxed mb-4 text-sm sm:text-base break-words">
             Werbens is the leading <strong>autonomous content creation platform</strong> for
             businesses that want to scale their <strong>social media marketing</strong>,{" "}
             <strong>email campaigns</strong>, and <strong>ad copy</strong> without hiring more
