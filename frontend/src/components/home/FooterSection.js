@@ -35,6 +35,21 @@ export function FooterSection() {
                 </Link>
               </li>
               <li>
+                <Link href="/analytics" className="hover:text-werbens-light-cyan">
+                  Analytics
+                </Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="hover:text-werbens-light-cyan">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link href="/create" className="hover:text-werbens-light-cyan">
+                  Create
+                </Link>
+              </li>
+              <li>
                 <a href="#" className="hover:text-werbens-light-cyan">
                   Features
                 </a>

@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/SessionProvider";
+import { Header } from "@/components/Header";
 
 export const metadata = {
   title: "Werbens — AI Content Creation Platform | Autonomous Social Media, Ads & Email",
@@ -29,7 +30,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <AuthSessionProvider>{children}</AuthSessionProvider>
+        <AuthSessionProvider>
+          <Header />
+          {children}
+        </AuthSessionProvider>
       </body>
     </html>
   );
