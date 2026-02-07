@@ -1,0 +1,15 @@
+@import "tailwindcss" source("../..");
+
+@theme {
+  /* Werbens color scheme */
+  --color-werbens-light-cyan: #7fe7dc;
+  --color-werbens-dark-cyan: #316879;
+  --color-werbens-text: #000000;
+  --color-werbens-alt-text: #ffffff;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-werbens-text antialiased;
+  }
+}
