@@ -1,0 +1,13 @@
+export { HeroSection } from "./HeroSection";
+export { TrustedBySection } from "./TrustedBySection";
+export { ProblemSolutionSection } from "./ProblemSolutionSection";
+export { FeaturesShowcase } from "./FeaturesShowcase";
+export { HowItWorksSection } from "./HowItWorksSection";
+export { StatsSection } from "./StatsSection";
+export { TestimonialsSection } from "./TestimonialsSection";
+export { UseCasesSection } from "./UseCasesSection";
+export { IntegrationsSection } from "./IntegrationsSection";
+export { SEOContentSection } from "./SEOContentSection";
+export { FAQSection } from "./FAQSection";
+export { CTASection } from "./CTASection";
+export { FooterSection } from "./FooterSection";
