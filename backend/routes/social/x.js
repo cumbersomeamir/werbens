@@ -195,6 +195,7 @@ export async function xCallback(req, res) {
           userId: userId.trim(),
           username: appUsername,
           platform: "x",
+          channelId: "",
           profile: {
             id: profile.id,
             name: profile.name,
@@ -250,6 +251,7 @@ export async function syncX(req, res) {
         userId,
         username: appUsername,
         platform: "x",
+        channelId: "",
         profile: {
           id: profile.id,
           name: profile.name,

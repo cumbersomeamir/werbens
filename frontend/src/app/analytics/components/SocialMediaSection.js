@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { getSocialAnalytics, syncSocialPlatform } from "@/lib/socialApi";
 import { formatNumber } from "../data/analytics";
 
-const PLATFORM_LABELS = { x: "X", instagram: "Instagram", linkedin: "LinkedIn", facebook: "Facebook" };
+const PLATFORM_LABELS = { x: "X", youtube: "YouTube", instagram: "Instagram", linkedin: "LinkedIn", facebook: "Facebook" };
 
 function CollapsibleCard({ title, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -174,6 +174,145 @@ function XAggregates({ posts }) {
   );
 }
 
+function YouTubeProfile({ profile }) {
+  if (!profile) return null;
+  const stats = profile.statistics || {};
+  const thumb = profile.thumbnails?.medium?.url || profile.thumbnails?.default?.url;
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 pb-4 border-b border-werbens-dark-cyan/10">
+      <div className="flex items-start gap-3 shrink-0">
+        {thumb ? (
+          <img src={thumb} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-werbens-dark-cyan/20" />
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-werbens-dark-cyan/20 flex items-center justify-center ring-2 ring-werbens-dark-cyan/20">
+            <span className="text-lg font-bold text-werbens-dark-cyan">{(profile.title || "?").charAt(0)}</span>
+          </div>
+        )}
+        <div>
+          <h3 className="font-bold text-werbens-text">{profile.title || "YouTube Channel"}</h3>
+          {profile.publishedAt && (
+            <p className="text-xs text-werbens-muted mt-0.5">
+              Created {(() => {
+                try {
+                  const d = new Date(profile.publishedAt);
+                  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+                } catch {
+                  return "";
+                }
+              })()}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="min-w-0 flex-1">
+        {profile.description && (
+          <p className="text-sm text-werbens-text line-clamp-3">{profile.description}</p>
+        )}
+        <div className="flex flex-wrap gap-4 sm:gap-6 mt-3 text-sm">
+          <span className="font-semibold text-werbens-text">
+            {formatNumber(stats.subscriberCount ?? 0)} <span className="font-normal text-werbens-muted">Subscribers</span>
+          </span>
+          <span className="font-semibold text-werbens-text">
+            {formatNumber(stats.videoCount ?? 0)} <span className="font-normal text-werbens-muted">Videos</span>
+          </span>
+          <span className="font-semibold text-werbens-text">
+            {formatNumber(stats.viewCount ?? 0)} <span className="font-normal text-werbens-muted">Total views</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function computeVideoAggregates(videos) {
+  const agg = { views: 0, likes: 0, comments: 0 };
+  if (!Array.isArray(videos)) return agg;
+  for (const v of videos) {
+    const s = v?.statistics || {};
+    agg.views += Number(s.viewCount) || 0;
+    agg.likes += Number(s.likeCount) || 0;
+    agg.comments += Number(s.commentCount) || 0;
+  }
+  agg.engagement = agg.likes + agg.comments;
+  return agg;
+}
+
+function YouTubeAggregates({ videos }) {
+  if (!videos?.length) return null;
+  const agg = computeVideoAggregates(videos);
+  return (
+    <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-werbens-mist/60 to-werbens-dark-cyan/5 border border-werbens-dark-cyan/10">
+      <h4 className="text-xs font-semibold text-werbens-dark-cyan uppercase tracking-wider mb-3">
+        Totals (from {videos.length} video{videos.length !== 1 ? "s" : ""})
+      </h4>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.views)}</p>
+          <p className="text-xs text-werbens-muted">Views</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.likes)}</p>
+          <p className="text-xs text-werbens-muted">Likes</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.comments)}</p>
+          <p className="text-xs text-werbens-muted">Comments</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.engagement)}</p>
+          <p className="text-xs text-werbens-muted">Total engagement</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function YouTubeVideos({ videos }) {
+  if (!videos?.length) return <p className="text-sm text-werbens-muted">No videos yet.</p>;
+  return (
+    <div className="space-y-4">
+      <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">Recent videos</h4>
+      <ul className="space-y-3">
+        {videos.slice(0, 20).map((video, idx) => {
+          if (!video) return null;
+          const s = video.statistics || {};
+          const thumb = video.thumbnails?.medium?.url || video.thumbnails?.default?.url;
+          return (
+            <li
+              key={video.id || `video-${idx}`}
+              className="p-3 sm:p-4 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8 flex gap-3"
+            >
+              {thumb && (
+                <img src={thumb} alt="" className="w-24 h-14 object-cover rounded-lg shrink-0" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-werbens-text line-clamp-2">{video.title || "Untitled"}</p>
+                {video.publishedAt && (
+                  <p className="text-xs text-werbens-muted mt-1">
+                    {(() => {
+                      try {
+                        const d = new Date(video.publishedAt);
+                        return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { dateStyle: "medium" });
+                      } catch {
+                        return "";
+                      }
+                    })()}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-3 mt-2 text-xs text-werbens-muted">
+                  <span>{formatNumber(s.viewCount ?? 0)} views</span>
+                  <span>{formatNumber(s.likeCount ?? 0)} likes</span>
+                  <span>{formatNumber(s.commentCount ?? 0)} comments</span>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function XPosts({ posts }) {
   if (!posts?.length) return <p className="text-sm text-werbens-muted">No posts yet.</p>;
   return (
@@ -220,12 +359,22 @@ function PlatformContent({ platform, doc }) {
   if (!doc) return null;
   const profile = doc.profile;
   const posts = Array.isArray(doc.posts) ? doc.posts : [];
+  const videos = Array.isArray(doc.videos) ? doc.videos : [];
   if (platform === "x") {
     return (
       <>
         <XProfile profile={profile} />
         <XAggregates posts={posts} />
         <XPosts posts={posts} />
+      </>
+    );
+  }
+  if (platform === "youtube") {
+    return (
+      <>
+        <YouTubeProfile profile={profile} />
+        <YouTubeAggregates videos={videos} />
+        <YouTubeVideos videos={videos} />
       </>
     );
   }
@@ -305,19 +454,25 @@ export function SocialMediaSection({ userId }) {
           <div className="space-y-4">
             {list.filter(Boolean).map((doc) => {
               const platformLabel = PLATFORM_LABELS[doc.platform] || doc.platform;
-              const displayUsername = doc.profile?.username ? `@${doc.profile.username}` : doc.username || "";
-              const title = `${platformLabel} – ${displayUsername}`.trim() || `${platformLabel} – Connected`;
+              const displayName =
+                doc.platform === "youtube"
+                  ? (doc.profile?.title || doc.username || "Channel")
+                  : doc.profile?.username
+                    ? `@${doc.profile.username}`
+                    : doc.username || "";
+              const title = `${platformLabel} – ${displayName}`.trim() || `${platformLabel} – Connected`;
+              const cardKey = `${doc.platform}-${doc.channelId ?? doc.profile?.id ?? doc.userId}`;
               return (
-                <CollapsibleCard key={`${doc.platform}-${doc.profile?.id || doc.userId}`} title={title}>
-                  {doc.platform === "x" && (
+                <CollapsibleCard key={cardKey} title={title}>
+                  {(doc.platform === "x" || doc.platform === "youtube") && (
                     <div className="flex justify-end mb-2">
                       <button
                         type="button"
-                        onClick={() => handleSync("x")}
-                        disabled={syncing === "x"}
+                        onClick={() => handleSync(doc.platform)}
+                        disabled={syncing === doc.platform}
                         className="text-xs font-medium text-werbens-dark-cyan hover:underline disabled:opacity-50"
                       >
-                        {syncing === "x" ? "Syncing…" : "Sync now"}
+                        {syncing === doc.platform ? "Syncing…" : "Sync now"}
                       </button>
                     </div>
                   )}

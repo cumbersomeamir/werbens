@@ -44,11 +44,18 @@ async function main() {
 
   const socialColl = db.collection("SocialMedia");
   await socialColl.createIndex({ userId: 1 });
-  await socialColl.createIndex({ userId: 1, platform: 1 }, { unique: true });
+  try {
+    await socialColl.dropIndex("userId_1_platform_1");
+  } catch (_) {}
+  await socialColl.updateMany(
+    { $or: [{ channelId: { $exists: false } }, { channelId: null }] },
+    { $set: { channelId: "" } }
+  );
+  await socialColl.createIndex({ userId: 1, platform: 1, channelId: 1 }, { unique: true });
 
   const collections = await db.listCollections().toArray();
   console.log("Collections in", dbName + ":", collections.map((c) => c.name).join(", "));
-  console.log("Indexes ensured (Users.userId unique; userId on Onboarding, SocialAccounts, SocialMedia).");
+  console.log("Indexes ensured (Users.userId unique; SocialMedia userId+platform+channelId unique).");
   process.exit(0);
 }
 

@@ -18,6 +18,7 @@ export async function getSocialAccounts(req, res) {
         profileImageUrl: 1,
         connectedAt: 1,
         updatedAt: 1,
+        channels: 1,
       })
       .toArray();
 
@@ -28,6 +29,7 @@ export async function getSocialAccounts(req, res) {
       profileImageUrl: doc.profileImageUrl,
       connectedAt: doc.connectedAt,
       updatedAt: doc.updatedAt,
+      channels: doc.channels || null,
     }));
 
     res.json({ accounts });
@@ -63,10 +65,12 @@ export async function disconnectSocialAccount(req, res) {
     const accountsColl = db.collection("SocialAccounts");
     const socialColl = db.collection("SocialMedia");
 
-    await Promise.all([
-      accountsColl.deleteOne({ userId: userId.trim(), platform }),
-      socialColl.deleteOne({ userId: userId.trim(), platform }),
-    ]);
+    await accountsColl.deleteOne({ userId: userId.trim(), platform });
+    if (platform === "youtube") {
+      await socialColl.deleteMany({ userId: userId.trim(), platform: "youtube" });
+    } else {
+      await socialColl.deleteMany({ userId: userId.trim(), platform });
+    }
 
     res.json({ success: true });
   } catch (err) {

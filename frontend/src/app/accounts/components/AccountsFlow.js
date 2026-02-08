@@ -7,7 +7,7 @@ import { AccountCard } from "./AccountCard";
 import { ManageAccountModal } from "./ManageAccountModal";
 import Link from "next/link";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
-import { getSocialAccounts, getXAuthUrl, disconnectAccount } from "@/lib/socialApi";
+import { getSocialAccounts, getXAuthUrl, getYoutubeAuthUrl, disconnectAccount } from "@/lib/socialApi";
 
 const PLATFORM_IDS = [
   "instagram",
@@ -55,7 +55,8 @@ export function AccountsFlow() {
     const connected = searchParams.get("connected");
     const error = searchParams.get("error");
     if (connected) {
-      setMessage({ type: "success", text: `${connected === "x" ? "X (Twitter)" : connected} connected successfully.` });
+      const label = connected === "x" ? "X (Twitter)" : connected === "youtube" ? "YouTube" : connected;
+      setMessage({ type: "success", text: `${label} connected successfully.` });
       loadAccounts();
       window.history.replaceState({}, "", window.location.pathname);
     }
@@ -78,6 +79,22 @@ export function AccountsFlow() {
       setMessage(null);
       try {
         const url = await getXAuthUrl(userId);
+        window.location.href = url;
+      } catch (err) {
+        setMessage({ type: "error", text: err.message || "Could not start connection." });
+        setConnectLoading(null);
+      }
+      return;
+    }
+    if (platformId === "youtube") {
+      if (!userId) {
+        setMessage({ type: "error", text: "Sign in to connect accounts." });
+        return;
+      }
+      setConnectLoading("youtube");
+      setMessage(null);
+      try {
+        const url = await getYoutubeAuthUrl(userId);
         window.location.href = url;
       } catch (err) {
         setMessage({ type: "error", text: err.message || "Could not start connection." });

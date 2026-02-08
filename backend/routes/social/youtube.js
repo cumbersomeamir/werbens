@@ -1,0 +1,259 @@
+import crypto from "crypto";
+import { getDb } from "../../db.js";
+import { upsertUser } from "../../lib/users.js";
+
+const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube.readonly";
+const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
+const STATE_TTL_MS = 10 * 60 * 1000;
+
+const stateStore = new Map();
+
+function pruneStates() {
+  const now = Date.now();
+  for (const [state, data] of stateStore.entries()) {
+    if (now - data.createdAt > STATE_TTL_MS) stateStore.delete(state);
+  }
+}
+
+/** Fetch channels for the authenticated user, then for each channel fetch profile + videos. */
+async function fetchYouTubeData(accessToken) {
+  const headers = { Authorization: `Bearer ${accessToken}` };
+  const channelsRes = await fetch(
+    `${YOUTUBE_API_BASE}/channels?part=snippet,statistics,contentDetails&mine=true`,
+    { headers }
+  );
+  if (!channelsRes.ok) return null;
+  const channelsData = await channelsRes.json();
+  const channelItems = channelsData.items || [];
+  if (channelItems.length === 0) return { channels: [] };
+
+  const result = [];
+  for (const ch of channelItems) {
+    const channelId = ch.id;
+    const snippet = ch.snippet || {};
+    const statistics = ch.statistics || {};
+    const contentDetails = ch.contentDetails || {};
+    const uploadsPlaylistId = contentDetails.relatedPlaylists?.uploads;
+
+    const profile = {
+      id: channelId,
+      title: snippet.title || "",
+      description: snippet.description || "",
+      publishedAt: snippet.publishedAt || null,
+      thumbnails: snippet.thumbnails || {},
+      statistics: {
+        subscriberCount: Number(statistics.subscriberCount) || 0,
+        videoCount: Number(statistics.videoCount) || 0,
+        viewCount: Number(statistics.viewCount) || 0,
+      },
+    };
+
+    let videos = [];
+    if (uploadsPlaylistId) {
+      const playlistRes = await fetch(
+        `${YOUTUBE_API_BASE}/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=50`,
+        { headers }
+      );
+      if (playlistRes.ok) {
+        const playlistData = await playlistRes.json();
+        const videoIds = (playlistData.items || [])
+          .map((i) => i.contentDetails?.videoId)
+          .filter(Boolean);
+        if (videoIds.length > 0) {
+          const videosRes = await fetch(
+            `${YOUTUBE_API_BASE}/videos?part=snippet,statistics,contentDetails&id=${videoIds.join(",")}`,
+            { headers }
+          );
+          if (videosRes.ok) {
+            const videosData = await videosRes.json();
+            videos = (videosData.items || []).map((v) => ({
+              id: v.id,
+              title: v.snippet?.title || "",
+              description: v.snippet?.description || "",
+              publishedAt: v.snippet?.publishedAt || null,
+              thumbnails: v.snippet?.thumbnails || {},
+              statistics: {
+                viewCount: Number(v.statistics?.viewCount) || 0,
+                likeCount: Number(v.statistics?.likeCount) || 0,
+                commentCount: Number(v.statistics?.commentCount) || 0,
+              },
+              duration: v.contentDetails?.duration || null,
+            }));
+          }
+        }
+      }
+    }
+    result.push({ profile, videos });
+  }
+  return { channels: result };
+}
+
+export function getYoutubeAuthUrl(req, res) {
+  const userId = req.query.userId;
+  if (!userId || typeof userId !== "string") {
+    return res.status(400).json({ error: "userId is required" });
+  }
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const redirectUri = process.env.YOUTUBE_CALLBACK_URL;
+  if (!clientId || !redirectUri) {
+    return res.status(503).json({
+      error: "YouTube integration is not configured. Set GOOGLE_CLIENT_ID and YOUTUBE_CALLBACK_URL.",
+    });
+  }
+  pruneStates();
+  const state = crypto.randomUUID();
+  stateStore.set(state, { userId: userId.trim(), createdAt: Date.now() });
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: YOUTUBE_SCOPE,
+    state,
+    access_type: "offline",
+    prompt: "consent",
+  });
+  res.json({ url: `${GOOGLE_AUTH_URL}?${params.toString()}` });
+}
+
+export async function youtubeCallback(req, res) {
+  const { code, state } = req.query;
+  const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+  if (!code || !state) {
+    return res.redirect(`${frontendBase}/accounts?error=missing_params`);
+  }
+  const data = stateStore.get(state);
+  stateStore.delete(state);
+  if (!data) {
+    return res.redirect(`${frontendBase}/accounts?error=invalid_state`);
+  }
+  const userId = data.userId;
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.YOUTUBE_CALLBACK_URL;
+  if (!clientId || !redirectUri) {
+    return res.redirect(`${frontendBase}/accounts?error=server_config`);
+  }
+  try {
+    const tokenRes = await fetch(GOOGLE_TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code: String(code),
+        client_id: clientId,
+        client_secret: clientSecret || "",
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }).toString(),
+    });
+    if (!tokenRes.ok) {
+      const errText = await tokenRes.text();
+      console.error("YouTube token exchange failed:", tokenRes.status, errText);
+      return res.redirect(`${frontendBase}/accounts?error=token_exchange`);
+    }
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+    const refreshToken = tokenData.refresh_token || null;
+    const ytData = await fetchYouTubeData(accessToken);
+    if (!ytData || ytData.channels.length === 0) {
+      return res.redirect(`${frontendBase}/accounts?error=no_channels`);
+    }
+    const db = await getDb();
+    const usersColl = db.collection("Users");
+    const firstChannelTitle = ytData.channels[0]?.profile?.title || "YouTube";
+    await upsertUser({ userId, username: firstChannelTitle });
+    const accountsColl = db.collection("SocialAccounts");
+    const now = new Date();
+    const channelsForAccount = ytData.channels.map((c) => ({
+      channelId: c.profile.id,
+      title: c.profile.title,
+      thumbnail: c.profile.thumbnails?.default?.url || null,
+    }));
+    await accountsColl.updateOne(
+      { userId, platform: "youtube" },
+      {
+        $set: {
+          userId,
+          platform: "youtube",
+          accessToken,
+          refreshToken,
+          username: channelsForAccount[0]?.title || "YouTube",
+          displayName: "YouTube",
+          profileImageUrl: channelsForAccount[0]?.thumbnail || null,
+          channels: channelsForAccount,
+          updatedAt: now,
+        },
+        $setOnInsert: { connectedAt: now },
+      },
+      { upsert: true }
+    );
+    const socialColl = db.collection("SocialMedia");
+    const userDoc = await usersColl.findOne({ userId });
+    const appUsername = userDoc?.username || firstChannelTitle;
+    for (const { profile, videos } of ytData.channels) {
+      await socialColl.updateOne(
+        { userId, platform: "youtube", channelId: profile.id },
+        {
+          $set: {
+            userId,
+            username: appUsername,
+            platform: "youtube",
+            channelId: profile.id,
+            profile,
+            videos,
+            lastFetchedAt: now,
+            updatedAt: now,
+          },
+        },
+        { upsert: true }
+      );
+    }
+    return res.redirect(`${frontendBase}/accounts?connected=youtube`);
+  } catch (err) {
+    console.error("YouTube callback error:", err);
+    return res.redirect(`${frontendBase}/accounts?error=callback`);
+  }
+}
+
+/** POST /api/social/youtube/sync — re-fetch all channels and videos. */
+export async function syncYoutube(req, res) {
+  const userId = (req.body?.userId ?? req.query?.userId)?.trim();
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+  const db = await getDb();
+  const accountsColl = db.collection("SocialAccounts");
+  const account = await accountsColl.findOne({ userId, platform: "youtube" });
+  if (!account?.accessToken) {
+    return res.status(404).json({ error: "YouTube account not connected for this user" });
+  }
+  const ytData = await fetchYouTubeData(account.accessToken);
+  if (!ytData) {
+    return res.status(502).json({ error: "Failed to fetch data from YouTube" });
+  }
+  const usersColl = db.collection("Users");
+  const userDoc = await usersColl.findOne({ userId });
+  const appUsername = userDoc?.username || "YouTube";
+  const socialColl = db.collection("SocialMedia");
+  const now = new Date();
+  for (const { profile, videos } of ytData.channels) {
+    await socialColl.updateOne(
+      { userId, platform: "youtube", channelId: profile.id },
+      {
+        $set: {
+          userId,
+          username: appUsername,
+          platform: "youtube",
+          channelId: profile.id,
+          profile,
+          videos,
+          lastFetchedAt: now,
+          updatedAt: now,
+        },
+      },
+      { upsert: true }
+    );
+  }
+  return res.json({ ok: true, platform: "youtube", channels: ytData.channels.length });
+}

@@ -16,8 +16,10 @@ export async function getSocialAnalytics(req, res) {
     userId: d.userId,
     username: d.username,
     platform: d.platform,
+    channelId: d.channelId ?? "",
     profile: d.profile || null,
     posts: d.posts || [],
+    videos: d.videos || [],
     lastFetchedAt: d.lastFetchedAt,
     updatedAt: d.updatedAt,
   }));

@@ -20,6 +20,16 @@ export async function getXAuthUrl(userId) {
   return data.url;
 }
 
+export async function getYoutubeAuthUrl(userId) {
+  if (!userId) throw new Error("Not signed in");
+  const res = await fetch(
+    `${API_BASE}/api/social/youtube/auth-url?userId=${encodeURIComponent(userId)}`
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to get auth URL");
+  return data.url;
+}
+
 export async function disconnectAccount(userId, platform) {
   if (!userId || !platform) throw new Error("Missing userId or platform");
   const res = await fetch(
@@ -46,7 +56,9 @@ export async function syncSocialPlatform(userId, platform) {
   const url =
     platform === "x"
       ? `${API_BASE}/api/social/x/sync`
-      : `${API_BASE}/api/social/${platform}/sync`;
+      : platform === "youtube"
+        ? `${API_BASE}/api/social/youtube/sync`
+        : `${API_BASE}/api/social/${platform}/sync`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
