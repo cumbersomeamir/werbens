@@ -38,19 +38,25 @@ function CollapsibleCard({ title, defaultOpen = false, children }) {
 function XProfile({ profile }) {
   if (!profile) return null;
   const metrics = profile.public_metrics || {};
+  const displayName = profile.name || profile.username || "";
+  const initial = (displayName.charAt(0) || profile.username?.charAt(0) || "?").toUpperCase();
   return (
     <div className="flex flex-col sm:flex-row gap-4 pb-4 border-b border-werbens-dark-cyan/10">
       <div className="flex items-start gap-3 shrink-0">
-        {profile.profile_image_url && (
+        {profile.profile_image_url ? (
           <img
             src={profile.profile_image_url}
             alt=""
             className="w-14 h-14 rounded-full object-cover ring-2 ring-werbens-dark-cyan/20"
           />
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-werbens-dark-cyan/20 flex items-center justify-center ring-2 ring-werbens-dark-cyan/20">
+            <span className="text-lg font-bold text-werbens-dark-cyan">{initial}</span>
+          </div>
         )}
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-werbens-text">{profile.name || profile.username}</span>
+            <span className="font-bold text-werbens-text">{displayName}</span>
             {profile.verified && (
               <span className="text-werbens-dark-cyan" title="Verified">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -62,6 +68,18 @@ function XProfile({ profile }) {
           {profile.username && (
             <p className="text-sm text-werbens-muted">@{profile.username}</p>
           )}
+          {profile.created_at && (
+            <p className="text-xs text-werbens-muted mt-0.5">
+              Joined {(() => {
+                try {
+                  const d = new Date(profile.created_at);
+                  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+                } catch {
+                  return "";
+                }
+              })()}
+            </p>
+          )}
         </div>
       </div>
       <div className="min-w-0 flex-1">
@@ -69,7 +87,7 @@ function XProfile({ profile }) {
           <p className="text-sm text-werbens-text mb-3">{profile.description}</p>
         )}
         {(profile.location || profile.url) && (
-          <p className="text-xs text-werbens-muted space-x-2">
+          <p className="text-xs text-werbens-muted space-x-2 mb-2">
             {profile.location && <span>{profile.location}</span>}
             {profile.url && (
               <a
@@ -83,27 +101,73 @@ function XProfile({ profile }) {
             )}
           </p>
         )}
-        <div className="flex flex-wrap gap-4 mt-3 text-sm">
-          {metrics.followers_count != null && (
-            <span className="font-semibold text-werbens-text">
-              {formatNumber(metrics.followers_count)} <span className="font-normal text-werbens-muted">Followers</span>
-            </span>
-          )}
-          {metrics.following_count != null && (
-            <span className="font-semibold text-werbens-text">
-              {formatNumber(metrics.following_count)} <span className="font-normal text-werbens-muted">Following</span>
-            </span>
-          )}
-          {metrics.tweet_count != null && (
-            <span className="font-semibold text-werbens-text">
-              {formatNumber(metrics.tweet_count)} <span className="font-normal text-werbens-muted">Tweets</span>
-            </span>
-          )}
-          {metrics.listed_count != null && (
-            <span className="font-semibold text-werbens-text">
-              {formatNumber(metrics.listed_count)} <span className="font-normal text-werbens-muted">Listed</span>
-            </span>
-          )}
+        <div className="flex flex-wrap gap-4 sm:gap-6 mt-3 text-sm">
+          <span className="font-semibold text-werbens-text">
+            {formatNumber(metrics.followers_count ?? 0)} <span className="font-normal text-werbens-muted">Followers</span>
+          </span>
+          <span className="font-semibold text-werbens-text">
+            {formatNumber(metrics.following_count ?? 0)} <span className="font-normal text-werbens-muted">Following</span>
+          </span>
+          <span className="font-semibold text-werbens-text">
+            {formatNumber(metrics.tweet_count ?? 0)} <span className="font-normal text-werbens-muted">Tweets</span>
+          </span>
+          <span className="font-semibold text-werbens-text">
+            {formatNumber(metrics.listed_count ?? 0)} <span className="font-normal text-werbens-muted">Listed</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Aggregate engagement from posts (for X). */
+function computePostAggregates(posts) {
+  const agg = { impressions: 0, likes: 0, retweets: 0, replies: 0, quotes: 0 };
+  if (!Array.isArray(posts)) return agg;
+  for (const post of posts) {
+    const m = post?.public_metrics || {};
+    agg.impressions += Number(m.impression_count) || 0;
+    agg.likes += Number(m.like_count) || 0;
+    agg.retweets += Number(m.retweet_count) || 0;
+    agg.replies += Number(m.reply_count) || 0;
+    agg.quotes += Number(m.quote_count) || 0;
+  }
+  agg.engagement = agg.likes + agg.retweets + agg.replies + agg.quotes;
+  return agg;
+}
+
+function XAggregates({ posts }) {
+  if (!posts?.length) return null;
+  const agg = computePostAggregates(posts);
+  return (
+    <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-werbens-mist/60 to-werbens-dark-cyan/5 border border-werbens-dark-cyan/10">
+      <h4 className="text-xs font-semibold text-werbens-dark-cyan uppercase tracking-wider mb-3">
+        Engagement totals (from {posts.length} recent post{posts.length !== 1 ? "s" : ""})
+      </h4>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.impressions)}</p>
+          <p className="text-xs text-werbens-muted">Impressions</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.likes)}</p>
+          <p className="text-xs text-werbens-muted">Likes</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.retweets)}</p>
+          <p className="text-xs text-werbens-muted">Retweets</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.replies)}</p>
+          <p className="text-xs text-werbens-muted">Replies</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.quotes)}</p>
+          <p className="text-xs text-werbens-muted">Quotes</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.engagement)}</p>
+          <p className="text-xs text-werbens-muted">Total engagement</p>
         </div>
       </div>
     </div>
@@ -160,6 +224,7 @@ function PlatformContent({ platform, doc }) {
     return (
       <>
         <XProfile profile={profile} />
+        <XAggregates posts={posts} />
         <XPosts posts={posts} />
       </>
     );
