@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import { saveOnboarding } from "./routes/onboarding.js";
 import { getSocialAccounts, disconnectSocialAccount } from "./routes/social/accounts.js";
-import { getXAuthUrl, xCallback } from "./routes/social/x.js";
+import { getSocialAnalytics } from "./routes/social/analytics.js";
+import { getXAuthUrl, xCallback, syncX } from "./routes/social/x.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -23,6 +24,10 @@ app.delete("/api/social/accounts/:platform", disconnectSocialAccount);
 // X (Twitter) OAuth: get auth URL, callback (GET so X can redirect)
 app.get("/api/social/x/auth-url", getXAuthUrl);
 app.get("/api/social/x/callback", xCallback);
+app.post("/api/social/x/sync", syncX);
+
+// Social analytics: GET data for analytics UI (no tokens)
+app.get("/api/social/analytics", getSocialAnalytics);
 
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);

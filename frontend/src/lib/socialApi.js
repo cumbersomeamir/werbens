@@ -30,3 +30,29 @@ export async function disconnectAccount(userId, platform) {
   if (!res.ok) throw new Error(data.error || "Failed to disconnect");
   return data;
 }
+
+export async function getSocialAnalytics(userId) {
+  if (!userId) return { data: [] };
+  const res = await fetch(
+    `${API_BASE}/api/social/analytics?userId=${encodeURIComponent(userId)}`
+  );
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) return { data: [], error: json.error };
+  return json;
+}
+
+export async function syncSocialPlatform(userId, platform) {
+  if (!userId || !platform) throw new Error("Missing userId or platform");
+  const url =
+    platform === "x"
+      ? `${API_BASE}/api/social/x/sync`
+      : `${API_BASE}/api/social/${platform}/sync`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Sync failed");
+  return data;
+}

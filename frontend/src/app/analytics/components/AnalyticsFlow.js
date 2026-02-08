@@ -6,9 +6,12 @@ import { AnalyticsHero } from "./AnalyticsHero";
 import { DateRangeSelector } from "./DateRangeSelector";
 import { OverviewStats } from "./OverviewStats";
 import { ChannelCards } from "./ChannelCards";
+import { SocialMediaSection } from "./SocialMediaSection";
+import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 
 export function AnalyticsFlow() {
   const [dateRange, setDateRange] = useState("30 days");
+  const { userId } = useCurrentUser();
 
   return (
     <AnalyticsLayout>
@@ -21,6 +24,7 @@ export function AnalyticsFlow() {
       />
       <OverviewStats />
       <ChannelCards />
+      <SocialMediaSection userId={userId} />
     </AnalyticsLayout>
   );
 }

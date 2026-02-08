@@ -10,6 +10,40 @@ const X_API_BASE = "https://api.x.com/2";
 const SCOPES = ["tweet.read", "users.read", "offline.access"];
 const STATE_TTL_MS = 10 * 60 * 1000;
 
+const USER_FIELDS = "id,name,username,profile_image_url,description,created_at,public_metrics,verified,location,url";
+const TWEET_FIELDS = "created_at,public_metrics,text,entities,conversation_id,referenced_tweets";
+
+/** Fetch full profile + tweets from X API. Returns { profile, posts } for SocialMedia. */
+export async function fetchXUserData(accessToken) {
+  const userRes = await fetch(
+    `${X_API_BASE}/users/me?user.fields=${USER_FIELDS}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  if (!userRes.ok) return null;
+  const userData = await userRes.json();
+  const profile = userData.data || {};
+  const platformUserId = profile.id;
+
+  const tweetsRes = await fetch(
+    `${X_API_BASE}/users/${platformUserId}/tweets?max_results=100&tweet.fields=${TWEET_FIELDS}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  let posts = [];
+  if (tweetsRes.ok) {
+    const tweetsData = await tweetsRes.json();
+    posts = (tweetsData.data || []).map((t) => ({
+      id: t.id,
+      text: t.text || "",
+      created_at: t.created_at,
+      public_metrics: t.public_metrics || {},
+      entities: t.entities || null,
+      conversation_id: t.conversation_id || null,
+      referenced_tweets: t.referenced_tweets || null,
+    }));
+  }
+  return { profile, posts };
+}
+
 // In-memory: state -> { userId, codeVerifier, createdAt }. For production use Redis.
 const stateStore = new Map();
 
@@ -114,17 +148,12 @@ export async function xCallback(req, res) {
     const accessToken = tokenData.access_token;
     const refreshToken = tokenData.refresh_token || null;
 
-    const userRes = await fetch(`${X_API_BASE}/users/me?user.fields=id,name,username,profile_image_url`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
-    if (!userRes.ok) {
-      console.error("X user fetch failed:", userRes.status);
+    const xData = await fetchXUserData(accessToken);
+    if (!xData) {
+      console.error("X user fetch failed");
       return res.redirect(`${frontendBase}/accounts?error=user_fetch`);
     }
-
-    const userData = await userRes.json();
-    const profile = userData.data || {};
+    const { profile, posts } = xData;
     const platformUserId = profile.id;
     const username = profile.username || null;
     const displayName = profile.name || null;
@@ -157,35 +186,26 @@ export async function xCallback(req, res) {
       { upsert: true }
     );
 
-    const tweetsRes = await fetch(
-      `${X_API_BASE}/users/${platformUserId}/tweets?max_results=10&tweet.fields=created_at,public_metrics,text`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-
-    let posts = [];
-    if (tweetsRes.ok) {
-      const tweetsData = await tweetsRes.json();
-      posts = (tweetsData.data || []).map((t) => ({
-        id: t.id,
-        text: t.text,
-        created_at: t.created_at,
-        public_metrics: t.public_metrics || {},
-      }));
-    }
-
     const socialColl = db.collection("SocialMedia");
+    const appUsername = displayName || username || null;
     await socialColl.updateOne(
       { userId, platform: "x" },
       {
         $set: {
-          userId,
-          username: username || displayName || null,
+          userId: userId.trim(),
+          username: appUsername,
           platform: "x",
           profile: {
             id: profile.id,
-            username: profile.username,
             name: profile.name,
+            username: profile.username,
             profile_image_url: profile.profile_image_url,
+            description: profile.description || null,
+            created_at: profile.created_at || null,
+            public_metrics: profile.public_metrics || null,
+            verified: profile.verified ?? false,
+            location: profile.location || null,
+            url: profile.url || null,
           },
           posts,
           lastFetchedAt: new Date(),
@@ -200,4 +220,54 @@ export async function xCallback(req, res) {
     console.error("X callback error:", err);
     return res.redirect(`${frontendBase}/accounts?error=callback`);
   }
+}
+
+/** POST /api/social/x/sync — re-fetch X profile + tweets and update SocialMedia. Body or query: userId (required). */
+export async function syncX(req, res) {
+  const userId = (req.body?.userId ?? req.query?.userId)?.trim();
+  if (!userId) {
+    return res.status(400).json({ error: "userId is required" });
+  }
+  const db = await getDb();
+  const accountsColl = db.collection("SocialAccounts");
+  const account = await accountsColl.findOne({ userId, platform: "x" });
+  if (!account?.accessToken) {
+    return res.status(404).json({ error: "X account not connected for this user" });
+  }
+  const xData = await fetchXUserData(account.accessToken);
+  if (!xData) {
+    return res.status(502).json({ error: "Failed to fetch data from X" });
+  }
+  const { profile, posts } = xData;
+  const usersColl = db.collection("Users");
+  const user = await usersColl.findOne({ userId });
+  const appUsername = user?.username ?? profile.name ?? profile.username ?? null;
+  const socialColl = db.collection("SocialMedia");
+  await socialColl.updateOne(
+    { userId, platform: "x" },
+    {
+      $set: {
+        userId,
+        username: appUsername,
+        platform: "x",
+        profile: {
+          id: profile.id,
+          name: profile.name,
+          username: profile.username,
+          profile_image_url: profile.profile_image_url,
+          description: profile.description || null,
+          created_at: profile.created_at || null,
+          public_metrics: profile.public_metrics || null,
+          verified: profile.verified ?? false,
+          location: profile.location || null,
+          url: profile.url || null,
+        },
+        posts,
+        lastFetchedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+  return res.json({ ok: true, platform: "x" });
 }
