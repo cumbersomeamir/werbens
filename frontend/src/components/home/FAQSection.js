@@ -25,38 +25,68 @@ const faqs = [
   },
 ];
 
+function ChevronIcon({ isOpen }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`flex-shrink-0 text-werbens-dark-cyan/50 transition-transform duration-300 ease-out ${
+        isOpen ? "rotate-180" : "rotate-0"
+      }`}
+    >
+      <path
+        d="M5 7.5L10 12.5L15 7.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function FAQSection() {
   const [open, setOpen] = useState(null);
 
   return (
-    <section className="py-12 sm:py-16 md:py-24 bg-werbens-light-cyan/30">
+    <section className="py-16 sm:py-20 md:py-28 bg-gradient-to-b from-werbens-surface to-werbens-surface/80">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-werbens-dark-cyan text-center mb-3 sm:mb-4">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-werbens-dark-cyan text-center mb-3 sm:mb-4 animate-fade-in">
           Frequently asked questions
         </h2>
-        <p className="text-center text-werbens-text/80 mb-8 sm:mb-12 text-sm sm:text-base">
+        <p className="text-center text-werbens-text/60 mb-10 sm:mb-14 text-sm sm:text-base animate-fade-in">
           Everything you need to know about AI content creation and Werbens.
         </p>
-        <div className="space-y-2">
+        <div className="space-y-4">
           {faqs.map((faq, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl border border-werbens-dark-cyan/10 overflow-hidden"
+              className={`bg-white rounded-2xl shadow-elevated transition-all duration-300 ${
+                open === i ? "ring-1 ring-werbens-dark-cyan/10" : ""
+              }`}
             >
               <button
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full text-left px-4 sm:px-6 py-4 min-h-[52px] flex justify-between items-center font-semibold text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5 transition text-sm sm:text-base"
+                className="w-full text-left px-5 sm:px-7 py-5 sm:py-6 flex justify-between items-center gap-4 font-semibold text-werbens-dark-cyan hover:text-werbens-dark-cyan/80 transition-colors duration-200 text-[15px] sm:text-base"
               >
-                {faq.q}
-                <span className="text-2xl text-werbens-dark-cyan/60">
-                  {open === i ? "−" : "+"}
-                </span>
+                <span>{faq.q}</span>
+                <ChevronIcon isOpen={open === i} />
               </button>
-              {open === i && (
-                <div className="px-4 sm:px-6 pb-4">
-                  <p className="text-werbens-text/80 leading-relaxed">{faq.a}</p>
+              <div
+                className="grid transition-all duration-300 ease-out"
+                style={{
+                  gridTemplateRows: open === i ? "1fr" : "0fr",
+                }}
+              >
+                <div className="overflow-hidden">
+                  <p className="px-5 sm:px-7 pb-5 sm:pb-6 text-werbens-text/70 leading-relaxed text-[15px]">
+                    {faq.a}
+                  </p>
                 </div>
-              )}
+              </div>
             </div>
           ))}
         </div>

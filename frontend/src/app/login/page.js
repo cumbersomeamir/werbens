@@ -113,67 +113,99 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-werbens-surface">
       <div id="recaptcha-container" />
-      {/* Left: Value proposition */}
-      <div className="hidden lg:flex lg:w-1/2 bg-werbens-dark-cyan text-werbens-alt-text p-16 flex-col justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Werbens</h2>
-        <div>
-          <h3 className="text-4xl font-bold leading-tight mb-6">
-            Create content for your business.
+
+      {/* ── Left panel: brand story ── */}
+      <div className="hidden lg:flex lg:w-1/2 bg-werbens-midnight noise text-werbens-alt-text p-16 flex-col justify-between relative overflow-hidden">
+        {/* Floating decorative orbs */}
+        <div className="absolute top-20 left-16 w-64 h-64 rounded-full bg-werbens-dark-cyan/15 blur-3xl animate-float pointer-events-none" />
+        <div className="absolute bottom-32 right-12 w-80 h-80 rounded-full bg-werbens-light-cyan/10 blur-3xl animate-float-slow pointer-events-none" />
+        <div className="absolute top-1/2 left-1/3 w-40 h-40 rounded-full bg-werbens-glow/10 blur-2xl animate-float pointer-events-none" />
+
+        {/* Logo */}
+        <div className="relative z-10 animate-fade-in">
+          <h2 className="text-3xl font-bold tracking-tight gradient-text-light">
+            Werbens
+          </h2>
+        </div>
+
+        {/* Headline & features */}
+        <div className="relative z-10 animate-fade-in-up">
+          <h3 className="text-4xl xl:text-5xl font-bold leading-tight mb-8">
+            <span className="gradient-text-light">Create content</span>
             <br />
-            <span className="text-werbens-light-cyan">Totally autonomously.</span>
+            for your business.
+            <br />
+            <span className="text-werbens-light-cyan/90">Totally autonomously.</span>
           </h3>
-          <ul className="space-y-4 text-lg text-werbens-alt-text/90">
-            <li className="flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-werbens-light-cyan shrink-0" />
+          <ul className="space-y-5 text-lg text-werbens-alt-text/80">
+            <li className="flex items-center gap-4 stagger-1 animate-fade-in-up">
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-werbens-light-cyan/10 border border-werbens-light-cyan/20">
+                <span className="w-2 h-2 rounded-full bg-werbens-light-cyan animate-pulse-glow" />
+              </span>
               AI-powered copy, images, and campaigns
             </li>
-            <li className="flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-werbens-light-cyan shrink-0" />
+            <li className="flex items-center gap-4 stagger-2 animate-fade-in-up">
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-werbens-light-cyan/10 border border-werbens-light-cyan/20">
+                <span className="w-2 h-2 rounded-full bg-werbens-light-cyan animate-pulse-glow" />
+              </span>
               Brand-consistent content in minutes
             </li>
-            <li className="flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-werbens-light-cyan shrink-0" />
+            <li className="flex items-center gap-4 stagger-3 animate-fade-in-up">
+              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-werbens-light-cyan/10 border border-werbens-light-cyan/20">
+                <span className="w-2 h-2 rounded-full bg-werbens-light-cyan animate-pulse-glow" />
+              </span>
               Scale without scaling your team
             </li>
           </ul>
         </div>
-        <p className="text-sm text-werbens-alt-text/70">
+
+        {/* Footer note */}
+        <p className="relative z-10 text-sm text-werbens-alt-text/50 animate-fade-in">
           Join businesses that ship content on autopilot.
         </p>
       </div>
 
-      {/* Right: Login form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 bg-werbens-light-cyan/30 min-h-screen">
+      {/* ── Right panel: login form ── */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 bg-werbens-surface min-h-screen">
         <div className="w-full max-w-md">
-          <div className="lg:hidden text-center mb-8">
-            <h1 className="text-2xl font-bold text-werbens-dark-cyan">
+          {/* Mobile header */}
+          <div className="lg:hidden text-center mb-10 animate-fade-in-down">
+            <h1 className="text-3xl font-bold gradient-text tracking-tight">
               Werbens
             </h1>
-            <p className="text-werbens-text/80 mt-1">
+            <p className="text-werbens-muted mt-2 text-sm">
               Content for your business, autonomously.
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-werbens-dark-cyan/10">
-            <h2 className="text-xl font-semibold text-werbens-text mb-1">
-              {step === "phone" ? "Welcome back" : "Enter verification code"}
-            </h2>
-            <p className="text-werbens-text/70 mb-6">
-              {step === "phone"
-                ? "Sign in to continue creating"
-                : `We sent a code to ${phone}`}
-            </p>
+          {/* Form card */}
+          <div className="bg-white rounded-2xl shadow-elevated-lg p-6 sm:p-8 border border-werbens-steel/30 animate-scale-in">
+            {/* Step header with transition */}
+            <div
+              key={step}
+              className="animate-fade-in"
+            >
+              <h2 className="text-xl font-semibold text-werbens-text mb-1">
+                {step === "phone" ? "Welcome back" : "Enter verification code"}
+              </h2>
+              <p className="text-werbens-muted mb-6 text-sm">
+                {step === "phone"
+                  ? "Sign in to continue creating"
+                  : `We sent a code to ${phone}`}
+              </p>
+            </div>
 
+            {/* Phone step */}
             {step === "phone" ? (
-              <form onSubmit={handleSendOtp} className="space-y-5">
+              <form onSubmit={handleSendOtp} className="space-y-5 animate-fade-in" key="phone-form">
                 <div>
                   <label
                     htmlFor="phone"
                     className="block text-sm font-medium text-werbens-text mb-2"
                   >
-                    Phone number <span className="text-red-500">*</span>
+                    Phone number <span className="text-werbens-amber">*</span>
                   </label>
                   <input
                     id="phone"
@@ -184,22 +216,38 @@ export default function LoginPage() {
                       setPhoneError("");
                     }}
                     placeholder="+1 234 567 8900"
-                    className="w-full px-4 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text placeholder:text-werbens-text/40 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/40 focus:border-werbens-dark-cyan transition"
+                    className="w-full px-4 py-3 rounded-xl border border-werbens-steel/40 bg-werbens-surface/50 text-werbens-text placeholder:text-werbens-muted/60 focus:outline-none focus:border-werbens-dark-cyan focus:ring-2 focus:ring-werbens-dark-cyan/20 glow-sm transition-all duration-200"
                   />
                   {phoneError && (
-                    <p className="mt-1.5 text-sm text-red-600">{phoneError}</p>
+                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1.5 animate-fade-in">
+                      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                      </svg>
+                      {phoneError}
+                    </p>
                   )}
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/50 transition disabled:opacity-60 min-h-[48px]"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-werbens-dark-cyan to-werbens-dark-cyan/85 text-werbens-alt-text font-medium hover:glow hover:shadow-elevated transition-all duration-200 focus:outline-none focus-ring disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] flex items-center justify-center gap-2"
                 >
-                  {loading ? "Sending…" : "Continue with phone"}
+                  {loading ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    "Continue with phone"
+                  )}
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-5">
+              /* OTP step */
+              <form onSubmit={handleVerifyOtp} className="space-y-5 animate-fade-in-up" key="otp-form">
                 <div>
                   <label
                     htmlFor="otp"
@@ -218,45 +266,65 @@ export default function LoginPage() {
                       setOtpError("");
                     }}
                     placeholder="000000"
-                    className="w-full px-4 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text placeholder:text-werbens-text/40 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/40 focus:border-werbens-dark-cyan transition text-center text-lg tracking-widest"
+                    className="w-full px-4 py-3.5 rounded-xl border border-werbens-steel/40 bg-werbens-surface/50 text-werbens-text placeholder:text-werbens-muted/40 focus:outline-none focus:border-werbens-dark-cyan focus:ring-2 focus:ring-werbens-dark-cyan/20 glow-sm transition-all duration-200 text-center text-2xl tracking-[0.4em] font-mono"
                   />
                   {otpError && (
-                    <p className="mt-1.5 text-sm text-red-600">{otpError}</p>
+                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1.5 animate-fade-in">
+                      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                      </svg>
+                      {otpError}
+                    </p>
                   )}
                 </div>
                 <button
                   type="submit"
                   disabled={loading || otp.length < 6}
-                  className="w-full py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/50 transition disabled:opacity-60"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-werbens-dark-cyan to-werbens-dark-cyan/85 text-werbens-alt-text font-medium hover:glow hover:shadow-elevated transition-all duration-200 focus:outline-none focus-ring disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] flex items-center justify-center gap-2"
                 >
-                  {loading ? "Verifying…" : "Verify"}
+                  {loading ? (
+                    <>
+                      <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify"
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="w-full text-sm text-werbens-dark-cyan hover:underline"
+                  className="w-full text-sm text-werbens-dark-cyan hover:text-werbens-dark-cyan/80 font-medium transition-colors duration-200 flex items-center justify-center gap-1.5 py-1"
                 >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                  </svg>
                   Change number
                 </button>
               </form>
             )}
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-werbens-dark-cyan/20" />
+            {/* Refined divider */}
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <div className="w-full border-t border-werbens-steel/25" />
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white text-werbens-text/60">
+              <div className="relative flex justify-center">
+                <span className="px-4 bg-white text-xs font-medium uppercase tracking-wider text-werbens-muted">
                   or continue with
                 </span>
               </div>
             </div>
 
+            {/* Social login buttons */}
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => handleSocialLogin("Apple")}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text font-medium hover:bg-werbens-dark-cyan/5 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/30 transition min-h-[48px]"
+                className="flex items-center justify-center gap-2.5 py-3 rounded-xl border border-werbens-steel/30 bg-white text-werbens-text font-medium hover-lift hover:border-werbens-steel/50 hover:shadow-elevated focus:outline-none focus-ring transition-all duration-200 min-h-[48px]"
               >
                 <svg
                   className="w-5 h-5"
@@ -271,7 +339,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => handleSocialLogin("Google")}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text font-medium hover:bg-werbens-dark-cyan/5 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/30 transition min-h-[48px]"
+                className="flex items-center justify-center gap-2.5 py-3 rounded-xl border border-werbens-steel/30 bg-white text-werbens-text font-medium hover-lift hover:border-werbens-steel/50 hover:shadow-elevated focus:outline-none focus-ring transition-all duration-200 min-h-[48px]"
               >
                 <svg
                   className="w-5 h-5"
@@ -300,10 +368,11 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <p className="mt-6 text-center">
+          {/* Skip link */}
+          <p className="mt-8 text-center animate-fade-in">
             <Link
               href="/"
-              className="text-sm text-werbens-dark-cyan hover:underline font-medium"
+              className="text-sm text-werbens-muted hover:text-werbens-dark-cyan font-medium transition-colors duration-200"
             >
               Skip for now
             </Link>

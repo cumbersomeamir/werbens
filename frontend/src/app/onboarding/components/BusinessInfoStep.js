@@ -13,17 +13,17 @@ export function BusinessInfoStep({ initialData, onContinue, onSkip }) {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <h1 className="text-xl sm:text-2xl font-bold text-werbens-dark-cyan mb-2">
+    <div className="w-full max-w-md animate-fade-in-up">
+      <h1 className="text-2xl sm:text-3xl font-bold text-werbens-alt-text mb-2 tracking-tight">
         Tell us about your business
       </h1>
-      <p className="text-werbens-text/80 mb-6">
+      <p className="text-werbens-alt-text/70 mb-8 text-sm sm:text-base">
         Optional. You can add or update this later.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="businessName" className="block text-sm font-medium text-werbens-text mb-1.5">
+          <label htmlFor="businessName" className="block text-sm font-medium text-werbens-alt-text/80 mb-2">
             Business name
           </label>
           <input
@@ -32,19 +32,19 @@ export function BusinessInfoStep({ initialData, onContinue, onSkip }) {
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
             placeholder="Your brand or company"
-            className="w-full px-4 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text placeholder:text-werbens-text/40 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/40"
+            className="w-full px-4 py-3 rounded-xl bg-werbens-slate/50 border border-werbens-steel text-werbens-alt-text placeholder:text-werbens-muted focus:outline-none focus:ring-2 focus:ring-werbens-glow/40 focus:border-werbens-glow transition-all duration-200"
           />
         </div>
 
         <div>
-          <label htmlFor="businessType" className="block text-sm font-medium text-werbens-text mb-1.5">
+          <label htmlFor="businessType" className="block text-sm font-medium text-werbens-alt-text/80 mb-2">
             Business type
           </label>
           <select
             id="businessType"
             value={businessType}
             onChange={(e) => setBusinessType(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/40"
+            className="w-full px-4 py-3 rounded-xl bg-werbens-slate/50 border border-werbens-steel text-werbens-alt-text focus:outline-none focus:ring-2 focus:ring-werbens-glow/40 focus:border-werbens-glow transition-all duration-200 appearance-none"
           >
             <option value="">Select type</option>
             <option value="ecommerce">E-commerce</option>
@@ -57,7 +57,7 @@ export function BusinessInfoStep({ initialData, onContinue, onSkip }) {
         </div>
 
         <div>
-          <label htmlFor="website" className="block text-sm font-medium text-werbens-text mb-1.5">
+          <label htmlFor="website" className="block text-sm font-medium text-werbens-alt-text/80 mb-2">
             Website (optional)
           </label>
           <input
@@ -66,21 +66,21 @@ export function BusinessInfoStep({ initialData, onContinue, onSkip }) {
             value={website}
             onChange={(e) => setWebsite(e.target.value)}
             placeholder="https://"
-            className="w-full px-4 py-3 rounded-xl border border-werbens-dark-cyan/20 bg-white text-werbens-text placeholder:text-werbens-text/40 focus:outline-none focus:ring-2 focus:ring-werbens-dark-cyan/40"
+            className="w-full px-4 py-3 rounded-xl bg-werbens-slate/50 border border-werbens-steel text-werbens-alt-text placeholder:text-werbens-muted focus:outline-none focus:ring-2 focus:ring-werbens-glow/40 focus:border-werbens-glow transition-all duration-200"
           />
         </div>
 
-        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-3">
           <button
             type="button"
             onClick={() => onSkip({ businessName, businessType, website })}
-            className="flex-1 py-3 rounded-xl border border-werbens-dark-cyan/20 text-werbens-dark-cyan font-medium hover:bg-werbens-dark-cyan/5 transition min-h-[48px]"
+            className="flex-1 py-3.5 rounded-2xl glass-dark border border-werbens-steel/50 text-werbens-alt-text/80 font-medium hover:text-werbens-alt-text hover:border-werbens-light-cyan/40 transition-all duration-200 min-h-[48px]"
           >
             Skip
           </button>
           <button
             type="submit"
-            className="flex-1 py-3 rounded-xl bg-werbens-dark-cyan text-werbens-alt-text font-medium hover:bg-werbens-dark-cyan/90 transition min-h-[48px]"
+            className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan text-werbens-alt-text font-semibold glow hover:opacity-90 transition-all duration-200 min-h-[48px] shadow-elevated"
           >
             Continue
           </button>

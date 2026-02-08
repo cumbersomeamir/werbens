@@ -71,23 +71,25 @@ export function AccountsFlow() {
 
   return (
     <AccountsLayout>
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-werbens-dark-cyan">
-          Social media accounts
+      <div className="mb-8 sm:mb-10 animate-fade-in-up">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-werbens-text">
+          Social media{" "}
+          <span className="gradient-text">accounts</span>
         </h1>
-        <p className="mt-2 text-werbens-text/80">
-          Add, remove, and manage your connected platforms. Connect at least
-          one account to start creating content.
+        <p className="mt-3 text-base sm:text-lg text-werbens-muted max-w-2xl leading-relaxed">
+          Connect and manage your platforms in one place. Link at least one
+          account to start publishing content.
         </p>
         {connectedCount > 0 && (
-          <p className="mt-1 text-sm text-werbens-dark-cyan">
-            {connectedCount} account{connectedCount !== 1 ? "s" : ""} connected
-          </p>
+          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-werbens-light-cyan/15 px-3 py-1 text-xs font-semibold text-werbens-dark-cyan ring-1 ring-werbens-light-cyan/25">
+            <span className="h-1.5 w-1.5 rounded-full bg-werbens-light-cyan animate-pulse-glow" />
+            {connectedCount} connected
+          </span>
         )}
       </div>
 
-      <div className="space-y-4">
-        {PLATFORM_IDS.map((id) => (
+      <div className="space-y-4 sm:space-y-5">
+        {PLATFORM_IDS.map((id, i) => (
           <AccountCard
             key={id}
             platformId={id}

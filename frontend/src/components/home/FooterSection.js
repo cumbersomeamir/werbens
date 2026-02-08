@@ -1,122 +1,134 @@
 import Link from "next/link";
 
+const footerLinkClass =
+  "inline-block text-werbens-alt-text/50 hover:text-werbens-light-cyan hover:translate-x-0.5 transition-all duration-200";
+
 export function FooterSection() {
   return (
-    <footer className="py-10 sm:py-12 md:py-16 bg-werbens-text text-werbens-alt-text">
+    <footer className="py-14 sm:py-16 md:py-20 bg-werbens-midnight text-werbens-alt-text">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 md:gap-12 mb-8 sm:mb-12">
-          <div>
-            <p className="text-xl font-bold text-werbens-light-cyan">Werbens</p>
-            <p className="mt-2 text-sm text-werbens-alt-text/70">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 sm:gap-12 md:gap-16 mb-12 sm:mb-16">
+          {/* Brand column */}
+          <div className="col-span-2 md:col-span-1">
+            <p className="text-2xl font-bold gradient-text tracking-tight">Werbens</p>
+            <p className="mt-3 text-sm text-werbens-alt-text/40 leading-relaxed max-w-xs">
               Autonomous content creation for modern marketing teams.
             </p>
           </div>
+
+          {/* Product column */}
           <div>
-            <h4 className="font-semibold mb-3">Product</h4>
-            <ul className="space-y-2 text-sm text-werbens-alt-text/80">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-werbens-alt-text/30 mb-5">
+              Product
+            </h4>
+            <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/onboarding" className="hover:text-werbens-light-cyan">
+                <Link href="/onboarding" className={footerLinkClass}>
                   Get started
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="hover:text-werbens-light-cyan">
+                <Link href="/login" className={footerLinkClass}>
                   Sign in
                 </Link>
               </li>
               <li>
-                <Link href="/accounts" className="hover:text-werbens-light-cyan">
+                <Link href="/accounts" className={footerLinkClass}>
                   Accounts
                 </Link>
               </li>
               <li>
-                <Link href="/templates" className="hover:text-werbens-light-cyan">
+                <Link href="/templates" className={footerLinkClass}>
                   Templates
                 </Link>
               </li>
               <li>
-                <Link href="/analytics" className="hover:text-werbens-light-cyan">
+                <Link href="/analytics" className={footerLinkClass}>
                   Analytics
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="hover:text-werbens-light-cyan">
+                <Link href="/pricing" className={footerLinkClass}>
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link href="/create" className="hover:text-werbens-light-cyan">
+                <Link href="/create" className={footerLinkClass}>
                   Create
                 </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   Features
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   Integrations
                 </a>
               </li>
             </ul>
           </div>
+
+          {/* Resources column */}
           <div>
-            <h4 className="font-semibold mb-3">Resources</h4>
-            <ul className="space-y-2 text-sm text-werbens-alt-text/80">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-werbens-alt-text/30 mb-5">
+              Resources
+            </h4>
+            <ul className="space-y-3 text-sm">
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   Blog
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   Help center
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   API docs
                 </a>
               </li>
             </ul>
           </div>
+
+          {/* Company column */}
           <div>
-            <h4 className="font-semibold mb-3">Company</h4>
-            <ul className="space-y-2 text-sm text-werbens-alt-text/80">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-werbens-alt-text/30 mb-5">
+              Company
+            </h4>
+            <ul className="space-y-3 text-sm">
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   About
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   Contact
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   Privacy
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-werbens-light-cyan">
+                <a href="#" className={footerLinkClass}>
                   Terms
                 </a>
               </li>
             </ul>
           </div>
         </div>
-        <div className="pt-6 sm:pt-8 border-t border-werbens-alt-text/20 text-xs sm:text-sm text-werbens-alt-text/60 break-words">
-          <p>
-            © {new Date().getFullYear()} Werbens. AI content creation platform
+
+        {/* Bottom bar */}
+        <div className="pt-8 border-t border-werbens-alt-text/8">
+          <p className="text-xs text-werbens-alt-text/30">
+            &copy; {new Date().getFullYear()} Werbens. AI content creation platform
             for social media, email marketing, and brand consistency.
-          </p>
-          <p className="mt-2">
-            Keywords: AI content creation, autonomous content, social media
-            automation, brand voice AI, content marketing platform, social
-            media management, email copy AI, marketing automation, content at
-            scale.
           </p>
         </div>
       </div>

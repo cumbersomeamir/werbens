@@ -15,44 +15,58 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
 
   return (
     <div
-      className={`rounded-2xl border-2 p-6 transition ${
+      className={`group relative rounded-2xl p-5 sm:p-6 transition-all duration-300 ${
         isConnected
-          ? "border-werbens-dark-cyan/30 bg-white shadow-sm"
-          : "border-werbens-dark-cyan/10 bg-white/80"
+          ? "bg-white border border-werbens-light-cyan/30 border-l-[3px] border-l-werbens-light-cyan shadow-elevated hover-lift"
+          : "bg-white/60 border border-dashed border-werbens-steel/30 hover:border-werbens-steel/50 hover:bg-white/80"
       }`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Platform info */}
         <div className="flex items-center gap-4">
           <div
-            className={`w-14 h-14 rounded-xl ${meta.color} flex items-center justify-center text-2xl`}
+            className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl transition-all duration-300 ${
+              isConnected
+                ? "bg-gradient-to-br from-werbens-light-cyan/20 to-werbens-dark-cyan/10 ring-2 ring-werbens-light-cyan/20"
+                : "bg-werbens-surface ring-1 ring-werbens-steel/20 opacity-60 group-hover:opacity-80"
+            }`}
           >
             {meta.icon}
           </div>
-          <div>
-            <h3 className="font-semibold text-werbens-dark-cyan">{meta.name}</h3>
+          <div className="min-w-0">
+            <h3 className={`font-semibold transition-colors duration-200 ${
+              isConnected ? "text-werbens-text" : "text-werbens-muted"
+            }`}>
+              {meta.name}
+            </h3>
             {isConnected ? (
-              <p className="text-sm text-werbens-text/70 mt-0.5">
+              <p className="mt-0.5 text-sm text-werbens-dark-cyan/80 flex items-center gap-1.5">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 {username || "Connected"}
               </p>
             ) : (
-              <p className="text-sm text-werbens-text/50">Not connected</p>
+              <p className="mt-0.5 text-sm text-werbens-muted/70">
+                Not connected
+              </p>
             )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 self-start sm:self-auto">
+
+        {/* Actions */}
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
           {isConnected ? (
             <>
               <button
                 type="button"
                 onClick={() => onManage(platformId)}
-                className="px-4 py-2.5 rounded-lg border border-werbens-dark-cyan/20 text-werbens-dark-cyan text-sm font-medium hover:bg-werbens-dark-cyan/5 transition min-h-[40px]"
+                className="rounded-lg border border-werbens-steel/20 bg-transparent px-4 py-2 text-sm font-medium text-werbens-text/80 transition-all duration-200 hover:border-werbens-dark-cyan/30 hover:text-werbens-dark-cyan hover:bg-werbens-light-cyan/5 focus-ring"
               >
                 Manage
               </button>
               <button
                 type="button"
                 onClick={() => onRemove(platformId)}
-                className="px-4 py-2.5 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition min-h-[40px]"
+                className="rounded-lg border border-transparent bg-transparent px-4 py-2 text-sm font-medium text-werbens-muted transition-all duration-200 hover:text-red-500 hover:bg-red-50 hover:border-red-100 focus-ring"
               >
                 Remove
               </button>
@@ -61,7 +75,7 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
             <button
               type="button"
               onClick={() => onConnect(platformId)}
-              className="px-4 py-2.5 rounded-lg bg-werbens-dark-cyan text-werbens-alt-text text-sm font-medium hover:bg-werbens-dark-cyan/90 transition min-h-[40px]"
+              className="rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:glow-sm focus-ring"
             >
               Add account
             </button>

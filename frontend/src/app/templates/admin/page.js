@@ -7,8 +7,8 @@ export const metadata = {
 
 export default function TemplatesAdminPage() {
   return (
-    <div className="min-h-screen bg-werbens-light-cyan/20">
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-10">
+    <div className="min-h-screen bg-gradient-to-b from-werbens-mist to-werbens-surface">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
         <TemplatesAdminFlow />
       </main>
     </div>

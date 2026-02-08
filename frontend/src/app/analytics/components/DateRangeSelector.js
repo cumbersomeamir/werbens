@@ -12,13 +12,26 @@ export function DateRangeSelector({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 rounded-lg border border-werbens-dark-cyan/20 bg-white px-3 py-2.5 text-sm text-werbens-text hover:bg-werbens-light-cyan/20 transition min-h-[44px] shrink-0"
+        className="flex items-center gap-2.5 rounded-xl border border-werbens-dark-cyan/15 bg-white px-4 py-2.5 text-sm font-medium text-werbens-text shadow-elevated hover:border-werbens-dark-cyan/30 hover:shadow-elevated-lg transition-all duration-200 min-h-[44px] shrink-0"
         aria-expanded={open}
         aria-haspopup="listbox"
       >
+        <svg
+          className="h-4 w-4 text-werbens-dark-cyan"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+          />
+        </svg>
         {value}
         <svg
-          className="h-4 w-4 text-werbens-text/60"
+          className={`h-4 w-4 text-werbens-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -40,22 +53,25 @@ export function DateRangeSelector({ value, onChange }) {
           />
           <ul
             role="listbox"
-            className="absolute right-0 z-20 mt-1 min-w-[120px] rounded-lg border border-werbens-dark-cyan/10 bg-white py-1 shadow-lg"
+            className="absolute right-0 z-20 mt-2 min-w-[160px] rounded-xl border border-werbens-dark-cyan/10 bg-white py-1.5 shadow-elevated-lg animate-scale-in origin-top-right"
           >
             {RANGES.map((range) => (
-              <li key={range} role="option">
+              <li key={range} role="option" aria-selected={value === range}>
                 <button
                   type="button"
                   onClick={() => {
                     onChange(range);
                     setOpen(false);
                   }}
-                  className={`block w-full px-4 py-3 text-left text-sm min-h-[44px] flex items-center ${
+                  className={`w-full px-4 py-3 text-left text-sm min-h-[44px] flex items-center gap-2.5 transition-colors duration-150 ${
                     value === range
-                      ? "bg-werbens-light-cyan/30 text-werbens-dark-cyan font-medium"
-                      : "text-werbens-text hover:bg-werbens-light-cyan/20"
+                      ? "bg-werbens-light-cyan/20 text-werbens-dark-cyan font-semibold"
+                      : "text-werbens-text hover:bg-werbens-mist/60"
                   }`}
                 >
+                  {value === range && (
+                    <span className="flex h-1.5 w-1.5 rounded-full bg-werbens-dark-cyan" />
+                  )}
                   {range}
                 </button>
               </li>
