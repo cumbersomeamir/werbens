@@ -10,10 +10,51 @@ const NAV_ITEMS = [
   { href: "/analytics", label: "Analytics" },
   { href: "/pricing", label: "Pricing" },
   { href: "/create", label: "Create" },
+  { href: "/splash", label: "Splash", splash: true },
   { href: "/templates/admin", label: "Admin", muted: true },
 ];
 
-function NavLink({ href, label, muted, isActive, onClick, isCta }) {
+function NavLink({ href, label, muted, isActive, onClick, isCta, isSplash }) {
+  if (isSplash) {
+    return (
+      <Link
+        key={href}
+        href={href}
+        onClick={onClick}
+        className="
+          group relative inline-flex items-center justify-center gap-1.5
+          px-4 py-1.5 rounded-full text-sm font-medium
+          bg-gradient-to-r from-werbens-midnight to-werbens-deep
+          text-werbens-light-cyan border border-werbens-light-cyan/20
+          transition-all duration-300 ease-out
+          hover:border-werbens-light-cyan/40 hover:shadow-lg hover:shadow-werbens-light-cyan/15
+          hover:scale-[1.03] active:scale-[0.97]
+          focus-ring overflow-hidden
+        "
+      >
+        <svg
+          className="w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-180"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+        </svg>
+        {label}
+        <span
+          className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{
+            background: "linear-gradient(90deg, transparent, rgba(127,231,220,0.08), transparent)",
+            backgroundSize: "200% 100%",
+            animation: "shimmer 2s linear infinite",
+          }}
+          aria-hidden="true"
+        />
+      </Link>
+    );
+  }
+
   if (isCta) {
     return (
       <Link
@@ -92,7 +133,7 @@ function DesktopNav({ pathname }) {
       className="hidden md:flex items-center gap-6"
       aria-label="Main"
     >
-      {NAV_ITEMS.map(({ href, label, muted }) => {
+      {NAV_ITEMS.map(({ href, label, muted, splash }) => {
         const isActive =
           href === "/"
             ? pathname === "/"
@@ -107,6 +148,7 @@ function DesktopNav({ pathname }) {
             muted={muted}
             isActive={isActive}
             isCta={isCta}
+            isSplash={splash}
           />
         );
       })}
@@ -131,7 +173,7 @@ function MobileNav({ pathname, isOpen, onClose }) {
         "
         aria-label="Main"
       >
-        {NAV_ITEMS.map(({ href, label, muted }, index) => {
+        {NAV_ITEMS.map(({ href, label, muted, splash }, index) => {
           const isActive =
             href === "/"
               ? pathname === "/"
@@ -154,6 +196,7 @@ function MobileNav({ pathname, isOpen, onClose }) {
                 isActive={isActive}
                 onClick={onClose}
                 isCta={isCta}
+                isSplash={splash}
               />
             </div>
           );
