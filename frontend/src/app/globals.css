@@ -104,6 +104,57 @@
   40% { opacity: 1; transform: scale(1); }
 }
 
+/* ─── Splash Screen Keyframes ─── */
+
+@keyframes strokeDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes glowRing {
+  0% { opacity: 0.8; stroke-width: 3; }
+  100% { opacity: 0; stroke-width: 0.5; }
+}
+
+@keyframes particleEmit {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0px) scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(90px) scale(1);
+  }
+}
+
+@keyframes particleOrbit {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(90px);
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) + 120deg)) translateX(100px);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) + 200deg)) translateX(85px);
+  }
+}
+
+@keyframes particleConverge {
+  0% { opacity: 1; }
+  60% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) + 200deg)) translateX(30px) scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--angle) + 200deg)) translateX(0px) scale(0);
+  }
+}
+
+@keyframes particleDrift {
+  0% { transform: translateY(0px) translateX(0px); opacity: 0.15; }
+  100% { transform: translateY(-30px) translateX(15px); opacity: 0.4; }
+}
+
 /* ─── Base Styles ─── */
 
 @layer base {
