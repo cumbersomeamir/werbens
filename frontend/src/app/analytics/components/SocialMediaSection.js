@@ -481,6 +481,171 @@ function XPosts({ posts }) {
   );
 }
 
+function FacebookProfile({ profile }) {
+  if (!profile || typeof profile !== "object") return null;
+  const name = typeof profile.name === "string" ? profile.name : "Facebook Page";
+  const pic = profile.picture;
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 pb-4 border-b border-werbens-dark-cyan/10">
+      <div className="flex items-center gap-3 shrink-0">
+        {pic ? (
+          <img src={pic} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-werbens-dark-cyan/20" />
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-werbens-dark-cyan/20 flex items-center justify-center ring-2 ring-werbens-dark-cyan/20">
+            <span className="text-lg font-bold text-werbens-dark-cyan">{(name.charAt(0) || "F").toUpperCase()}</span>
+          </div>
+        )}
+        <div>
+          <h3 className="font-bold text-werbens-text">{name}</h3>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FacebookPosts({ posts }) {
+  if (!posts?.length) return <p className="text-sm text-werbens-muted">No posts yet.</p>;
+  return (
+    <div className="space-y-4 mb-4">
+      <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">Page posts</h4>
+      <ul className="space-y-3">
+        {posts.slice(0, 20).map((post, idx) => {
+          if (!post) return null;
+          return (
+            <li key={post.id || `fb-${idx}`} className="p-3 sm:p-4 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8">
+              <p className="text-sm text-werbens-text whitespace-pre-wrap break-words">{post.message ?? ""}</p>
+              {post.full_picture && (
+                <img src={post.full_picture} alt="" className="mt-2 rounded-lg max-h-48 object-cover w-full" />
+              )}
+              {post.created_time && (
+                <p className="text-xs text-werbens-muted mt-2">
+                  {(() => {
+                    try {
+                      const d = new Date(post.created_time);
+                      return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { dateStyle: "medium", timeStyle: "short" });
+                    } catch {
+                      return "";
+                    }
+                  })()}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-3 mt-2 text-xs text-werbens-muted">
+                {post.likes != null && <span>{formatNumber(post.likes)} likes</span>}
+                {post.comments != null && <span>{formatNumber(post.comments)} comments</span>}
+              </div>
+              {post.permalink_url && (
+                <a href={post.permalink_url} target="_blank" rel="noopener noreferrer" className="text-xs text-werbens-dark-cyan hover:underline mt-2 inline-block">View on Facebook</a>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function FacebookInsights({ insights }) {
+  if (!insights || typeof insights !== "object" || Object.keys(insights).length === 0) return null;
+  const labels = { page_impressions: "Impressions", page_engaged_users: "Engaged users", page_fans: "Page fans" };
+  return (
+    <div className="space-y-4 mb-4">
+      <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">Insights (last 30 days)</h4>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {Object.entries(insights).map(([key, values]) => {
+          const arr = Array.isArray(values) ? values : [];
+          const total = arr.reduce((s, v) => s + (Number(v?.value) || 0), 0);
+          return (
+            <div key={key} className="p-3 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8">
+              <p className="text-xs text-werbens-muted uppercase tracking-wider">{labels[key] || key}</p>
+              <p className="text-lg font-bold text-werbens-dark-cyan mt-1">{formatNumber(total)}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function InstagramProfile({ profile }) {
+  if (!profile || typeof profile !== "object") return null;
+  const username = typeof profile.username === "string" ? profile.username : "Instagram";
+  const pic = profile.profile_picture_url;
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 pb-4 border-b border-werbens-dark-cyan/10">
+      <div className="flex items-center gap-3 shrink-0">
+        {pic ? (
+          <img src={pic} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-werbens-dark-cyan/20" />
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-werbens-dark-cyan/20 flex items-center justify-center ring-2 ring-werbens-dark-cyan/20">
+            <span className="text-lg font-bold text-werbens-dark-cyan">@</span>
+          </div>
+        )}
+        <div>
+          <h3 className="font-bold text-werbens-text">@{username}</h3>
+          {profile.biography && <p className="text-sm text-werbens-muted mt-0.5 line-clamp-2">{profile.biography}</p>}
+          <div className="flex flex-wrap gap-3 mt-2 text-sm">
+            <span className="font-semibold text-werbens-text">{formatNumber(profile.followers_count ?? 0)} <span className="font-normal text-werbens-muted">followers</span></span>
+            <span className="font-semibold text-werbens-text">{formatNumber(profile.follows_count ?? 0)} <span className="font-normal text-werbens-muted">following</span></span>
+            <span className="font-semibold text-werbens-text">{formatNumber(profile.media_count ?? 0)} <span className="font-normal text-werbens-muted">media</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InstagramMedia({ media }) {
+  if (!media?.length) return <p className="text-sm text-werbens-muted">No media yet.</p>;
+  return (
+    <div className="space-y-4 mb-4">
+      <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">Recent media</h4>
+      <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {media.slice(0, 18).map((item, idx) => {
+          if (!item) return null;
+          const thumb = item.thumbnail_url || item.media_url;
+          return (
+            <li key={item.id || `ig-${idx}`} className="rounded-xl overflow-hidden bg-werbens-mist/40 border border-werbens-dark-cyan/8">
+              {thumb && <img src={thumb} alt="" className="w-full aspect-square object-cover" />}
+              <div className="p-2">
+                <p className="text-xs text-werbens-text line-clamp-2">{item.caption || ""}</p>
+                <div className="flex gap-2 mt-1 text-xs text-werbens-muted">
+                  <span>{formatNumber(item.like_count ?? 0)} likes</span>
+                  <span>{formatNumber(item.comments_count ?? 0)} comments</span>
+                </div>
+                {item.permalink && (
+                  <a href={item.permalink} target="_blank" rel="noopener noreferrer" className="text-xs text-werbens-dark-cyan hover:underline mt-1 inline-block">View</a>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function InstagramInsights({ insights }) {
+  if (!insights || typeof insights !== "object" || Object.keys(insights).length === 0) return null;
+  const labels = { impressions: "Impressions", reach: "Reach", profile_views: "Profile views" };
+  return (
+    <div className="space-y-4 mb-4">
+      <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">Account insights</h4>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {Object.entries(insights).map(([key, values]) => {
+          const arr = Array.isArray(values) ? values : [];
+          const total = arr.reduce((s, v) => s + (Number(v?.value) || 0), 0);
+          return (
+            <div key={key} className="p-3 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8">
+              <p className="text-xs text-werbens-muted uppercase tracking-wider">{labels[key] || key}</p>
+              <p className="text-lg font-bold text-werbens-dark-cyan mt-1">{formatNumber(total)}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PlatformContent({ platform, doc }) {
   if (!doc) return null;
   const profile = doc.profile;
@@ -519,6 +684,28 @@ function PlatformContent({ platform, doc }) {
         <PinterestProfile profile={profile} boardsCount={boards.length} pinsCount={pins.length} />
         <PinterestBoards boards={boards} />
         <PinterestPins pins={pins} />
+      </>
+    );
+  }
+  if (platform === "facebook") {
+    const posts = Array.isArray(doc.posts) ? doc.posts : [];
+    const insights = doc.insights || null;
+    return (
+      <>
+        <FacebookProfile profile={profile} />
+        <FacebookInsights insights={insights} />
+        <FacebookPosts posts={posts} />
+      </>
+    );
+  }
+  if (platform === "instagram") {
+    const media = Array.isArray(doc.media) ? doc.media : [];
+    const insights = doc.insights || null;
+    return (
+      <>
+        <InstagramProfile profile={profile} />
+        <InstagramInsights insights={insights} />
+        <InstagramMedia media={media} />
       </>
     );
   }
@@ -607,14 +794,18 @@ export function SocialMediaSection({ userId }) {
                       : ([doc.profile?.given_name, doc.profile?.family_name].filter(Boolean).join(" ").trim() || doc.username || "LinkedIn")
                     : doc.platform === "pinterest"
                       ? (typeof doc.profile?.username === "string" && doc.profile.username) || doc.username || "Pinterest"
-                      : doc.profile?.username
-                        ? `@${doc.profile.username}`
-                        : doc.username || "";
+                      : doc.platform === "facebook"
+                        ? (typeof doc.profile?.name === "string" && doc.profile.name) || doc.username || "Facebook"
+                        : doc.platform === "instagram"
+                          ? (typeof doc.profile?.username === "string" && doc.profile.username) ? `@${doc.profile.username}` : doc.username || "Instagram"
+                          : doc.profile?.username
+                            ? `@${doc.profile.username}`
+                            : doc.username || "";
               const title = `${platformLabel} – ${displayName}`.trim() || `${platformLabel} – Connected`;
               const cardKey = `${doc.platform}-${doc.channelId ?? doc.profile?.id ?? doc.userId}`;
               return (
                 <CollapsibleCard key={cardKey} title={title}>
-                  {(doc.platform === "x" || doc.platform === "youtube" || doc.platform === "linkedin" || doc.platform === "pinterest") && (
+                  {(doc.platform === "x" || doc.platform === "youtube" || doc.platform === "linkedin" || doc.platform === "pinterest" || doc.platform === "facebook" || doc.platform === "instagram") && (
                     <div className="flex justify-end mb-2">
                       <button
                         type="button"

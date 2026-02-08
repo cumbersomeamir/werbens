@@ -22,6 +22,8 @@ export async function getSocialAnalytics(req, res) {
     videos: d.videos || [],
     boards: d.boards || [],
     pins: d.pins || [],
+    media: d.media || [],
+    insights: d.insights || null,
     lastFetchedAt: d.lastFetchedAt,
     updatedAt: d.updatedAt,
   }));

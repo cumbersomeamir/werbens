@@ -7,6 +7,7 @@ import { getXAuthUrl, xCallback, syncX } from "./routes/social/x.js";
 import { getYoutubeAuthUrl, youtubeCallback, syncYoutube } from "./routes/social/youtube.js";
 import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/social/linkedin.js";
 import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/social/pinterest.js";
+import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -43,6 +44,11 @@ app.post("/api/social/linkedin/sync", syncLinkedIn);
 app.get("/api/social/pinterest/auth-url", getPinterestAuthUrl);
 app.get("/api/social/pinterest/callback", pinterestCallback);
 app.post("/api/social/pinterest/sync", syncPinterest);
+
+// Meta (Facebook + Instagram) OAuth: get auth URL, callback
+app.get("/api/social/meta/auth-url", getMetaAuthUrl);
+app.get("/api/social/meta/callback", metaCallback);
+app.post("/api/social/meta/sync", syncMeta);
 
 // Social analytics: GET data for analytics UI (no tokens)
 app.get("/api/social/analytics", getSocialAnalytics);
