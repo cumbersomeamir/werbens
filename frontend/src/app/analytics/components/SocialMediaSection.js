@@ -175,14 +175,16 @@ function XAggregates({ posts }) {
 }
 
 function LinkedInProfile({ profile }) {
-  if (!profile) return null;
-  const name = profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(" ") || "LinkedIn";
+  if (!profile || typeof profile !== "object") return null;
+  const nameRaw = profile.name ?? ([profile.given_name, profile.family_name].filter(Boolean).join(" ").trim() || profile.username);
+  const name = typeof nameRaw === "string" ? nameRaw : "LinkedIn";
   const initial = (name.charAt(0) || "?").toUpperCase();
+  const pictureUrl = typeof profile.picture === "string" ? profile.picture : null;
   return (
     <div className="flex flex-col sm:flex-row gap-4 pb-4 border-b border-werbens-dark-cyan/10">
       <div className="flex items-start gap-3 shrink-0">
-        {profile.picture ? (
-          <img src={profile.picture} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-werbens-dark-cyan/20" />
+        {pictureUrl ? (
+          <img src={pictureUrl} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-werbens-dark-cyan/20" />
         ) : (
           <div className="w-14 h-14 rounded-full bg-werbens-dark-cyan/20 flex items-center justify-center ring-2 ring-werbens-dark-cyan/20">
             <span className="text-lg font-bold text-werbens-dark-cyan">{initial}</span>
@@ -190,10 +192,10 @@ function LinkedInProfile({ profile }) {
         )}
         <div>
           <h3 className="font-bold text-werbens-text">{name}</h3>
-          {profile.email && (
+          {typeof profile.email === "string" && profile.email && (
             <p className="text-sm text-werbens-muted mt-0.5">{profile.email}</p>
           )}
-          {profile.locale && (
+          {typeof profile.locale === "string" && profile.locale && (
             <p className="text-xs text-werbens-muted mt-0.5">Locale: {profile.locale}</p>
           )}
         </div>
@@ -498,7 +500,9 @@ export function SocialMediaSection({ userId }) {
                 doc.platform === "youtube"
                   ? (doc.profile?.title || doc.username || "Channel")
                   : doc.platform === "linkedin"
-                    ? (doc.profile?.name || [doc.profile?.given_name, doc.profile?.family_name].filter(Boolean).join(" ") || doc.username || "LinkedIn")
+                    ? (typeof doc.profile?.name === "string" && doc.profile.name)
+                      ? doc.profile.name
+                      : ([doc.profile?.given_name, doc.profile?.family_name].filter(Boolean).join(" ").trim() || doc.username || "LinkedIn")
                     : doc.profile?.username
                       ? `@${doc.profile.username}`
                       : doc.username || "";
