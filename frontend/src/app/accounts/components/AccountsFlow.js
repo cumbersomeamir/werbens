@@ -7,7 +7,7 @@ import { AccountCard } from "./AccountCard";
 import { ManageAccountModal } from "./ManageAccountModal";
 import Link from "next/link";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
-import { getSocialAccounts, getXAuthUrl, getYoutubeAuthUrl, getLinkedInAuthUrl, getPinterestAuthUrl, getMetaAuthUrl, disconnectAccount } from "@/lib/socialApi";
+import { getSocialAccounts, getXAuthUrl, getYoutubeAuthUrl, getLinkedInAuthUrl, getPinterestAuthUrl, getMetaAuthUrl, getInstagramAuthUrl, disconnectAccount } from "@/lib/socialApi";
 
 const PLATFORM_IDS = [
   "instagram",
@@ -56,7 +56,7 @@ export function AccountsFlow() {
     const error = searchParams.get("error");
     if (connected) {
       const label = connected === "x" ? "X (Twitter)" : connected === "youtube" ? "YouTube" : connected === "linkedin" ? "LinkedIn" : connected === "pinterest" ? "Pinterest" : connected === "facebook" ? "Facebook" : connected;
-      const text = connected === "facebook" ? "Facebook connected. Your Pages and linked Instagram accounts will appear in Analytics." : `${label} connected successfully.`;
+      const text = connected === "facebook" ? "Facebook connected. Your Pages and linked Instagram accounts will appear in Analytics." : connected === "instagram" ? "Instagram connected successfully." : `${label} connected successfully.`;
       setMessage({ type: "success", text });
       loadAccounts();
       window.history.replaceState({}, "", window.location.pathname);
@@ -135,15 +135,31 @@ export function AccountsFlow() {
       }
       return;
     }
-    if (platformId === "facebook" || platformId === "instagram") {
+    if (platformId === "facebook") {
       if (!userId) {
         setMessage({ type: "error", text: "Sign in to connect accounts." });
         return;
       }
-      setConnectLoading(platformId);
+      setConnectLoading("facebook");
       setMessage(null);
       try {
         const url = await getMetaAuthUrl(userId);
+        window.location.href = url;
+      } catch (err) {
+        setMessage({ type: "error", text: err.message || "Could not start connection." });
+        setConnectLoading(null);
+      }
+      return;
+    }
+    if (platformId === "instagram") {
+      if (!userId) {
+        setMessage({ type: "error", text: "Sign in to connect accounts." });
+        return;
+      }
+      setConnectLoading("instagram");
+      setMessage(null);
+      try {
+        const url = await getInstagramAuthUrl(userId);
         window.location.href = url;
       } catch (err) {
         setMessage({ type: "error", text: err.message || "Could not start connection." });

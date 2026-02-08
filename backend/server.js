@@ -8,6 +8,7 @@ import { getYoutubeAuthUrl, youtubeCallback, syncYoutube } from "./routes/social
 import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/social/linkedin.js";
 import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/social/pinterest.js";
 import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js";
+import { getInstagramAuthUrl, instagramCallback, syncInstagram } from "./routes/social/instagram.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -45,10 +46,15 @@ app.get("/api/social/pinterest/auth-url", getPinterestAuthUrl);
 app.get("/api/social/pinterest/callback", pinterestCallback);
 app.post("/api/social/pinterest/sync", syncPinterest);
 
-// Meta (Facebook + Instagram) OAuth: get auth URL, callback
+// Meta (Facebook + Instagram via Pages) OAuth: get auth URL, callback
 app.get("/api/social/meta/auth-url", getMetaAuthUrl);
 app.get("/api/social/meta/callback", metaCallback);
 app.post("/api/social/meta/sync", syncMeta);
+
+// Instagram (standalone Instagram Login, no Facebook Page required)
+app.get("/api/social/instagram/auth-url", getInstagramAuthUrl);
+app.get("/api/social/instagram/callback", instagramCallback);
+app.post("/api/social/instagram/sync", syncInstagram);
 
 // Social analytics: GET data for analytics UI (no tokens)
 app.get("/api/social/analytics", getSocialAnalytics);

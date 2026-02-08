@@ -60,6 +60,16 @@ export async function getMetaAuthUrl(userId) {
   return data.url;
 }
 
+export async function getInstagramAuthUrl(userId) {
+  if (!userId) throw new Error("Not signed in");
+  const res = await fetch(
+    `${API_BASE}/api/social/instagram/auth-url?userId=${encodeURIComponent(userId)}`
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to get auth URL");
+  return data.url;
+}
+
 export async function disconnectAccount(userId, platform) {
   if (!userId || !platform) throw new Error("Missing userId or platform");
   const res = await fetch(
@@ -95,7 +105,7 @@ export async function syncSocialPlatform(userId, platform) {
             : platform === "facebook"
               ? `${API_BASE}/api/social/meta/sync`
               : platform === "instagram"
-                ? `${API_BASE}/api/social/meta/sync`
+                ? `${API_BASE}/api/social/instagram/sync`
                 : `${API_BASE}/api/social/${platform}/sync`;
   const res = await fetch(url, {
     method: "POST",
@@ -103,6 +113,16 @@ export async function syncSocialPlatform(userId, platform) {
     body: JSON.stringify({ userId }),
   });
   const data = await res.json().catch(() => ({}));
+  if (res.status === 404 && platform === "instagram") {
+    const metaRes = await fetch(`${API_BASE}/api/social/meta/sync`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    const metaData = await metaRes.json().catch(() => ({}));
+    if (!metaRes.ok) throw new Error(metaData.error || "Sync failed");
+    return metaData;
+  }
   if (!res.ok) throw new Error(data.error || "Sync failed");
   return data;
 }

@@ -95,6 +95,8 @@ export async function disconnectSocialAccount(req, res) {
     } else if (platform === "facebook") {
       await socialColl.deleteMany({ userId: userId.trim(), platform: "facebook" });
       await socialColl.deleteMany({ userId: userId.trim(), platform: "instagram" });
+    } else if (platform === "instagram") {
+      await socialColl.deleteMany({ userId: userId.trim(), platform: "instagram" });
     } else {
       await socialColl.deleteMany({ userId: userId.trim(), platform });
     }
