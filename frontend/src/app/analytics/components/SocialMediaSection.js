@@ -174,6 +174,39 @@ function XAggregates({ posts }) {
   );
 }
 
+function LinkedInProfile({ profile }) {
+  if (!profile) return null;
+  const name = profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(" ") || "LinkedIn";
+  const initial = (name.charAt(0) || "?").toUpperCase();
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 pb-4 border-b border-werbens-dark-cyan/10">
+      <div className="flex items-start gap-3 shrink-0">
+        {profile.picture ? (
+          <img src={profile.picture} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-werbens-dark-cyan/20" />
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-werbens-dark-cyan/20 flex items-center justify-center ring-2 ring-werbens-dark-cyan/20">
+            <span className="text-lg font-bold text-werbens-dark-cyan">{initial}</span>
+          </div>
+        )}
+        <div>
+          <h3 className="font-bold text-werbens-text">{name}</h3>
+          {profile.email && (
+            <p className="text-sm text-werbens-muted mt-0.5">{profile.email}</p>
+          )}
+          {profile.locale && (
+            <p className="text-xs text-werbens-muted mt-0.5">Locale: {profile.locale}</p>
+          )}
+        </div>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-werbens-muted">
+          Profile data from Sign In with LinkedIn (OpenID Connect). Posts and engagement require additional API access.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function YouTubeProfile({ profile }) {
   if (!profile) return null;
   const stats = profile.statistics || {};
@@ -378,6 +411,13 @@ function PlatformContent({ platform, doc }) {
       </>
     );
   }
+  if (platform === "linkedin") {
+    return (
+      <>
+        <LinkedInProfile profile={profile} />
+      </>
+    );
+  }
   return (
     <div className="text-sm text-werbens-muted">
       Profile and posts for {platform} will be shown here (same UI pattern).
@@ -457,14 +497,16 @@ export function SocialMediaSection({ userId }) {
               const displayName =
                 doc.platform === "youtube"
                   ? (doc.profile?.title || doc.username || "Channel")
-                  : doc.profile?.username
-                    ? `@${doc.profile.username}`
-                    : doc.username || "";
+                  : doc.platform === "linkedin"
+                    ? (doc.profile?.name || [doc.profile?.given_name, doc.profile?.family_name].filter(Boolean).join(" ") || doc.username || "LinkedIn")
+                    : doc.profile?.username
+                      ? `@${doc.profile.username}`
+                      : doc.username || "";
               const title = `${platformLabel} – ${displayName}`.trim() || `${platformLabel} – Connected`;
               const cardKey = `${doc.platform}-${doc.channelId ?? doc.profile?.id ?? doc.userId}`;
               return (
                 <CollapsibleCard key={cardKey} title={title}>
-                  {(doc.platform === "x" || doc.platform === "youtube") && (
+                  {(doc.platform === "x" || doc.platform === "youtube" || doc.platform === "linkedin") && (
                     <div className="flex justify-end mb-2">
                       <button
                         type="button"

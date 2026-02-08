@@ -5,6 +5,7 @@ import { getSocialAccounts, disconnectSocialAccount } from "./routes/social/acco
 import { getSocialAnalytics } from "./routes/social/analytics.js";
 import { getXAuthUrl, xCallback, syncX } from "./routes/social/x.js";
 import { getYoutubeAuthUrl, youtubeCallback, syncYoutube } from "./routes/social/youtube.js";
+import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/social/linkedin.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -31,6 +32,11 @@ app.post("/api/social/x/sync", syncX);
 app.get("/api/social/youtube/auth-url", getYoutubeAuthUrl);
 app.get("/api/social/youtube/callback", youtubeCallback);
 app.post("/api/social/youtube/sync", syncYoutube);
+
+// LinkedIn OAuth: get auth URL, callback (GET so LinkedIn can redirect)
+app.get("/api/social/linkedin/auth-url", getLinkedInAuthUrl);
+app.get("/api/social/linkedin/callback", linkedinCallback);
+app.post("/api/social/linkedin/sync", syncLinkedIn);
 
 // Social analytics: GET data for analytics UI (no tokens)
 app.get("/api/social/analytics", getSocialAnalytics);
