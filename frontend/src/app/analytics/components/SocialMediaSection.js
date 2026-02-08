@@ -116,20 +116,25 @@ function XPosts({ posts }) {
     <div className="space-y-4">
       <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">Recent posts</h4>
       <ul className="space-y-3">
-        {posts.map((post) => {
+        {posts.map((post, idx) => {
+          if (!post) return null;
           const m = post.public_metrics || {};
           return (
             <li
-              key={post.id}
+              key={post.id || `post-${idx}`}
               className="p-3 sm:p-4 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8"
             >
-              <p className="text-sm text-werbens-text whitespace-pre-wrap break-words">{post.text}</p>
+              <p className="text-sm text-werbens-text whitespace-pre-wrap break-words">{post.text ?? ""}</p>
               {post.created_at && (
                 <p className="text-xs text-werbens-muted mt-2">
-                  {new Date(post.created_at).toLocaleDateString(undefined, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })}
+                  {(() => {
+                    try {
+                      const d = new Date(post.created_at);
+                      return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { dateStyle: "medium", timeStyle: "short" });
+                    } catch {
+                      return "";
+                    }
+                  })()}
                 </p>
               )}
               <div className="flex flex-wrap gap-3 mt-2 text-xs text-werbens-muted">
@@ -148,8 +153,9 @@ function XPosts({ posts }) {
 }
 
 function PlatformContent({ platform, doc }) {
+  if (!doc) return null;
   const profile = doc.profile;
-  const posts = doc.posts || [];
+  const posts = Array.isArray(doc.posts) ? doc.posts : [];
   if (platform === "x") {
     return (
       <>
@@ -232,7 +238,7 @@ export function SocialMediaSection({ userId }) {
           <p className="text-sm text-werbens-muted">Connect an account from Accounts to see data here.</p>
         ) : (
           <div className="space-y-4">
-            {list.map((doc) => {
+            {list.filter(Boolean).map((doc) => {
               const platformLabel = PLATFORM_LABELS[doc.platform] || doc.platform;
               const displayUsername = doc.profile?.username ? `@${doc.profile.username}` : doc.username || "";
               const title = `${platformLabel} – ${displayUsername}`.trim() || `${platformLabel} – Connected`;
@@ -253,7 +259,15 @@ export function SocialMediaSection({ userId }) {
                   <PlatformContent platform={doc.platform} doc={doc} />
                   {doc.lastFetchedAt && (
                     <p className="text-xs text-werbens-muted mt-4">
-                      Last synced: {new Date(doc.lastFetchedAt).toLocaleString()}
+                      Last synced:{" "}
+                      {(() => {
+                        try {
+                          const d = new Date(doc.lastFetchedAt);
+                          return Number.isNaN(d.getTime()) ? "" : d.toLocaleString();
+                        } catch {
+                          return "";
+                        }
+                      })()}
                     </p>
                   )}
                 </CollapsibleCard>

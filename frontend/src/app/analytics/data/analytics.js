@@ -61,7 +61,9 @@ export const CHANNELS = [
 ];
 
 export function formatNumber(num) {
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-  if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-  return num.toString();
+  const n = Number(num);
+  if (num == null || Number.isNaN(n)) return "0";
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+  return String(n);
 }
