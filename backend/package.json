@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "ensure-indexes": "node scripts/ensure-mongo-indexes.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

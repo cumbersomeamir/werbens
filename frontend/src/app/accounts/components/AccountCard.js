@@ -10,7 +10,7 @@ const PLATFORM_META = {
   pinterest: { name: "Pinterest", icon: "📌", color: "bg-red-600/10" },
 };
 
-export function AccountCard({ platformId, isConnected, username, onConnect, onRemove, onManage }) {
+export function AccountCard({ platformId, isConnected, username, onConnect, onRemove, onManage, connectLoading }) {
   const meta = PLATFORM_META[platformId] ?? { name: platformId, icon: "🔗", color: "bg-gray-500/10" };
 
   return (
@@ -75,9 +75,10 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
             <button
               type="button"
               onClick={() => onConnect(platformId)}
-              className="rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:glow-sm focus-ring"
+              disabled={connectLoading}
+              className="rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:glow-sm focus-ring disabled:opacity-70 disabled:pointer-events-none"
             >
-              Add account
+              {connectLoading ? "Connecting…" : "Add account"}
             </button>
           )}
         </div>

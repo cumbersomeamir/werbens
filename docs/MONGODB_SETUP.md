@@ -23,6 +23,16 @@
    MONGODB_DB=werbens
    ```
 
-## Onboarding collection
+## Collections
+
+### Onboarding
 
 Documents are inserted on onboarding completion. Schema includes `userId`, `username`, `platforms`, `business`, `goals`, `completedAt`, `updatedAt`.
+
+### SocialAccounts
+
+One document per user per connected social platform. Used by the social integration (e.g. X/Twitter). Fields include `userId`, `platform`, `accessToken`, `refreshToken`, `platformUserId`, `username`, `displayName`, `connectedAt`, `updatedAt`. See `docs/SOCIAL_X_SETUP.md` for X (Twitter) setup.
+
+### SocialMedia
+
+Read-only data from social platforms, keyed by `userId` and `platform`. Each document holds `profile`, `posts`, `lastFetchedAt`, `updatedAt`. Platform-specific (e.g. `platform: "x"`, `"instagram"`). See `docs/SOCIAL_X_SETUP.md`.

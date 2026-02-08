@@ -1,4 +1,5 @@
 import { getDb } from "../db.js";
+import { upsertUser } from "../lib/users.js";
 
 export async function saveOnboarding(req, res) {
   try {
@@ -8,6 +9,10 @@ export async function saveOnboarding(req, res) {
       return res.status(400).json({
         error: "At least one platform is required",
       });
+    }
+
+    if (userId) {
+      await upsertUser({ userId: String(userId).trim(), username: username ? String(username) : null });
     }
 
     const db = await getDb();

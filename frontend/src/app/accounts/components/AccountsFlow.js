@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { AccountsLayout } from "./AccountsLayout";
 import { AccountCard } from "./AccountCard";
 import { ManageAccountModal } from "./ManageAccountModal";
+import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
+import { getSocialAccounts, getXAuthUrl, disconnectAccount } from "@/lib/socialApi";
 
 const PLATFORM_IDS = [
   "instagram",
@@ -15,52 +18,90 @@ const PLATFORM_IDS = [
   "pinterest",
 ];
 
-const STORAGE_KEY = "werbens-connected-accounts";
-
-function loadAccounts() {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveAccounts(accounts) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
-  } catch {}
-}
+const BACKEND_PLATFORM_MAP = { twitter: "x" };
+const FRONTEND_PLATFORM_MAP = { x: "twitter" };
 
 export function AccountsFlow() {
+  const searchParams = useSearchParams();
+  const { userId, loading: userLoading } = useCurrentUser();
   const [accounts, setAccounts] = useState({});
   const [managePlatform, setManagePlatform] = useState(null);
+  const [connectLoading, setConnectLoading] = useState(null);
+  const [message, setMessage] = useState(null);
+
+  const loadAccounts = useCallback(async () => {
+    if (!userId) {
+      setAccounts({});
+      return;
+    }
+    const { accounts: list } = await getSocialAccounts(userId);
+    const byFrontendId = {};
+    for (const a of list) {
+      const frontendId = FRONTEND_PLATFORM_MAP[a.platform] ?? a.platform;
+      byFrontendId[frontendId] = {
+        username: a.username ?? a.displayName,
+        connectedAt: a.connectedAt,
+      };
+    }
+    setAccounts(byFrontendId);
+  }, [userId]);
 
   useEffect(() => {
-    setAccounts(loadAccounts());
-  }, []);
+    loadAccounts();
+  }, [loadAccounts]);
 
-  const handleConnect = (platformId) => {
-    setAccounts((prev) => {
-      const next = {
-        ...prev,
-        [platformId]: { username: null, connectedAt: new Date().toISOString() },
-      };
-      saveAccounts(next);
-      return next;
-    });
+  useEffect(() => {
+    const connected = searchParams.get("connected");
+    const error = searchParams.get("error");
+    if (connected) {
+      setMessage({ type: "success", text: `${connected === "x" ? "X (Twitter)" : connected} connected successfully.` });
+      loadAccounts();
+      window.history.replaceState({}, "", "/accounts");
+    }
+    if (error) {
+      setMessage({
+        type: "error",
+        text: error === "invalid_state" ? "Connection expired. Try again." : "Connection failed. Try again.",
+      });
+      window.history.replaceState({}, "", "/accounts");
+    }
+  }, [searchParams, loadAccounts]);
+
+  const handleConnect = async (platformId) => {
+    if (platformId === "twitter") {
+      if (!userId) {
+        setMessage({ type: "error", text: "Sign in to connect accounts." });
+        return;
+      }
+      setConnectLoading("twitter");
+      setMessage(null);
+      try {
+        const url = await getXAuthUrl(userId);
+        window.location.href = url;
+      } catch (err) {
+        setMessage({ type: "error", text: err.message || "Could not start connection." });
+        setConnectLoading(null);
+      }
+      return;
+    }
+    setMessage({ type: "info", text: "Coming soon." });
   };
 
-  const handleRemove = (platformId) => {
-    setAccounts((prev) => {
-      const next = { ...prev };
-      delete next[platformId];
-      saveAccounts(next);
-      return next;
-    });
-    if (managePlatform === platformId) setManagePlatform(null);
+  const handleRemove = async (platformId) => {
+    const backendPlatform = BACKEND_PLATFORM_MAP[platformId] ?? platformId;
+    if (!userId) return;
+    try {
+      await disconnectAccount(userId, backendPlatform);
+      setAccounts((prev) => {
+        const next = { ...prev };
+        delete next[platformId];
+        return next;
+      });
+      if (managePlatform === platformId) setManagePlatform(null);
+      setMessage({ type: "success", text: "Account disconnected." });
+    } catch (err) {
+      setMessage({ type: "error", text: err.message || "Failed to disconnect." });
+    }
   };
 
   const handleManage = (platformId) => {
@@ -80,6 +121,11 @@ export function AccountsFlow() {
           Connect and manage your platforms in one place. Link at least one
           account to start publishing content.
         </p>
+        {!userLoading && !userId && (
+          <p className="mt-2 text-sm text-werbens-muted">
+            Sign in to connect your accounts.
+          </p>
+        )}
         {connectedCount > 0 && (
           <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-werbens-light-cyan/15 px-3 py-1 text-xs font-semibold text-werbens-dark-cyan ring-1 ring-werbens-light-cyan/25">
             <span className="h-1.5 w-1.5 rounded-full bg-werbens-light-cyan animate-pulse-glow" />
@@ -88,19 +134,39 @@ export function AccountsFlow() {
         )}
       </div>
 
-      <div className="space-y-4 sm:space-y-5">
-        {PLATFORM_IDS.map((id, i) => (
-          <AccountCard
-            key={id}
-            platformId={id}
-            isConnected={!!accounts[id]}
-            username={accounts[id]?.username}
-            onConnect={handleConnect}
-            onRemove={handleRemove}
-            onManage={handleManage}
-          />
-        ))}
-      </div>
+      {message && (
+        <div
+          className={`mb-4 rounded-xl px-4 py-3 text-sm ${
+            message.type === "error"
+              ? "bg-red-50 text-red-800 border border-red-100"
+              : message.type === "success"
+                ? "bg-emerald-50 text-emerald-800 border border-emerald-100"
+                : "bg-werbens-surface text-werbens-text border border-werbens-steel/20"
+          }`}
+          role="alert"
+        >
+          {message.text}
+        </div>
+      )}
+
+      {userLoading ? (
+        <div className="text-werbens-muted text-sm">Loading…</div>
+      ) : (
+        <div className="space-y-4 sm:space-y-5">
+          {PLATFORM_IDS.map((id) => (
+            <AccountCard
+              key={id}
+              platformId={id}
+              isConnected={!!accounts[id]}
+              username={accounts[id]?.username}
+              onConnect={handleConnect}
+              onRemove={handleRemove}
+              onManage={handleManage}
+              connectLoading={connectLoading === id}
+            />
+          ))}
+        </div>
+      )}
 
       {managePlatform && (
         <ManageAccountModal
