@@ -2,8 +2,10 @@
 
 export function AccountsLayout({ children }) {
   return (
-    <div className="min-h-screen bg-werbens-light-cyan/20">
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">{children}</main>
+    <div className="min-h-screen bg-gradient-to-b from-werbens-mist to-werbens-surface">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:py-16">
+        {children}
+      </main>
     </div>
   );
 }

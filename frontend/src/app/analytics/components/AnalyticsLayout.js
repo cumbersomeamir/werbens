@@ -2,7 +2,7 @@
 
 export function AnalyticsLayout({ children }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-werbens-mist via-white to-white">
       <main>{children}</main>
     </div>
   );
