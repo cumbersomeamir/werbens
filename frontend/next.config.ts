@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/", destination: "/app", permanent: false, basePath: false },
+      { source: "/api/auth/:path*", destination: "/app/api/auth/:path*", permanent: false, basePath: false },
     ];
   },
 };

@@ -1,7 +1,10 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+const nextAuthUrl = process.env.NEXTAUTH_URL;
+
 const handler = NextAuth({
+  ...(nextAuthUrl && { trustHost: true }),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,

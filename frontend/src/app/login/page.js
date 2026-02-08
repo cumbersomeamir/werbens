@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import {
   RecaptchaVerifier,
@@ -10,6 +11,7 @@ import {
 import { auth } from "@/lib/firebase";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -89,7 +91,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await confirmationRef.current.confirm(otp.trim());
-      window.location.href = "/";
+      router.push("/");
     } catch (err) {
       setOtpError(err.message || "Invalid code");
     } finally {

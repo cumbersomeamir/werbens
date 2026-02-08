@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { AccountsLayout } from "./AccountsLayout";
 import { AccountCard } from "./AccountCard";
 import { ManageAccountModal } from "./ManageAccountModal";
+import Link from "next/link";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import { getSocialAccounts, getXAuthUrl, disconnectAccount } from "@/lib/socialApi";
 
@@ -56,14 +57,14 @@ export function AccountsFlow() {
     if (connected) {
       setMessage({ type: "success", text: `${connected === "x" ? "X (Twitter)" : connected} connected successfully.` });
       loadAccounts();
-      window.history.replaceState({}, "", "/accounts");
+      window.history.replaceState({}, "", window.location.pathname);
     }
     if (error) {
       setMessage({
         type: "error",
         text: error === "invalid_state" ? "Connection expired. Try again." : "Connection failed. Try again.",
       });
-      window.history.replaceState({}, "", "/accounts");
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, [searchParams, loadAccounts]);
 
@@ -122,9 +123,17 @@ export function AccountsFlow() {
           account to start publishing content.
         </p>
         {!userLoading && !userId && (
-          <p className="mt-2 text-sm text-werbens-muted">
-            Sign in to connect your accounts.
-          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <p className="text-sm text-werbens-muted">
+              Sign in to connect your accounts.
+            </p>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md focus-ring"
+            >
+              Sign in
+            </Link>
+          </div>
         )}
         {connectedCount > 0 && (
           <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-werbens-light-cyan/15 px-3 py-1 text-xs font-semibold text-werbens-dark-cyan ring-1 ring-werbens-light-cyan/25">
