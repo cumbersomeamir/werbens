@@ -20,6 +20,8 @@ export async function getSocialAnalytics(req, res) {
     profile: d.profile || null,
     posts: d.posts || [],
     videos: d.videos || [],
+    boards: d.boards || [],
+    pins: d.pins || [],
     lastFetchedAt: d.lastFetchedAt,
     updatedAt: d.updatedAt,
   }));

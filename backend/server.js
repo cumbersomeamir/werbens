@@ -6,6 +6,7 @@ import { getSocialAnalytics } from "./routes/social/analytics.js";
 import { getXAuthUrl, xCallback, syncX } from "./routes/social/x.js";
 import { getYoutubeAuthUrl, youtubeCallback, syncYoutube } from "./routes/social/youtube.js";
 import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/social/linkedin.js";
+import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/social/pinterest.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -37,6 +38,11 @@ app.post("/api/social/youtube/sync", syncYoutube);
 app.get("/api/social/linkedin/auth-url", getLinkedInAuthUrl);
 app.get("/api/social/linkedin/callback", linkedinCallback);
 app.post("/api/social/linkedin/sync", syncLinkedIn);
+
+// Pinterest OAuth: get auth URL, callback (GET so Pinterest can redirect)
+app.get("/api/social/pinterest/auth-url", getPinterestAuthUrl);
+app.get("/api/social/pinterest/callback", pinterestCallback);
+app.post("/api/social/pinterest/sync", syncPinterest);
 
 // Social analytics: GET data for analytics UI (no tokens)
 app.get("/api/social/analytics", getSocialAnalytics);

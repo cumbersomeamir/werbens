@@ -7,7 +7,7 @@ import { AccountCard } from "./AccountCard";
 import { ManageAccountModal } from "./ManageAccountModal";
 import Link from "next/link";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
-import { getSocialAccounts, getXAuthUrl, getYoutubeAuthUrl, getLinkedInAuthUrl, disconnectAccount } from "@/lib/socialApi";
+import { getSocialAccounts, getXAuthUrl, getYoutubeAuthUrl, getLinkedInAuthUrl, getPinterestAuthUrl, disconnectAccount } from "@/lib/socialApi";
 
 const PLATFORM_IDS = [
   "instagram",
@@ -55,7 +55,7 @@ export function AccountsFlow() {
     const connected = searchParams.get("connected");
     const error = searchParams.get("error");
     if (connected) {
-      const label = connected === "x" ? "X (Twitter)" : connected === "youtube" ? "YouTube" : connected === "linkedin" ? "LinkedIn" : connected;
+      const label = connected === "x" ? "X (Twitter)" : connected === "youtube" ? "YouTube" : connected === "linkedin" ? "LinkedIn" : connected === "pinterest" ? "Pinterest" : connected;
       setMessage({ type: "success", text: `${label} connected successfully.` });
       loadAccounts();
       window.history.replaceState({}, "", window.location.pathname);
@@ -111,6 +111,22 @@ export function AccountsFlow() {
       setMessage(null);
       try {
         const url = await getLinkedInAuthUrl(userId);
+        window.location.href = url;
+      } catch (err) {
+        setMessage({ type: "error", text: err.message || "Could not start connection." });
+        setConnectLoading(null);
+      }
+      return;
+    }
+    if (platformId === "pinterest") {
+      if (!userId) {
+        setMessage({ type: "error", text: "Sign in to connect accounts." });
+        return;
+      }
+      setConnectLoading("pinterest");
+      setMessage(null);
+      try {
+        const url = await getPinterestAuthUrl(userId);
         window.location.href = url;
       } catch (err) {
         setMessage({ type: "error", text: err.message || "Could not start connection." });

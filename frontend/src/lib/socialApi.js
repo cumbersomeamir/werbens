@@ -40,6 +40,16 @@ export async function getLinkedInAuthUrl(userId) {
   return data.url;
 }
 
+export async function getPinterestAuthUrl(userId) {
+  if (!userId) throw new Error("Not signed in");
+  const res = await fetch(
+    `${API_BASE}/api/social/pinterest/auth-url?userId=${encodeURIComponent(userId)}`
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Failed to get auth URL");
+  return data.url;
+}
+
 export async function disconnectAccount(userId, platform) {
   if (!userId || !platform) throw new Error("Missing userId or platform");
   const res = await fetch(
@@ -70,7 +80,9 @@ export async function syncSocialPlatform(userId, platform) {
         ? `${API_BASE}/api/social/youtube/sync`
         : platform === "linkedin"
           ? `${API_BASE}/api/social/linkedin/sync`
-          : `${API_BASE}/api/social/${platform}/sync`;
+          : platform === "pinterest"
+            ? `${API_BASE}/api/social/pinterest/sync`
+            : `${API_BASE}/api/social/${platform}/sync`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

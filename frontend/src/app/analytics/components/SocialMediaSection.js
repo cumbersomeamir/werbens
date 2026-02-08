@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { getSocialAnalytics, syncSocialPlatform } from "@/lib/socialApi";
 import { formatNumber } from "../data/analytics";
 
-const PLATFORM_LABELS = { x: "X", youtube: "YouTube", instagram: "Instagram", linkedin: "LinkedIn", facebook: "Facebook" };
+const PLATFORM_LABELS = { x: "X", youtube: "YouTube", instagram: "Instagram", linkedin: "LinkedIn", pinterest: "Pinterest", facebook: "Facebook" };
 
 function CollapsibleCard({ title, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -205,6 +205,97 @@ function LinkedInProfile({ profile }) {
           Profile data from Sign In with LinkedIn (OpenID Connect). Posts and engagement require additional API access.
         </p>
       </div>
+    </div>
+  );
+}
+
+function PinterestProfile({ profile, boardsCount, pinsCount }) {
+  if (!profile || typeof profile !== "object") return null;
+  const username = typeof profile.username === "string" ? profile.username : "Pinterest";
+  const initial = (username.charAt(0) || "?").toUpperCase();
+  const imgUrl = typeof profile.profile_image === "string" ? profile.profile_image : null;
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 pb-4 border-b border-werbens-dark-cyan/10">
+      <div className="flex items-start gap-3 shrink-0">
+        {imgUrl ? (
+          <img src={imgUrl} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-werbens-dark-cyan/20" />
+        ) : (
+          <div className="w-14 h-14 rounded-full bg-werbens-dark-cyan/20 flex items-center justify-center ring-2 ring-werbens-dark-cyan/20">
+            <span className="text-lg font-bold text-werbens-dark-cyan">{initial}</span>
+          </div>
+        )}
+        <div>
+          <h3 className="font-bold text-werbens-text">{username}</h3>
+          {profile.business_name && (
+            <p className="text-sm text-werbens-muted mt-0.5">{profile.business_name}</p>
+          )}
+          {profile.account_type && (
+            <p className="text-xs text-werbens-muted mt-0.5">{profile.account_type}</p>
+          )}
+          <div className="flex flex-wrap gap-3 mt-2 text-sm">
+            <span className="font-semibold text-werbens-text">{formatNumber(boardsCount ?? 0)} <span className="font-normal text-werbens-muted">Boards</span></span>
+            <span className="font-semibold text-werbens-text">{formatNumber(pinsCount ?? 0)} <span className="font-normal text-werbens-muted">Pins</span></span>
+          </div>
+        </div>
+      </div>
+      <div className="min-w-0 flex-1">
+        {profile.website_url && (
+          <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-werbens-dark-cyan hover:underline">
+            {profile.website_url}
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PinterestBoards({ boards }) {
+  if (!boards?.length) return null;
+  return (
+    <div className="space-y-4 mb-4">
+      <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">Boards</h4>
+      <ul className="space-y-2">
+        {boards.slice(0, 15).map((board, idx) => (
+          <li key={board.id || `board-${idx}`} className="p-3 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8 flex justify-between items-center">
+            <span className="text-sm font-medium text-werbens-text truncate">{board.name || "Unnamed"}</span>
+            <span className="text-xs text-werbens-muted shrink-0 ml-2">{formatNumber(board.pin_count ?? 0)} pins</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PinterestPins({ pins }) {
+  if (!pins?.length) return <p className="text-sm text-werbens-muted">No pins synced yet.</p>;
+  const getImageUrl = (pin) => {
+    const m = pin.media;
+    if (!m) return null;
+    if (typeof m === "string") return m;
+    if (m.images?.original?.url) return m.images.original.url;
+    if (m.images?.["736x"]?.url) return m.images["736x"].url;
+    return null;
+  };
+  return (
+    <div className="space-y-4">
+      <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">Recent pins</h4>
+      <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {pins.slice(0, 18).map((pin, idx) => {
+          if (!pin) return null;
+          const thumb = getImageUrl(pin);
+          return (
+            <li key={pin.id || `pin-${idx}`} className="rounded-xl overflow-hidden bg-werbens-mist/40 border border-werbens-dark-cyan/8">
+              {thumb && <img src={thumb} alt="" className="w-full aspect-square object-cover" />}
+              <div className="p-2">
+                <p className="text-xs font-medium text-werbens-text line-clamp-2">{pin.title || "Pin"}</p>
+                {pin.link && (
+                  <a href={pin.link} target="_blank" rel="noopener noreferrer" className="text-xs text-werbens-dark-cyan hover:underline truncate block">View</a>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
@@ -420,6 +511,17 @@ function PlatformContent({ platform, doc }) {
       </>
     );
   }
+  if (platform === "pinterest") {
+    const boards = Array.isArray(doc.boards) ? doc.boards : [];
+    const pins = Array.isArray(doc.pins) ? doc.pins : [];
+    return (
+      <>
+        <PinterestProfile profile={profile} boardsCount={boards.length} pinsCount={pins.length} />
+        <PinterestBoards boards={boards} />
+        <PinterestPins pins={pins} />
+      </>
+    );
+  }
   return (
     <div className="text-sm text-werbens-muted">
       Profile and posts for {platform} will be shown here (same UI pattern).
@@ -503,14 +605,16 @@ export function SocialMediaSection({ userId }) {
                     ? (typeof doc.profile?.name === "string" && doc.profile.name)
                       ? doc.profile.name
                       : ([doc.profile?.given_name, doc.profile?.family_name].filter(Boolean).join(" ").trim() || doc.username || "LinkedIn")
-                    : doc.profile?.username
-                      ? `@${doc.profile.username}`
-                      : doc.username || "";
+                    : doc.platform === "pinterest"
+                      ? (typeof doc.profile?.username === "string" && doc.profile.username) || doc.username || "Pinterest"
+                      : doc.profile?.username
+                        ? `@${doc.profile.username}`
+                        : doc.username || "";
               const title = `${platformLabel} – ${displayName}`.trim() || `${platformLabel} – Connected`;
               const cardKey = `${doc.platform}-${doc.channelId ?? doc.profile?.id ?? doc.userId}`;
               return (
                 <CollapsibleCard key={cardKey} title={title}>
-                  {(doc.platform === "x" || doc.platform === "youtube" || doc.platform === "linkedin") && (
+                  {(doc.platform === "x" || doc.platform === "youtube" || doc.platform === "linkedin" || doc.platform === "pinterest") && (
                     <div className="flex justify-end mb-2">
                       <button
                         type="button"
