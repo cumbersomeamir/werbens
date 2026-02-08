@@ -47,10 +47,10 @@ function NavLink({ href, label, muted, isActive, onClick, isCta }) {
         group
         ${
           muted
-            ? "text-werbens-muted hover:text-werbens-alt-text"
+            ? "text-werbens-steel hover:text-werbens-dark-cyan"
             : isActive
               ? "text-werbens-dark-cyan font-medium"
-              : "text-werbens-alt-text hover:text-werbens-dark-cyan"
+              : "text-werbens-text hover:text-werbens-dark-cyan"
         }
       `}
     >
@@ -215,12 +215,8 @@ export function Header() {
     <header
       className={`
         fixed top-0 left-0 right-0 z-50
+        glass shadow-elevated border-b border-white/10
         transition-all duration-500 ease-out
-        ${
-          scrolled
-            ? "glass shadow-elevated border-b border-white/10"
-            : "bg-transparent border-b border-transparent"
-        }
       `}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -254,7 +250,7 @@ export function Header() {
             onClick={() => setMenuOpen((prev) => !prev)}
             className="
               md:hidden relative p-2.5 -mr-2 rounded-xl
-              text-werbens-alt-text
+              text-werbens-text
               transition-all duration-300 ease-out
               hover:text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5
               active:scale-95
