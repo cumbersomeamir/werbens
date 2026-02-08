@@ -8,8 +8,9 @@ export async function getSocialAccounts(req, res) {
 
   try {
     const db = await getDb();
-    const coll = db.collection("SocialAccounts");
-    const list = await coll
+    const accountsColl = db.collection("SocialAccounts");
+    const socialColl = db.collection("SocialMedia");
+    const list = await accountsColl
       .find({ userId: userId.trim() })
       .project({
         platform: 1,
@@ -21,6 +22,25 @@ export async function getSocialAccounts(req, res) {
         channels: 1,
       })
       .toArray();
+
+    const platformSet = new Set(list.map((d) => d.platform));
+    if (!platformSet.has("instagram")) {
+      const igDoc = await socialColl.findOne(
+        { userId: userId.trim(), platform: "instagram" },
+        { projection: { username: 1, updatedAt: 1 } }
+      );
+      if (igDoc) {
+        list.push({
+          platform: "instagram",
+          username: igDoc.username ?? "Instagram",
+          displayName: "Instagram",
+          profileImageUrl: null,
+          connectedAt: igDoc.updatedAt,
+          updatedAt: igDoc.updatedAt,
+          channels: null,
+        });
+      }
+    }
 
     const accounts = list.map((doc) => ({
       platform: doc.platform,

@@ -56,7 +56,8 @@ export function AccountsFlow() {
     const error = searchParams.get("error");
     if (connected) {
       const label = connected === "x" ? "X (Twitter)" : connected === "youtube" ? "YouTube" : connected === "linkedin" ? "LinkedIn" : connected === "pinterest" ? "Pinterest" : connected === "facebook" ? "Facebook" : connected;
-      setMessage({ type: "success", text: `${label} connected successfully.` });
+      const text = connected === "facebook" ? "Facebook connected. Your Pages and linked Instagram accounts will appear in Analytics." : `${label} connected successfully.`;
+      setMessage({ type: "success", text });
       loadAccounts();
       window.history.replaceState({}, "", window.location.pathname);
     }
@@ -134,12 +135,12 @@ export function AccountsFlow() {
       }
       return;
     }
-    if (platformId === "facebook") {
+    if (platformId === "facebook" || platformId === "instagram") {
       if (!userId) {
         setMessage({ type: "error", text: "Sign in to connect accounts." });
         return;
       }
-      setConnectLoading("facebook");
+      setConnectLoading(platformId);
       setMessage(null);
       try {
         const url = await getMetaAuthUrl(userId);
