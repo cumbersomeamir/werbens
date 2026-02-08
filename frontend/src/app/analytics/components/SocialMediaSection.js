@@ -497,6 +497,50 @@ function FacebookProfile({ profile }) {
         )}
         <div>
           <h3 className="font-bold text-werbens-text">{name}</h3>
+          <p className="text-xs text-werbens-muted mt-0.5">Page you manage. Personal profile posts are not included.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function computeFacebookAggregates(posts) {
+  const agg = { posts: 0, likes: 0, comments: 0 };
+  if (!Array.isArray(posts)) return agg;
+  for (const p of posts) {
+    if (!p) continue;
+    agg.posts += 1;
+    agg.likes += Number(p.likes) || 0;
+    agg.comments += Number(p.comments) || 0;
+  }
+  agg.engagement = agg.likes + agg.comments;
+  return agg;
+}
+
+function FacebookAggregates({ posts }) {
+  if (!posts?.length) return null;
+  const agg = computeFacebookAggregates(posts);
+  return (
+    <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-werbens-mist/60 to-werbens-dark-cyan/5 border border-werbens-dark-cyan/10">
+      <h4 className="text-xs font-semibold text-werbens-dark-cyan uppercase tracking-wider mb-3">
+        Engagement totals (from {agg.posts} post{agg.posts !== 1 ? "s" : ""})
+      </h4>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.posts)}</p>
+          <p className="text-xs text-werbens-muted">Posts</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.likes)}</p>
+          <p className="text-xs text-werbens-muted">Likes</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.comments)}</p>
+          <p className="text-xs text-werbens-muted">Comments</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.engagement)}</p>
+          <p className="text-xs text-werbens-muted">Total engagement</p>
         </div>
       </div>
     </div>
@@ -588,6 +632,45 @@ function InstagramProfile({ profile }) {
             <span className="font-semibold text-werbens-text">{formatNumber(profile.follows_count ?? 0)} <span className="font-normal text-werbens-muted">following</span></span>
             <span className="font-semibold text-werbens-text">{formatNumber(profile.media_count ?? 0)} <span className="font-normal text-werbens-muted">media</span></span>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function computeInstagramAggregates(media) {
+  const agg = { media: 0, likes: 0, comments: 0 };
+  if (!Array.isArray(media)) return agg;
+  for (const m of media) {
+    if (!m) continue;
+    agg.media += 1;
+    agg.likes += Number(m.like_count) || 0;
+    agg.comments += Number(m.comments_count) || 0;
+  }
+  agg.engagement = agg.likes + agg.comments;
+  return agg;
+}
+
+function InstagramAggregates({ media }) {
+  if (!media?.length) return null;
+  const agg = computeInstagramAggregates(media);
+  return (
+    <div className="mb-4 p-4 rounded-xl bg-gradient-to-r from-werbens-mist/60 to-werbens-dark-cyan/5 border border-werbens-dark-cyan/10">
+      <h4 className="text-xs font-semibold text-werbens-dark-cyan uppercase tracking-wider mb-3">
+        Engagement totals (from {agg.media} item{agg.media !== 1 ? "s" : ""})
+      </h4>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.likes)}</p>
+          <p className="text-xs text-werbens-muted">Likes</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.comments)}</p>
+          <p className="text-xs text-werbens-muted">Comments</p>
+        </div>
+        <div>
+          <p className="text-lg sm:text-xl font-bold text-werbens-dark-cyan">{formatNumber(agg.engagement)}</p>
+          <p className="text-xs text-werbens-muted">Total engagement</p>
         </div>
       </div>
     </div>
@@ -693,6 +776,7 @@ function PlatformContent({ platform, doc }) {
     return (
       <>
         <FacebookProfile profile={profile} />
+        <FacebookAggregates posts={posts} />
         <FacebookInsights insights={insights} />
         <FacebookPosts posts={posts} />
       </>
@@ -704,6 +788,7 @@ function PlatformContent({ platform, doc }) {
     return (
       <>
         <InstagramProfile profile={profile} />
+        <InstagramAggregates media={media} />
         <InstagramInsights insights={insights} />
         <InstagramMedia media={media} />
       </>
