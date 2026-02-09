@@ -30,29 +30,18 @@ export function OnboardingFlow() {
   const saveToBackend = async (payload) => {
     setSaveError("");
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-      const res = await fetch(`${API_URL}/api/onboarding`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          username,
-          ...payload,
-        }),
-        signal: controller.signal,
+      const { saveOnboarding } = await import("@/api/services/onboardingService.js");
+      await saveOnboarding({
+        userId,
+        username,
+        ...payload,
       });
-      clearTimeout(timeout);
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        if (data.skipped) {
-          return;
-        }
-        throw new Error(data.error || "Failed to save");
-      }
     } catch (err) {
-      if (err.name === "AbortError") {
+      if (err.message?.includes("timeout") || err.name === "AbortError") {
         setSaveError("Request timed out. Is the backend running?");
+      } else if (err.data?.skipped) {
+        // Database unavailable but skipped is OK
+        return;
       } else {
         setSaveError(err.message || "Could not save. Please try again.");
       }

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { saveOnboarding } from "./routes/onboarding.js";
@@ -9,6 +10,14 @@ import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/soc
 import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/social/pinterest.js";
 import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js";
 import { getInstagramAuthUrl, instagramCallback, syncInstagram } from "./routes/social/instagram.js";
+import { chatHandler } from "./routes/chat/index.js";
+import { imageGenerationHandler } from "./routes/image-generation/index.js";
+import { classifyPromptHandler } from "./routes/model-switcher/index.js";
+import {
+  getOrCreateSessionHandler,
+  clearSessionHandler,
+  getSessionMessagesHandler,
+} from "./routes/sessions/index.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -58,6 +67,16 @@ app.post("/api/social/instagram/sync", syncInstagram);
 
 // Social analytics: GET data for analytics UI (no tokens)
 app.get("/api/social/analytics", getSocialAnalytics);
+
+// Chat and Image Generation APIs
+app.post("/api/chat", chatHandler);
+app.post("/api/generate-image", imageGenerationHandler);
+app.post("/api/model-switcher/classify", classifyPromptHandler);
+
+// Session management APIs
+app.post("/api/sessions/get-or-create", getOrCreateSessionHandler);
+app.post("/api/sessions/clear", clearSessionHandler);
+app.get("/api/sessions/:sessionId/messages", getSessionMessagesHandler);
 
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);

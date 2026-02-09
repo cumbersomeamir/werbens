@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { generateChatResponse, getOrCreateSessionId } from "@/api/services/chatService.js";
+import { generateImage, fileToBase64 } from "@/api/services/imageGenerationService.js";
+import { classifyPrompt } from "@/api/services/modelSwitcherService.js";
+import { getOrCreateSession, clearSession, getSessionMessages } from "@/api/services/sessionService.js";
+import { clearSessionId } from "@/utils/storage.js";
+import { ASPECT_RATIOS } from "@/constants/index.js";
 
 function ImageIcon() {
   return (
@@ -61,8 +67,52 @@ export function CreateChat() {
   const [input, setInput] = useState("");
   const [images, setImages] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [detectedMode, setDetectedMode] = useState(null); // "text" or "image" - auto-detected
+  const [aspectRatio, setAspectRatio] = useState("1:1"); // Default square
+  const [sessionId, setSessionId] = useState(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  // Initialize session on mount
+  useEffect(() => {
+    async function initSession() {
+      try {
+        const currentSessionId = getOrCreateSessionId();
+        const { sessionId: confirmedSessionId } = await getOrCreateSession(currentSessionId);
+        setSessionId(confirmedSessionId);
+
+        // Load previous messages
+        try {
+          const { messages: savedMessages } = await getSessionMessages(confirmedSessionId);
+          if (savedMessages && savedMessages.length > 0) {
+            // Convert saved messages to UI format
+            const uiMessages = savedMessages.map((msg) => {
+              if (msg.contentType === "image") {
+                return {
+                  type: msg.type,
+                  text: msg.prompt || "",
+                  image: msg.imageUrl || msg.content,
+                };
+              }
+              return {
+                type: msg.type,
+                text: msg.content,
+              };
+            });
+            setMessages(uiMessages);
+          }
+        } catch (err) {
+          console.error("Failed to load session messages:", err);
+        }
+      } catch (err) {
+        console.error("Failed to initialize session:", err);
+      } finally {
+        setIsLoadingSession(false);
+      }
+    }
+    initSession();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -79,38 +129,137 @@ export function CreateChat() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleNewChat = async () => {
+    if (!sessionId) return;
+
+    try {
+      // Clear session on backend
+      await clearSession(sessionId);
+      
+      // Generate new session ID
+      clearSessionId();
+      const newSessionId = getOrCreateSessionId();
+      const { sessionId: confirmedSessionId } = await getOrCreateSession(newSessionId);
+      setSessionId(confirmedSessionId);
+      
+      // Clear UI state
+      setMessages([]);
+      setDetectedMode(null);
+      setInput("");
+      setImages([]);
+    } catch (err) {
+      console.error("Failed to start new chat:", err);
+    }
+  };
+
   const handleGenerate = async () => {
     const text = input.trim();
     if (!text && images.length === 0) return;
+    if (!sessionId) return;
 
-    const imageUrls = images.map((f) => URL.createObjectURL(f));
+    // Store images before clearing
+    const imagesToUse = [...images];
+    const imageUrls = imagesToUse.map((f) => URL.createObjectURL(f));
     const userContent = { type: "user", text, imageUrls };
     setMessages((prev) => [...prev, userContent]);
+    const promptText = text;
     setInput("");
     setImages([]);
     setIsGenerating(true);
 
-    // Scroll to show new message
     setTimeout(scrollToBottom, 50);
 
-    // Placeholder: simulate generation (replace with real API call)
-    await new Promise((r) => setTimeout(r, 1200));
+    try {
+      // Auto-detect generation mode using model-switcher
+      const detectedType = await classifyPrompt(promptText);
+      const mode = detectedType.toLowerCase() === "image" ? "image" : "text";
+      setDetectedMode(mode);
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        type: "assistant",
-        text: "Generated content will appear here. Connect your API to enable real content generation.",
-      },
-    ]);
-    setIsGenerating(false);
-    setTimeout(scrollToBottom, 50);
+      if (mode === "text") {
+        const data = await generateChatResponse({
+          message: promptText,
+          sessionId,
+        });
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: "assistant",
+            text: data.message || data.text || "Generated content",
+          },
+        ]);
+      } else {
+        let referenceImageBase64 = null;
+        let referenceImageMime = "image/jpeg";
+        
+        if (imagesToUse.length > 0) {
+          const firstImage = imagesToUse[0];
+          const { base64, mime } = await fileToBase64(firstImage);
+          referenceImageBase64 = base64;
+          referenceImageMime = mime;
+        }
+
+        const data = await generateImage({
+          prompt: promptText,
+          referenceImageBase64,
+          referenceImageMime,
+          aspectRatio,
+          sessionId,
+        });
+
+        if (data.image) {
+          // Display image immediately (backend will upload to S3 in background)
+          setMessages((prev) => [
+            ...prev,
+            {
+              type: "assistant",
+              image: data.image,
+              text: promptText,
+            },
+          ]);
+        } else {
+          throw new Error("No image in response");
+        }
+      }
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "assistant",
+          text: `Error: ${err instanceof Error ? err.message : "Generation failed"}`,
+          isError: true,
+        },
+      ]);
+    } finally {
+      setIsGenerating(false);
+      setTimeout(scrollToBottom, 50);
+    }
   };
 
   const canSend = (input.trim() || images.length > 0) && !isGenerating;
 
+  if (isLoadingSession) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-werbens-muted">Loading session...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col min-h-0 max-w-4xl w-full mx-auto px-4 sm:px-6">
+      {/* New Chat button */}
+      {messages.length > 0 && (
+        <div className="flex justify-end mb-4">
+          <button
+            type="button"
+            onClick={handleNewChat}
+            className="px-4 py-2 rounded-xl text-sm font-medium text-werbens-dark-cyan hover:bg-werbens-light-cyan/30 border border-werbens-dark-cyan/20 transition-all duration-200"
+          >
+            New Chat
+          </button>
+        </div>
+      )}
+
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto py-4 sm:py-6 space-y-5 sm:space-y-6">
         {messages.length === 0 && (
@@ -120,11 +269,11 @@ export function CreateChat() {
             </div>
             <p className="stagger-2 animate-fade-in-up text-base sm:text-lg text-werbens-text/70 max-w-md leading-relaxed">
               Describe what you want to{" "}
-              <span className="gradient-text font-semibold">create</span>,
-              attach images for context, and generate.
+              <span className="gradient-text font-semibold">create</span>.
+              We'll automatically detect if you need text or image generation.
             </p>
             <p className="stagger-3 animate-fade-in-up mt-3 text-sm text-werbens-muted italic">
-              e.g. &quot;Social post for our new product launch&quot;
+              e.g. &quot;Write a social post for our launch&quot; or &quot;Generate an image of a futuristic city&quot;
             </p>
           </div>
         )}
@@ -138,11 +287,22 @@ export function CreateChat() {
               className={`max-w-[90%] sm:max-w-[80%] rounded-2xl px-5 py-3.5 ${
                 msg.type === "user"
                   ? "bg-gradient-to-br from-werbens-dark-cyan to-werbens-midnight text-white glow-sm"
-                  : "glass border border-werbens-dark-cyan/10 text-werbens-text shadow-sm"
+                  : msg.isError
+                    ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+                    : "glass border border-werbens-dark-cyan/10 text-werbens-text shadow-sm"
               }`}
             >
               {msg.text && (
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                <p className={`whitespace-pre-wrap leading-relaxed ${msg.isError ? "font-medium" : ""}`}>{msg.text}</p>
+              )}
+              {msg.image && (
+                <div className="mt-3">
+                  <img
+                    src={msg.image}
+                    alt="Generated"
+                    className="max-w-full rounded-xl border border-werbens-dark-cyan/10 shadow-sm"
+                  />
+                </div>
               )}
               {msg.imageUrls && msg.imageUrls.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -186,6 +346,30 @@ export function CreateChat() {
 
       {/* Input area */}
       <div className="shrink-0 pb-4 sm:pb-6">
+        {/* Aspect ratio selector - only show when image mode is detected */}
+        {detectedMode === "image" && (
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <span className="text-xs text-werbens-muted font-medium">Aspect Ratio:</span>
+            <div className="flex items-center gap-1.5 bg-werbens-mist/40 rounded-xl p-1">
+              {ASPECT_RATIOS.map((ratio) => (
+                <button
+                  key={ratio.value}
+                  type="button"
+                  onClick={() => setAspectRatio(ratio.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    aspectRatio === ratio.value
+                      ? "bg-gradient-to-br from-werbens-dark-cyan to-werbens-midnight text-white shadow-sm"
+                      : "text-werbens-muted hover:text-werbens-dark-cyan hover:bg-werbens-light-cyan/20"
+                  }`}
+                  title={ratio.label}
+                >
+                  <span className="mr-1.5">{ratio.icon}</span>
+                  {ratio.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="glass rounded-2xl shadow-elevated border border-werbens-dark-cyan/10 focus-within:border-werbens-dark-cyan/30 focus-within:shadow-elevated-lg transition-all duration-300">
           {/* Attached images preview */}
           {images.length > 0 && (
@@ -237,7 +421,7 @@ export function CreateChat() {
                   handleGenerate();
                 }
               }}
-              placeholder="What would you like to create?"
+              placeholder="What would you like to create? (Text or image - we'll detect automatically)"
               rows={2}
               className="flex-1 min-h-[44px] max-h-32 resize-none border-0 bg-transparent px-3 py-2.5 text-werbens-text placeholder-werbens-muted focus:outline-none focus:ring-0 leading-relaxed"
             />

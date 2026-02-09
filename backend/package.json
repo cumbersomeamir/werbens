@@ -9,8 +9,13 @@
     "ensure-indexes": "node scripts/ensure-mongo-indexes.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.985.0",
+    "@aws-sdk/s3-request-presigner": "^3.985.0",
+    "@google/genai": "^1.40.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.4",
     "express": "^4.21.0",
+    "ioredis": "^5.9.2",
     "mongodb": "^6.10.0"
   }
 }
