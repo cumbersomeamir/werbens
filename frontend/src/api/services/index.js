@@ -7,3 +7,4 @@ export * from "./modelSwitcherService.js";
 export * from "./onboardingService.js";
 export * from "./socialService.js";
 export * from "./sessionService.js";
+export * from "./contextService.js";

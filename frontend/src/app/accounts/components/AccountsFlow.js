@@ -8,6 +8,7 @@ import { ManageAccountModal } from "./ManageAccountModal";
 import Link from "next/link";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import { getSocialAccounts, getXAuthUrl, getYoutubeAuthUrl, getLinkedInAuthUrl, getPinterestAuthUrl, getMetaAuthUrl, getInstagramAuthUrl, disconnectAccount } from "@/lib/socialApi";
+import { updateContext } from "@/api/services/contextService.js";
 
 const PLATFORM_IDS = [
   "instagram",
@@ -29,6 +30,7 @@ export function AccountsFlow() {
   const [managePlatform, setManagePlatform] = useState(null);
   const [connectLoading, setConnectLoading] = useState(null);
   const [message, setMessage] = useState(null);
+  const [contextUpdating, setContextUpdating] = useState(false);
 
   const loadAccounts = useCallback(async () => {
     if (!userId) {
@@ -191,6 +193,23 @@ export function AccountsFlow() {
     setManagePlatform(platformId);
   };
 
+  const handleUpdateContext = async () => {
+    if (!userId) {
+      setMessage({ type: "error", text: "Sign in to update context." });
+      return;
+    }
+    setContextUpdating(true);
+    setMessage(null);
+    try {
+      await updateContext(userId);
+      setMessage({ type: "success", text: "Context updated successfully!" });
+    } catch (err) {
+      setMessage({ type: "error", text: err.message || "Failed to update context." });
+    } finally {
+      setContextUpdating(false);
+    }
+  };
+
   const connectedCount = Object.keys(accounts).length;
 
   return (
@@ -222,6 +241,29 @@ export function AccountsFlow() {
             <span className="h-1.5 w-1.5 rounded-full bg-werbens-light-cyan animate-pulse-glow" />
             {connectedCount} connected
           </span>
+        )}
+        {userId && (
+          <div className="mt-4">
+            <button
+              onClick={handleUpdateContext}
+              disabled={contextUpdating}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-midnight px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md focus-ring disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {contextUpdating ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Updating Context...
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Update Context
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
 

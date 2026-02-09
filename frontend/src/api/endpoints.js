@@ -18,6 +18,10 @@ export const API_ENDPOINTS = {
   SESSIONS_CLEAR: "/api/sessions/clear",
   SESSIONS_MESSAGES: (sessionId) => `/api/sessions/${sessionId}/messages`,
 
+  // Context
+  CONTEXT: "/api/context",
+  CONTEXT_UPDATE: "/api/context/update",
+
   // Social Accounts
   SOCIAL_ACCOUNTS: "/api/social/accounts",
   SOCIAL_ACCOUNT_DISCONNECT: (platform) => `/api/social/accounts/${platform}`,
