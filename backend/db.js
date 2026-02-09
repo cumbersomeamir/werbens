@@ -5,7 +5,11 @@ let client = null;
 let db = null;
 
 const options = {
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 30000,
+  connectTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  retryWrites: true,
+  retryReads: true,
 };
 
 export async function getDb() {

@@ -13,20 +13,33 @@ const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes of inactivity
  * @returns {Promise<Object>} Created session
  */
 export async function createSession(userId, sessionId) {
-  const db = await getDb();
-  const collection = db.collection("Sessions");
+  try {
+    const db = await getDb();
+    const collection = db.collection("Sessions");
 
-  const session = {
-    sessionId,
-    userId,
-    messages: [],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastActivityAt: new Date(),
-  };
+    const session = {
+      sessionId,
+      userId,
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastActivityAt: new Date(),
+    };
 
-  await collection.insertOne(session);
-  return session;
+    await collection.insertOne(session);
+    return session;
+  } catch (err) {
+    console.error("MongoDB error in createSession:", err.message);
+    // Return minimal session object if MongoDB unavailable
+    return {
+      sessionId,
+      userId,
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastActivityAt: new Date(),
+    };
+  }
 }
 
 /**
@@ -36,24 +49,37 @@ export async function createSession(userId, sessionId) {
  * @returns {Promise<Object>} Session object
  */
 export async function getOrCreateSession(userId, sessionId) {
-  const db = await getDb();
-  const collection = db.collection("Sessions");
+  try {
+    const db = await getDb();
+    const collection = db.collection("Sessions");
 
-  // Check if session exists and is still active
-  const existing = await collection.findOne({ sessionId, userId });
-  
-  if (existing) {
-    const timeSinceActivity = Date.now() - existing.lastActivityAt.getTime();
-    // If session is older than timeout, it's expired - create a new one
-    // (frontend will have already generated a new sessionId)
-    if (timeSinceActivity > SESSION_TIMEOUT_MS) {
-      return createSession(userId, sessionId);
+    // Check if session exists and is still active
+    const existing = await collection.findOne({ sessionId, userId });
+    
+    if (existing) {
+      const timeSinceActivity = Date.now() - existing.lastActivityAt.getTime();
+      // If session is older than timeout, it's expired - create a new one
+      // (frontend will have already generated a new sessionId)
+      if (timeSinceActivity > SESSION_TIMEOUT_MS) {
+        return createSession(userId, sessionId);
+      }
+      return existing;
     }
-    return existing;
-  }
 
-  // Create new session
-  return createSession(userId, sessionId);
+    // Create new session
+    return createSession(userId, sessionId);
+  } catch (err) {
+    console.error("MongoDB error in getOrCreateSession:", err.message);
+    // Return minimal session if MongoDB unavailable
+    return {
+      sessionId,
+      userId,
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastActivityAt: new Date(),
+    };
+  }
 }
 
 /**
@@ -79,29 +105,34 @@ export async function addMessageToSession({
   aspectRatio,
   imageUrl,
 }) {
-  const db = await getDb();
-  const collection = db.collection("Sessions");
+  try {
+    const db = await getDb();
+    const collection = db.collection("Sessions");
 
-  const message = {
-    type,
-    content,
-    contentType,
-    prompt: prompt || null,
-    aspectRatio: aspectRatio || null,
-    imageUrl: imageUrl || null,
-    timestamp: new Date(),
-  };
+    const message = {
+      type,
+      content,
+      contentType,
+      prompt: prompt || null,
+      aspectRatio: aspectRatio || null,
+      imageUrl: imageUrl || null,
+      timestamp: new Date(),
+    };
 
-  await collection.updateOne(
-    { sessionId, userId },
-    {
-      $push: { messages: message },
-      $set: {
-        updatedAt: new Date(),
-        lastActivityAt: new Date(),
-      },
-    }
-  );
+    await collection.updateOne(
+      { sessionId, userId },
+      {
+        $push: { messages: message },
+        $set: {
+          updatedAt: new Date(),
+          lastActivityAt: new Date(),
+        },
+      }
+    );
+  } catch (err) {
+    console.error("MongoDB error in addMessageToSession:", err.message);
+    // Silently fail - session storage is optional
+  }
 }
 
 /**
@@ -129,15 +160,20 @@ export async function uploadSessionImage({ buffer, sessionId, messageId, content
  * @returns {Promise<Array>} Messages array
  */
 export async function getSessionMessages(sessionId, userId) {
-  const db = await getDb();
-  const collection = db.collection("Sessions");
+  try {
+    const db = await getDb();
+    const collection = db.collection("Sessions");
 
-  const session = await collection.findOne(
-    { sessionId, userId },
-    { projection: { messages: 1 } }
-  );
+    const session = await collection.findOne(
+      { sessionId, userId },
+      { projection: { messages: 1 } }
+    );
 
-  return session?.messages || [];
+    return session?.messages || [];
+  } catch (err) {
+    console.error("MongoDB error in getSessionMessages:", err.message);
+    return []; // Return empty array if MongoDB unavailable
+  }
 }
 
 /**
@@ -147,17 +183,22 @@ export async function getSessionMessages(sessionId, userId) {
  * @returns {Promise<void>}
  */
 export async function clearSession(sessionId, userId) {
-  const db = await getDb();
-  const collection = db.collection("Sessions");
+  try {
+    const db = await getDb();
+    const collection = db.collection("Sessions");
 
-  await collection.updateOne(
-    { sessionId, userId },
-    {
-      $set: {
-        messages: [],
-        updatedAt: new Date(),
-        lastActivityAt: new Date(),
-      },
-    }
-  );
+    await collection.updateOne(
+      { sessionId, userId },
+      {
+        $set: {
+          messages: [],
+          updatedAt: new Date(),
+          lastActivityAt: new Date(),
+        },
+      }
+    );
+  } catch (err) {
+    console.error("MongoDB error in clearSession:", err.message);
+    // Silently fail - session clearing is optional
+  }
 }

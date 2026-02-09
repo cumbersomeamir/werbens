@@ -18,6 +18,7 @@ import {
   clearSessionHandler,
   getSessionMessagesHandler,
 } from "./routes/sessions/index.js";
+import { getContextHandler, updateContextHandler } from "./routes/context.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -77,6 +78,10 @@ app.post("/api/model-switcher/classify", classifyPromptHandler);
 app.post("/api/sessions/get-or-create", getOrCreateSessionHandler);
 app.post("/api/sessions/clear", clearSessionHandler);
 app.get("/api/sessions/:sessionId/messages", getSessionMessagesHandler);
+
+// Context management APIs
+app.get("/api/context", getContextHandler);
+app.post("/api/context/update", updateContextHandler);
 
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);
