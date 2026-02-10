@@ -111,14 +111,14 @@ export function FooterSection() {
                 </a>
               </li>
               <li>
-                <a href="#" className={footerLinkClass}>
+                <Link href="/privacy" className={footerLinkClass}>
                   Privacy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className={footerLinkClass}>
+                <Link href="/terms" className={footerLinkClass}>
                   Terms
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
