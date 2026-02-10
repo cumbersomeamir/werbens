@@ -8,6 +8,12 @@ const LINKEDIN_USERINFO_URL = "https://api.linkedin.com/v2/userinfo";
 const SCOPES = ["openid", "profile", "email"];
 const STATE_TTL_MS = 10 * 60 * 1000;
 
+function getFrontendBase() {
+  const raw = process.env.FRONTEND_URL || "http://localhost:3000";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.endsWith("/app") ? trimmed : `${trimmed}/app`;
+}
+
 const stateStore = new Map();
 
 function pruneStates() {
@@ -54,7 +60,7 @@ export function getLinkedInAuthUrl(req, res) {
 
 export async function linkedinCallback(req, res) {
   const { code, state } = req.query;
-  const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+  const frontendBase = getFrontendBase();
   if (!code || !state) {
     return res.redirect(`${frontendBase}/accounts?error=missing_params`);
   }
@@ -100,7 +106,7 @@ export async function linkedinCallback(req, res) {
     const accountsColl = db.collection("SocialAccounts");
     const now = new Date();
     await accountsColl.updateOne(
-      { userId, platform: "linkedin" },
+      { userId, platform: "linkedin", platformUserId: userInfo.sub },
       {
         $set: {
           userId,
@@ -162,44 +168,45 @@ export async function syncLinkedIn(req, res) {
   }
   const db = await getDb();
   const accountsColl = db.collection("SocialAccounts");
-  const account = await accountsColl.findOne({ userId, platform: "linkedin" });
-  if (!account?.accessToken) {
-    return res.status(404).json({ error: "LinkedIn account not connected for this user" });
-  }
-  const userInfo = await fetchLinkedInUserInfo(account.accessToken);
-  if (!userInfo || !userInfo.sub) {
-    return res.status(502).json({ error: "Failed to fetch profile from LinkedIn" });
-  }
-  const profile = {
-    sub: userInfo.sub,
-    name: userInfo.name || null,
-    given_name: userInfo.given_name || null,
-    family_name: userInfo.family_name || null,
-    picture: userInfo.picture || null,
-    locale: userInfo.locale || null,
-    email: userInfo.email || null,
-    email_verified: userInfo.email_verified ?? null,
-  };
   const usersColl = db.collection("Users");
   const userDoc = await usersColl.findOne({ userId });
-  const appUsername = userDoc?.username || profile.name || "LinkedIn";
   const socialColl = db.collection("SocialMedia");
+  const accounts = await accountsColl.find({ userId, platform: "linkedin" }).toArray();
+  if (!accounts?.length) {
+    return res.status(404).json({ error: "LinkedIn account not connected for this user" });
+  }
   const now = new Date();
-  await socialColl.updateOne(
-    { userId, platform: "linkedin", channelId: userInfo.sub },
-    {
-      $set: {
-        userId,
-        username: appUsername,
-        platform: "linkedin",
-        channelId: userInfo.sub,
-        profile,
-        posts: [],
-        lastFetchedAt: now,
-        updatedAt: now,
+  for (const account of accounts) {
+    if (!account?.accessToken) continue;
+    const userInfo = await fetchLinkedInUserInfo(account.accessToken);
+    if (!userInfo || !userInfo.sub) continue;
+    const profile = {
+      sub: userInfo.sub,
+      name: userInfo.name || null,
+      given_name: userInfo.given_name || null,
+      family_name: userInfo.family_name || null,
+      picture: userInfo.picture || null,
+      locale: userInfo.locale || null,
+      email: userInfo.email || null,
+      email_verified: userInfo.email_verified ?? null,
+    };
+    const appUsername = userDoc?.username || profile.name || "LinkedIn";
+    await socialColl.updateOne(
+      { userId, platform: "linkedin", channelId: userInfo.sub },
+      {
+        $set: {
+          userId,
+          username: appUsername,
+          platform: "linkedin",
+          channelId: userInfo.sub,
+          profile,
+          posts: [],
+          lastFetchedAt: now,
+          updatedAt: now,
+        },
       },
-    },
-    { upsert: true }
-  );
-  return res.json({ ok: true, platform: "linkedin" });
+      { upsert: true }
+    );
+  }
+  return res.json({ ok: true, platform: "linkedin", accounts: accounts.length });
 }

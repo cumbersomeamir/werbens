@@ -10,13 +10,23 @@ const PLATFORM_META = {
   pinterest: { name: "Pinterest", icon: "📌", color: "bg-red-600/10" },
 };
 
-export function AccountCard({ platformId, isConnected, username, onConnect, onRemove, onManage, connectLoading }) {
+export function AccountCard({
+  platformId,
+  accounts,
+  onConnect,
+  onRemoveAccount,
+  onRemoveAll,
+  onManage,
+  connectLoading,
+}) {
   const meta = PLATFORM_META[platformId] ?? { name: platformId, icon: "🔗", color: "bg-gray-500/10" };
+  const normalizedAccounts = Array.isArray(accounts) ? accounts : [];
+  const connected = normalizedAccounts.length > 0;
 
   return (
     <div
       className={`group relative rounded-2xl p-5 sm:p-6 transition-all duration-300 ${
-        isConnected
+        connected
           ? "bg-white border border-werbens-light-cyan/30 border-l-[3px] border-l-werbens-light-cyan shadow-elevated hover-lift"
           : "bg-white/60 border border-dashed border-werbens-steel/30 hover:border-werbens-steel/50 hover:bg-white/80"
       }`}
@@ -26,7 +36,7 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
         <div className="flex items-center gap-4">
           <div
             className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl transition-all duration-300 ${
-              isConnected
+              connected
                 ? "bg-gradient-to-br from-werbens-light-cyan/20 to-werbens-dark-cyan/10 ring-2 ring-werbens-light-cyan/20"
                 : "bg-werbens-surface ring-1 ring-werbens-steel/20 opacity-60 group-hover:opacity-80"
             }`}
@@ -35,14 +45,14 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
           </div>
           <div className="min-w-0">
             <h3 className={`font-semibold transition-colors duration-200 ${
-              isConnected ? "text-werbens-text" : "text-werbens-muted"
+              connected ? "text-werbens-text" : "text-werbens-muted"
             }`}>
               {meta.name}
             </h3>
-            {isConnected ? (
+            {connected ? (
               <p className="mt-0.5 text-sm text-werbens-dark-cyan/80 flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                {username || "Connected"}
+                {normalizedAccounts.length} connected
               </p>
             ) : (
               <p className="mt-0.5 text-sm text-werbens-muted/70">
@@ -54,35 +64,70 @@ export function AccountCard({ platformId, isConnected, username, onConnect, onRe
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
-          {isConnected ? (
-            <>
-              <button
-                type="button"
-                onClick={() => onManage(platformId)}
-                className="rounded-lg border border-werbens-steel/20 bg-transparent px-4 py-2 text-sm font-medium text-werbens-text/80 transition-all duration-200 hover:border-werbens-dark-cyan/30 hover:text-werbens-dark-cyan hover:bg-werbens-light-cyan/5 focus-ring"
-              >
-                Manage
-              </button>
-              <button
-                type="button"
-                onClick={() => onRemove(platformId)}
-                className="rounded-lg border border-transparent bg-transparent px-4 py-2 text-sm font-medium text-werbens-muted transition-all duration-200 hover:text-red-500 hover:bg-red-50 hover:border-red-100 focus-ring"
-              >
-                Remove
-              </button>
-            </>
-          ) : (
+          <button
+            type="button"
+            onClick={() => onConnect(platformId)}
+            disabled={connectLoading}
+            className="rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:glow-sm focus-ring disabled:opacity-70 disabled:pointer-events-none"
+          >
+            {connectLoading ? "Connecting…" : (connected ? "Add another account" : "Add account")}
+          </button>
+          {connected && (
             <button
               type="button"
-              onClick={() => onConnect(platformId)}
-              disabled={connectLoading}
-              className="rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md hover:glow-sm focus-ring disabled:opacity-70 disabled:pointer-events-none"
+              onClick={() => onManage(platformId)}
+              className="rounded-lg border border-werbens-steel/20 bg-transparent px-4 py-2 text-sm font-medium text-werbens-text/80 transition-all duration-200 hover:border-werbens-dark-cyan/30 hover:text-werbens-dark-cyan hover:bg-werbens-light-cyan/5 focus-ring"
             >
-              {connectLoading ? "Connecting…" : "Add account"}
+              Manage
             </button>
           )}
         </div>
       </div>
+
+      {/* Connected accounts list */}
+      {connected && (
+        <div className="mt-4 space-y-2">
+          {normalizedAccounts.map((acct) => (
+            <div
+              key={acct.id}
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-werbens-steel/10 bg-werbens-mist/20 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-werbens-text truncate">
+                  {acct.username || "Connected"}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:shrink-0">
+                <button
+                  type="button"
+                  onClick={() => onManage(platformId)}
+                  className="rounded-lg border border-werbens-steel/20 bg-white/60 px-3 py-1.5 text-xs font-medium text-werbens-text/80 transition-all duration-200 hover:border-werbens-dark-cyan/30 hover:text-werbens-dark-cyan hover:bg-werbens-light-cyan/5 focus-ring"
+                >
+                  Manage
+                </button>
+                {!!onRemoveAccount && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveAccount(platformId, acct)}
+                    className="rounded-lg border border-transparent bg-white/60 px-3 py-1.5 text-xs font-medium text-werbens-muted transition-all duration-200 hover:text-red-500 hover:bg-red-50 hover:border-red-100 focus-ring"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          {!!onRemoveAll && normalizedAccounts.length > 1 && (
+            <button
+              type="button"
+              onClick={() => onRemoveAll(platformId)}
+              className="text-xs text-werbens-muted hover:text-red-600 hover:underline mt-2"
+            >
+              Remove all {meta.name} accounts
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

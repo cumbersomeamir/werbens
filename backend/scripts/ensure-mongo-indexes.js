@@ -40,7 +40,31 @@ async function main() {
 
   const accountsColl = db.collection("SocialAccounts");
   await accountsColl.createIndex({ userId: 1 });
-  await accountsColl.createIndex({ userId: 1, platform: 1 }, { unique: true });
+  // Allow multiple connected accounts per platform.
+  // Drop the legacy unique index (userId+platform) if present.
+  try {
+    await accountsColl.dropIndex("userId_1_platform_1");
+  } catch (_) {}
+  await accountsColl.createIndex({ userId: 1, platform: 1 });
+  // Enforce uniqueness per platform identity when platformUserId is present.
+  await accountsColl.createIndex(
+    { userId: 1, platform: 1, platformUserId: 1 },
+    {
+      unique: true,
+      partialFilterExpression: {
+        platformUserId: { $exists: true, $type: "string", $ne: "" },
+      },
+    }
+  );
+  // Best-effort migration for older YouTube docs that may be missing platformUserId.
+  await accountsColl.updateMany(
+    {
+      platform: "youtube",
+      $or: [{ platformUserId: { $exists: false } }, { platformUserId: null }, { platformUserId: "" }],
+      "channels.0.channelId": { $exists: true },
+    },
+    [{ $set: { platformUserId: { $toString: "$channels.0.channelId" } } }]
+  );
 
   const socialColl = db.collection("SocialMedia");
   await socialColl.createIndex({ userId: 1 });
@@ -55,7 +79,7 @@ async function main() {
 
   const collections = await db.listCollections().toArray();
   console.log("Collections in", dbName + ":", collections.map((c) => c.name).join(", "));
-  console.log("Indexes ensured (Users.userId unique; SocialMedia userId+platform+channelId unique).");
+  console.log("Indexes ensured (Users.userId unique; SocialAccounts userId+platform+platformUserId unique (partial); SocialMedia userId+platform+channelId unique).");
   process.exit(0);
 }
 

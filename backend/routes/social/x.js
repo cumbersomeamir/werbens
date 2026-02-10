@@ -13,6 +13,12 @@ const STATE_TTL_MS = 10 * 60 * 1000;
 const USER_FIELDS = "id,name,username,profile_image_url,description,created_at,public_metrics,verified,location,url";
 const TWEET_FIELDS = "created_at,public_metrics,text,entities,conversation_id,referenced_tweets";
 
+function getFrontendBase() {
+  const raw = process.env.FRONTEND_URL || "http://localhost:3000";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.endsWith("/app") ? trimmed : `${trimmed}/app`;
+}
+
 /** Fetch full profile + tweets from X API. Returns { profile, posts } for SocialMedia. */
 export async function fetchXUserData(accessToken) {
   const userRes = await fetch(
@@ -92,7 +98,7 @@ export function getXAuthUrl(req, res) {
 
 export async function xCallback(req, res) {
   const { code, state } = req.query;
-  const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+  const frontendBase = getFrontendBase();
 
   if (!code || !state) {
     return res.redirect(`${frontendBase}/accounts?error=missing_params`);
@@ -168,7 +174,7 @@ export async function xCallback(req, res) {
     const accountsColl = db.collection("SocialAccounts");
     const now = new Date();
     await accountsColl.updateOne(
-      { userId, platform: "x" },
+      { userId, platform: "x", platformUserId },
       {
         $set: {
           userId,
@@ -188,14 +194,19 @@ export async function xCallback(req, res) {
 
     const socialColl = db.collection("SocialMedia");
     const appUsername = displayName || username || null;
+    // Migrate legacy single-account doc (channelId="") if present.
     await socialColl.updateOne(
-      { userId, platform: "x" },
+      { userId: userId.trim(), platform: "x", channelId: "" },
+      { $set: { channelId: String(platformUserId) } }
+    );
+    await socialColl.updateOne(
+      { userId, platform: "x", channelId: String(platformUserId) },
       {
         $set: {
           userId: userId.trim(),
           username: appUsername,
           platform: "x",
-          channelId: "",
+          channelId: String(platformUserId),
           profile: {
             id: profile.id,
             name: profile.name,
@@ -231,45 +242,49 @@ export async function syncX(req, res) {
   }
   const db = await getDb();
   const accountsColl = db.collection("SocialAccounts");
-  const account = await accountsColl.findOne({ userId, platform: "x" });
-  if (!account?.accessToken) {
+  const accounts = await accountsColl.find({ userId, platform: "x" }).toArray();
+  if (!accounts?.length) {
     return res.status(404).json({ error: "X account not connected for this user" });
   }
-  const xData = await fetchXUserData(account.accessToken);
-  if (!xData) {
-    return res.status(502).json({ error: "Failed to fetch data from X" });
-  }
-  const { profile, posts } = xData;
   const usersColl = db.collection("Users");
   const user = await usersColl.findOne({ userId });
-  const appUsername = user?.username ?? profile.name ?? profile.username ?? null;
   const socialColl = db.collection("SocialMedia");
-  await socialColl.updateOne(
-    { userId, platform: "x" },
-    {
-      $set: {
-        userId,
-        username: appUsername,
-        platform: "x",
-        channelId: "",
-        profile: {
-          id: profile.id,
-          name: profile.name,
-          username: profile.username,
-          profile_image_url: profile.profile_image_url,
-          description: profile.description || null,
-          created_at: profile.created_at || null,
-          public_metrics: profile.public_metrics || null,
-          verified: profile.verified ?? false,
-          location: profile.location || null,
-          url: profile.url || null,
+  const now = new Date();
+  for (const account of accounts) {
+    if (!account?.accessToken) continue;
+    const xData = await fetchXUserData(account.accessToken);
+    if (!xData) continue;
+    const { profile, posts } = xData;
+    const platformUserId = String(account.platformUserId || profile.id || "");
+    const appUsername = user?.username ?? profile.name ?? profile.username ?? null;
+    if (!platformUserId) continue;
+    await socialColl.updateOne(
+      { userId, platform: "x", channelId: platformUserId },
+      {
+        $set: {
+          userId,
+          username: appUsername,
+          platform: "x",
+          channelId: platformUserId,
+          profile: {
+            id: profile.id,
+            name: profile.name,
+            username: profile.username,
+            profile_image_url: profile.profile_image_url,
+            description: profile.description || null,
+            created_at: profile.created_at || null,
+            public_metrics: profile.public_metrics || null,
+            verified: profile.verified ?? false,
+            location: profile.location || null,
+            url: profile.url || null,
+          },
+          posts,
+          lastFetchedAt: now,
+          updatedAt: now,
         },
-        posts,
-        lastFetchedAt: new Date(),
-        updatedAt: new Date(),
       },
-    },
-    { upsert: true }
-  );
-  return res.json({ ok: true, platform: "x" });
+      { upsert: true }
+    );
+  }
+  return res.json({ ok: true, platform: "x", accounts: accounts.length });
 }

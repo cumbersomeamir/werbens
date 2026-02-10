@@ -32,7 +32,12 @@ export async function getSocialAnalytics(userId) {
  */
 export async function disconnectAccount(userId, platform) {
   if (!userId || !platform) throw new Error("Missing userId or platform");
-  return del(`${API_ENDPOINTS.SOCIAL_ACCOUNT_DISCONNECT(platform)}?userId=${encodeURIComponent(userId)}`);
+  const accountId = arguments.length >= 3 ? arguments[2] : null;
+  const channelId = arguments.length >= 4 ? arguments[3] : null;
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (accountId) q.set("accountId", String(accountId));
+  if (channelId) q.set("channelId", String(channelId));
+  return del(`${API_ENDPOINTS.SOCIAL_ACCOUNT_DISCONNECT(platform)}?${q.toString()}`);
 }
 
 /**

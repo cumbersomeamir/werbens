@@ -31,6 +31,8 @@ export async function getSocialAccounts(req, res) {
 export async function disconnectSocialAccount(req, res) {
   const userId = req.query.userId;
   const platform = (req.params.platform || "").toLowerCase();
+  const accountId = typeof req.query.accountId === "string" ? req.query.accountId : null;
+  const channelId = typeof req.query.channelId === "string" ? req.query.channelId : null;
 
   if (!userId || typeof userId !== "string") {
     return res.status(400).json({ error: "userId is required" });
@@ -40,7 +42,7 @@ export async function disconnectSocialAccount(req, res) {
   }
 
   try {
-    const result = await disconnectSocialAccountData(userId, platform);
+    const result = await disconnectSocialAccountData(userId, platform, { accountId, channelId });
     res.json(result);
   } catch (err) {
     console.error("disconnectSocialAccount error:", err.message);

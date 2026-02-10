@@ -853,6 +853,32 @@ export function SocialMediaSection({ userId }) {
     );
   }
 
+  const sortedList = (Array.isArray(list) ? list : [])
+    .filter(Boolean)
+    .slice()
+    .sort((a, b) => {
+      const pa = String(a.platform || "");
+      const pb = String(b.platform || "");
+      const p = pa.localeCompare(pb);
+      if (p !== 0) return p;
+      const nameFor = (doc) => {
+        const platform = doc.platform;
+        const profile = doc.profile || {};
+        if (platform === "youtube") return profile.title || doc.username || "";
+        if (platform === "linkedin") return profile.name || [profile.given_name, profile.family_name].filter(Boolean).join(" ").trim() || doc.username || "";
+        if (platform === "pinterest") return profile.username || doc.username || "";
+        if (platform === "facebook") return profile.name || doc.username || "";
+        if (platform === "instagram") return profile.username || doc.username || "";
+        if (platform === "x") return profile.username || profile.name || doc.username || "";
+        return doc.username || "";
+      };
+      const na = nameFor(a).toLowerCase();
+      const nb = nameFor(b).toLowerCase();
+      const n = na.localeCompare(nb);
+      if (n !== 0) return n;
+      return String(a.channelId || "").localeCompare(String(b.channelId || ""));
+    });
+
   return (
     <section className="px-4 sm:px-6 pb-12 sm:pb-16" aria-label="Social accounts data">
       <div className="mx-auto max-w-7xl">
@@ -868,7 +894,7 @@ export function SocialMediaSection({ userId }) {
           <p className="text-sm text-werbens-muted">Connect an account from Accounts to see data here.</p>
         ) : (
           <div className="space-y-4">
-            {list.filter(Boolean).map((doc) => {
+            {sortedList.map((doc) => {
               const platformLabel = PLATFORM_LABELS[doc.platform] || doc.platform;
               const displayName =
                 doc.platform === "youtube"

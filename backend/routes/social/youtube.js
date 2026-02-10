@@ -8,6 +8,12 @@ const YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube.readonly";
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 const STATE_TTL_MS = 10 * 60 * 1000;
 
+function getFrontendBase() {
+  const raw = process.env.FRONTEND_URL || "http://localhost:3000";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.endsWith("/app") ? trimmed : `${trimmed}/app`;
+}
+
 const stateStore = new Map();
 
 function pruneStates() {
@@ -119,7 +125,7 @@ export function getYoutubeAuthUrl(req, res) {
 
 export async function youtubeCallback(req, res) {
   const { code, state } = req.query;
-  const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+  const frontendBase = getFrontendBase();
   if (!code || !state) {
     return res.redirect(`${frontendBase}/accounts?error=missing_params`);
   }
@@ -165,19 +171,22 @@ export async function youtubeCallback(req, res) {
     await upsertUser({ userId, username: firstChannelTitle });
     const accountsColl = db.collection("SocialAccounts");
     const now = new Date();
+    // Use the first channel id as a stable identity for this Google login in our DB.
+    const platformUserId = String(ytData.channels[0]?.profile?.id || "youtube");
     const channelsForAccount = ytData.channels.map((c) => ({
       channelId: c.profile.id,
       title: c.profile.title,
       thumbnail: c.profile.thumbnails?.default?.url || null,
     }));
     await accountsColl.updateOne(
-      { userId, platform: "youtube" },
+      { userId, platform: "youtube", platformUserId },
       {
         $set: {
           userId,
           platform: "youtube",
           accessToken,
           refreshToken,
+          platformUserId,
           username: channelsForAccount[0]?.title || "YouTube",
           displayName: "YouTube",
           profileImageUrl: channelsForAccount[0]?.thumbnail || null,
@@ -224,36 +233,59 @@ export async function syncYoutube(req, res) {
   }
   const db = await getDb();
   const accountsColl = db.collection("SocialAccounts");
-  const account = await accountsColl.findOne({ userId, platform: "youtube" });
-  if (!account?.accessToken) {
+  const accounts = await accountsColl.find({ userId, platform: "youtube" }).toArray();
+  if (!accounts?.length) {
     return res.status(404).json({ error: "YouTube account not connected for this user" });
-  }
-  const ytData = await fetchYouTubeData(account.accessToken);
-  if (!ytData) {
-    return res.status(502).json({ error: "Failed to fetch data from YouTube" });
   }
   const usersColl = db.collection("Users");
   const userDoc = await usersColl.findOne({ userId });
   const appUsername = userDoc?.username || "YouTube";
   const socialColl = db.collection("SocialMedia");
   const now = new Date();
-  for (const { profile, videos } of ytData.channels) {
-    await socialColl.updateOne(
-      { userId, platform: "youtube", channelId: profile.id },
+  let totalChannels = 0;
+  for (const account of accounts) {
+    if (!account?.accessToken) continue;
+    const ytData = await fetchYouTubeData(account.accessToken);
+    if (!ytData) continue;
+    totalChannels += ytData.channels.length;
+
+    const channelsForAccount = ytData.channels.map((c) => ({
+      channelId: c.profile.id,
+      title: c.profile.title,
+      thumbnail: c.profile.thumbnails?.default?.url || null,
+    }));
+    // Keep the SocialAccounts doc fresh (channels list and basic display info).
+    await accountsColl.updateOne(
+      { _id: account._id },
       {
         $set: {
-          userId,
-          username: appUsername,
-          platform: "youtube",
-          channelId: profile.id,
-          profile,
-          videos,
-          lastFetchedAt: now,
+          platformUserId: account.platformUserId || String(channelsForAccount[0]?.channelId || "youtube"),
+          username: channelsForAccount[0]?.title || account.username || "YouTube",
+          profileImageUrl: channelsForAccount[0]?.thumbnail || account.profileImageUrl || null,
+          channels: channelsForAccount,
           updatedAt: now,
         },
-      },
-      { upsert: true }
+      }
     );
+
+    for (const { profile, videos } of ytData.channels) {
+      await socialColl.updateOne(
+        { userId, platform: "youtube", channelId: profile.id },
+        {
+          $set: {
+            userId,
+            username: appUsername,
+            platform: "youtube",
+            channelId: profile.id,
+            profile,
+            videos,
+            lastFetchedAt: now,
+            updatedAt: now,
+          },
+        },
+        { upsert: true }
+      );
+    }
   }
-  return res.json({ ok: true, platform: "youtube", channels: ytData.channels.length });
+  return res.json({ ok: true, platform: "youtube", accounts: accounts.length, channels: totalChannels });
 }

@@ -6,7 +6,11 @@ import { getDb } from "../db.js";
 export async function getSocialAnalyticsData(userId) {
   const db = await getDb();
   const coll = db.collection("SocialMedia");
-  const docs = await coll.find({ userId }).toArray();
+  const docs = await coll
+    .find({ userId })
+    // Ensure analytics items are grouped by platform (and stable within platform)
+    .sort({ platform: 1, username: 1, channelId: 1, updatedAt: -1 })
+    .toArray();
   
   const list = docs.map((d) => ({
     userId: d.userId,

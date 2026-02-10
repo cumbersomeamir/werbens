@@ -26,7 +26,7 @@ const FRONTEND_PLATFORM_MAP = { x: "twitter" };
 export function AccountsFlow() {
   const searchParams = useSearchParams();
   const { userId, loading: userLoading } = useCurrentUser();
-  const [accounts, setAccounts] = useState({});
+  const [accountsByPlatform, setAccountsByPlatform] = useState({});
   const [managePlatform, setManagePlatform] = useState(null);
   const [connectLoading, setConnectLoading] = useState(null);
   const [message, setMessage] = useState(null);
@@ -34,19 +34,50 @@ export function AccountsFlow() {
 
   const loadAccounts = useCallback(async () => {
     if (!userId) {
-      setAccounts({});
+      setAccountsByPlatform({});
       return;
     }
     const { accounts: list } = await getSocialAccounts(userId);
     const byFrontendId = {};
-    for (const a of list) {
+    const seenKeys = new Set();
+    for (const a of list || []) {
+      if (!a?.platform) continue;
       const frontendId = FRONTEND_PLATFORM_MAP[a.platform] ?? a.platform;
-      byFrontendId[frontendId] = {
-        username: a.username ?? a.displayName,
+      if (!byFrontendId[frontendId]) byFrontendId[frontendId] = [];
+      const platformUserId = a.platformUserId ?? null;
+      const username = a.username ?? a.displayName ?? "";
+      const stableKey = `${a.platform}::${platformUserId || username || a.id || "default"}`;
+      if (seenKeys.has(stableKey)) {
+        // Avoid showing duplicate entries for the same underlying channel/account
+        continue;
+      }
+      seenKeys.add(stableKey);
+      const id =
+        a.id ??
+        a._id ??
+        (platformUserId ? `${a.platform}-${platformUserId}` : `${a.platform}-${username || "connected"}`);
+      byFrontendId[frontendId].push({
+        id,
+        backendPlatform: a.platform,
+        platformUserId,
+        username,
+        displayName: a.displayName,
+        profileImageUrl: a.profileImageUrl ?? null,
         connectedAt: a.connectedAt,
-      };
+        updatedAt: a.updatedAt,
+        channels: a.channels ?? null,
+        source: a.source ?? "socialAccounts",
+      });
     }
-    setAccounts(byFrontendId);
+    // Stable ordering within each platform
+    for (const key of Object.keys(byFrontendId)) {
+      byFrontendId[key].sort((a, b) => {
+        const ua = (a.username || "").toLowerCase();
+        const ub = (b.username || "").toLowerCase();
+        return ua.localeCompare(ub);
+      });
+    }
+    setAccountsByPlatform(byFrontendId);
   }, [userId]);
 
   useEffect(() => {
@@ -64,9 +95,19 @@ export function AccountsFlow() {
       window.history.replaceState({}, "", window.location.pathname);
     }
     if (error) {
+      let text;
+      if (error === "invalid_state") {
+        text = "Connection expired. Try again.";
+      } else if (error === "no_channels") {
+        text = "No YouTube channels found for that Google account. Switch to an account that owns a YouTube channel and try again.";
+      } else if (error === "access_denied") {
+        text = "Connection was cancelled. No changes were made.";
+      } else {
+        text = "Connection failed. Try again.";
+      }
       setMessage({
         type: "error",
-        text: error === "invalid_state" ? "Connection expired. Try again." : "Connection failed. Try again.",
+        text,
       });
       window.history.replaceState({}, "", window.location.pathname);
     }
@@ -176,13 +217,35 @@ export function AccountsFlow() {
     const backendPlatform = BACKEND_PLATFORM_MAP[platformId] ?? platformId;
     if (!userId) return;
     try {
+      // Back-compat: if called without an account, disconnect ALL for that platform.
       await disconnectAccount(userId, backendPlatform);
-      setAccounts((prev) => {
+      setAccountsByPlatform((prev) => {
         const next = { ...prev };
         delete next[platformId];
         return next;
       });
       if (managePlatform === platformId) setManagePlatform(null);
+      setMessage({ type: "success", text: "Account disconnected." });
+    } catch (err) {
+      setMessage({ type: "error", text: err.message || "Failed to disconnect." });
+    }
+  };
+
+  const handleRemoveAccount = async (platformId, account) => {
+    const backendPlatform = BACKEND_PLATFORM_MAP[platformId] ?? platformId;
+    if (!userId) return;
+    try {
+      const accountId = account?.source === "socialMedia" ? null : account?.id;
+      const channelId = account?.source === "socialMedia" ? account?.platformUserId : null;
+      await disconnectAccount(userId, backendPlatform, accountId, channelId);
+      setAccountsByPlatform((prev) => {
+        const current = Array.isArray(prev?.[platformId]) ? prev[platformId] : [];
+        const filtered = current.filter((a) => a.id !== account?.id);
+        const next = { ...prev };
+        if (filtered.length === 0) delete next[platformId];
+        else next[platformId] = filtered;
+        return next;
+      });
       setMessage({ type: "success", text: "Account disconnected." });
     } catch (err) {
       setMessage({ type: "error", text: err.message || "Failed to disconnect." });
@@ -210,7 +273,7 @@ export function AccountsFlow() {
     }
   };
 
-  const connectedCount = Object.keys(accounts).length;
+  const connectedCount = Object.values(accountsByPlatform).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
 
   return (
     <AccountsLayout>
@@ -290,10 +353,10 @@ export function AccountsFlow() {
             <AccountCard
               key={id}
               platformId={id}
-              isConnected={!!accounts[id]}
-              username={accounts[id]?.username}
+              accounts={accountsByPlatform[id] || []}
               onConnect={handleConnect}
-              onRemove={handleRemove}
+              onRemoveAll={handleRemove}
+              onRemoveAccount={handleRemoveAccount}
               onManage={handleManage}
               connectLoading={connectLoading === id}
             />

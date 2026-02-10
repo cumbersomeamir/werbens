@@ -11,6 +11,12 @@ const SCOPES = ["instagram_business_basic", "instagram_business_manage_insights"
 
 const stateStore = new Map();
 
+function getFrontendBase() {
+  const raw = process.env.FRONTEND_URL || "http://localhost:3000";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.endsWith("/app") ? trimmed : `${trimmed}/app`;
+}
+
 function pruneStates() {
   const now = Date.now();
   for (const [state, data] of stateStore.entries()) {
@@ -123,7 +129,7 @@ export function getInstagramAuthUrl(req, res) {
 
 export async function instagramCallback(req, res) {
   const { code, state, error } = req.query;
-  const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+  const frontendBase = getFrontendBase();
   if (error === "access_denied") {
     return res.redirect(`${frontendBase}/accounts?error=access_denied`);
   }
@@ -164,7 +170,7 @@ export async function instagramCallback(req, res) {
     const username = igData.profile.username || "Instagram";
     await upsertUser({ userId, username });
     await accountsColl.updateOne(
-      { userId, platform: "instagram" },
+      { userId, platform: "instagram", platformUserId: channelId },
       {
         $set: {
           userId,
@@ -214,36 +220,37 @@ export async function syncInstagram(req, res) {
   }
   const db = await getDb();
   const accountsColl = db.collection("SocialAccounts");
-  const account = await accountsColl.findOne({ userId, platform: "instagram" });
-  if (!account?.accessToken) {
-    return res.status(404).json({ error: "Instagram account not connected for this user" });
-  }
-  const igData = await fetchInstagramData(account.accessToken);
-  if (!igData || !igData.profile) {
-    return res.status(502).json({ error: "Failed to fetch data from Instagram" });
-  }
-  const channelId = igData.profile.id;
   const socialColl = db.collection("SocialMedia");
   const usersColl = db.collection("Users");
   const userDoc = await usersColl.findOne({ userId });
-  const appUsername = userDoc?.username || igData.profile.username || "Instagram";
   const now = new Date();
-  await socialColl.updateOne(
-    { userId, platform: "instagram", channelId },
-    {
-      $set: {
-        userId,
-        username: appUsername,
-        platform: "instagram",
-        channelId,
-        profile: igData.profile,
-        media: igData.media,
-        insights: igData.insights,
-        lastFetchedAt: now,
-        updatedAt: now,
+  const accounts = await accountsColl.find({ userId, platform: "instagram" }).toArray();
+  if (!accounts?.length) {
+    return res.status(404).json({ error: "Instagram account not connected for this user" });
+  }
+  for (const account of accounts) {
+    if (!account?.accessToken) continue;
+    const igData = await fetchInstagramData(account.accessToken);
+    if (!igData || !igData.profile) continue;
+    const channelId = String(igData.profile.id);
+    const appUsername = userDoc?.username || igData.profile.username || "Instagram";
+    await socialColl.updateOne(
+      { userId, platform: "instagram", channelId },
+      {
+        $set: {
+          userId,
+          username: appUsername,
+          platform: "instagram",
+          channelId,
+          profile: igData.profile,
+          media: igData.media,
+          insights: igData.insights,
+          lastFetchedAt: now,
+          updatedAt: now,
+        },
       },
-    },
-    { upsert: true }
-  );
-  return res.json({ ok: true, platform: "instagram" });
+      { upsert: true }
+    );
+  }
+  return res.json({ ok: true, platform: "instagram", accounts: accounts.length });
 }

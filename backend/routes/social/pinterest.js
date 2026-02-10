@@ -8,6 +8,12 @@ const PINTEREST_API_BASE = "https://api.pinterest.com/v5";
 const SCOPES = ["user_accounts:read", "boards:read", "pins:read"];
 const STATE_TTL_MS = 10 * 60 * 1000;
 
+function getFrontendBase() {
+  const raw = process.env.FRONTEND_URL || "http://localhost:3000";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.endsWith("/app") ? trimmed : `${trimmed}/app`;
+}
+
 const stateStore = new Map();
 
 function pruneStates() {
@@ -97,7 +103,7 @@ export function getPinterestAuthUrl(req, res) {
 
 export async function pinterestCallback(req, res) {
   const { code, state } = req.query;
-  const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+  const frontendBase = getFrontendBase();
   if (!code || !state) {
     return res.redirect(`${frontendBase}/accounts?error=missing_params`);
   }
@@ -145,7 +151,7 @@ export async function pinterestCallback(req, res) {
     const now = new Date();
     const channelId = String(pinData.profile.id || pinData.profile.username || "pinterest");
     await accountsColl.updateOne(
-      { userId, platform: "pinterest" },
+      { userId, platform: "pinterest", platformUserId: channelId },
       {
         $set: {
           userId,
@@ -198,36 +204,37 @@ export async function syncPinterest(req, res) {
   }
   const db = await getDb();
   const accountsColl = db.collection("SocialAccounts");
-  const account = await accountsColl.findOne({ userId, platform: "pinterest" });
-  if (!account?.accessToken) {
-    return res.status(404).json({ error: "Pinterest account not connected for this user" });
-  }
-  const pinData = await fetchPinterestData(account.accessToken);
-  if (!pinData || !pinData.profile) {
-    return res.status(502).json({ error: "Failed to fetch data from Pinterest" });
-  }
-  const channelId = String(pinData.profile.id || pinData.profile.username || "pinterest");
   const usersColl = db.collection("Users");
   const userDoc = await usersColl.findOne({ userId });
-  const appUsername = userDoc?.username || pinData.profile.username || "Pinterest";
   const socialColl = db.collection("SocialMedia");
+  const accounts = await accountsColl.find({ userId, platform: "pinterest" }).toArray();
+  if (!accounts?.length) {
+    return res.status(404).json({ error: "Pinterest account not connected for this user" });
+  }
   const now = new Date();
-  await socialColl.updateOne(
-    { userId, platform: "pinterest", channelId },
-    {
-      $set: {
-        userId,
-        username: appUsername,
-        platform: "pinterest",
-        channelId,
-        profile: pinData.profile,
-        boards: pinData.boards,
-        pins: pinData.pins,
-        lastFetchedAt: now,
-        updatedAt: now,
+  for (const account of accounts) {
+    if (!account?.accessToken) continue;
+    const pinData = await fetchPinterestData(account.accessToken);
+    if (!pinData || !pinData.profile) continue;
+    const channelId = String(pinData.profile.id || pinData.profile.username || "pinterest");
+    const appUsername = userDoc?.username || pinData.profile.username || "Pinterest";
+    await socialColl.updateOne(
+      { userId, platform: "pinterest", channelId },
+      {
+        $set: {
+          userId,
+          username: appUsername,
+          platform: "pinterest",
+          channelId,
+          profile: pinData.profile,
+          boards: pinData.boards,
+          pins: pinData.pins,
+          lastFetchedAt: now,
+          updatedAt: now,
+        },
       },
-    },
-    { upsert: true }
-  );
-  return res.json({ ok: true, platform: "pinterest" });
+      { upsert: true }
+    );
+  }
+  return res.json({ ok: true, platform: "pinterest", accounts: accounts.length });
 }

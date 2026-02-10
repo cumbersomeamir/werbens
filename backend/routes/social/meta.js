@@ -17,6 +17,12 @@ const SCOPES = [
 
 const stateStore = new Map();
 
+function getFrontendBase() {
+  const raw = process.env.FRONTEND_URL || "http://localhost:3000";
+  const trimmed = raw.replace(/\/+$/, "");
+  return trimmed.endsWith("/app") ? trimmed : `${trimmed}/app`;
+}
+
 function pruneStates() {
   const now = Date.now();
   for (const [state, data] of stateStore.entries()) {
@@ -281,7 +287,7 @@ export function getMetaAuthUrl(req, res) {
 
 export async function metaCallback(req, res) {
   const { code, state } = req.query;
-  const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+  const frontendBase = getFrontendBase();
   if (!code || !state) {
     return res.redirect(`${frontendBase}/accounts?error=missing_params`);
   }
@@ -317,8 +323,28 @@ export async function metaCallback(req, res) {
     const now = new Date();
     const displayName = metaData.fbUser.name || "Facebook";
     await upsertUser({ userId, username: displayName });
+    const channelsForAccount = metaData.channels.map((ch) => {
+      if (ch.type === "facebook") {
+        return {
+          platform: "facebook",
+          channelId: String(ch.pageId),
+          name: ch.name || "Facebook Page",
+          picture: ch.picture ?? null,
+        };
+      }
+      if (ch.type === "instagram") {
+        return {
+          platform: "instagram",
+          channelId: String(ch.igId),
+          pageId: String(ch.pageId),
+          username: ch.profile?.username ?? null,
+          picture: ch.profile?.profile_picture_url ?? null,
+        };
+      }
+      return null;
+    }).filter(Boolean);
     await accountsColl.updateOne(
-      { userId, platform: "facebook" },
+      { userId, platform: "facebook", platformUserId: metaData.fbUser.id },
       {
         $set: {
           userId,
@@ -328,6 +354,7 @@ export async function metaCallback(req, res) {
           username: displayName,
           displayName: "Facebook",
           profileImageUrl: metaData.fbUser.picture ?? null,
+          channels: channelsForAccount,
           updatedAt: now,
         },
         $setOnInsert: { connectedAt: now },
@@ -390,57 +417,94 @@ export async function syncMeta(req, res) {
   }
   const db = await getDb();
   const accountsColl = db.collection("SocialAccounts");
-  const account = await accountsColl.findOne({ userId, platform: "facebook" });
-  if (!account?.accessToken) {
+  const accounts = await accountsColl.find({ userId, platform: "facebook" }).toArray();
+  if (!accounts?.length) {
     return res.status(404).json({ error: "Facebook account not connected for this user" });
-  }
-  const metaData = await fetchMetaData(account.accessToken);
-  if (!metaData || !metaData.fbUser) {
-    return res.status(502).json({ error: "Failed to fetch data from Meta" });
   }
   const socialColl = db.collection("SocialMedia");
   const usersColl = db.collection("Users");
   const userDoc = await usersColl.findOne({ userId });
-  const appUsername = userDoc?.username || metaData.fbUser.name || "Facebook";
   const now = new Date();
-  for (const ch of metaData.channels) {
-    if (ch.type === "facebook") {
-      await socialColl.updateOne(
-        { userId, platform: "facebook", channelId: ch.pageId },
-        {
-          $set: {
-            userId,
-            username: appUsername,
-            platform: "facebook",
-            channelId: ch.pageId,
-            profile: { id: ch.pageId, name: ch.name, picture: ch.picture },
-            posts: ch.posts,
-            insights: ch.insights,
-            lastFetchedAt: now,
-            updatedAt: now,
-          },
+  let totalChannels = 0;
+  for (const account of accounts) {
+    if (!account?.accessToken) continue;
+    const metaData = await fetchMetaData(account.accessToken);
+    if (!metaData || !metaData.fbUser) continue;
+    totalChannels += metaData.channels.length;
+    const appUsername = userDoc?.username || metaData.fbUser.name || "Facebook";
+
+    const channelsForAccount = metaData.channels.map((ch) => {
+      if (ch.type === "facebook") {
+        return {
+          platform: "facebook",
+          channelId: String(ch.pageId),
+          name: ch.name || "Facebook Page",
+          picture: ch.picture ?? null,
+        };
+      }
+      if (ch.type === "instagram") {
+        return {
+          platform: "instagram",
+          channelId: String(ch.igId),
+          pageId: String(ch.pageId),
+          username: ch.profile?.username ?? null,
+          picture: ch.profile?.profile_picture_url ?? null,
+        };
+      }
+      return null;
+    }).filter(Boolean);
+    await accountsColl.updateOne(
+      { _id: account._id },
+      {
+        $set: {
+          platformUserId: account.platformUserId || metaData.fbUser.id,
+          username: metaData.fbUser.name || account.username || "Facebook",
+          profileImageUrl: metaData.fbUser.picture ?? account.profileImageUrl ?? null,
+          channels: channelsForAccount,
+          updatedAt: now,
         },
-        { upsert: true }
-      );
-    } else if (ch.type === "instagram") {
-      await socialColl.updateOne(
-        { userId, platform: "instagram", channelId: ch.igId },
-        {
-          $set: {
-            userId,
-            username: appUsername,
-            platform: "instagram",
-            channelId: ch.igId,
-            profile: ch.profile,
-            media: ch.media,
-            insights: ch.insights,
-            lastFetchedAt: now,
-            updatedAt: now,
+      }
+    );
+
+    for (const ch of metaData.channels) {
+      if (ch.type === "facebook") {
+        await socialColl.updateOne(
+          { userId, platform: "facebook", channelId: ch.pageId },
+          {
+            $set: {
+              userId,
+              username: appUsername,
+              platform: "facebook",
+              channelId: ch.pageId,
+              profile: { id: ch.pageId, name: ch.name, picture: ch.picture },
+              posts: ch.posts,
+              insights: ch.insights,
+              lastFetchedAt: now,
+              updatedAt: now,
+            },
           },
-        },
-        { upsert: true }
-      );
+          { upsert: true }
+        );
+      } else if (ch.type === "instagram") {
+        await socialColl.updateOne(
+          { userId, platform: "instagram", channelId: ch.igId },
+          {
+            $set: {
+              userId,
+              username: appUsername,
+              platform: "instagram",
+              channelId: ch.igId,
+              profile: ch.profile,
+              media: ch.media,
+              insights: ch.insights,
+              lastFetchedAt: now,
+              updatedAt: now,
+            },
+          },
+          { upsert: true }
+        );
+      }
     }
   }
-  return res.json({ ok: true, platform: "facebook", channels: metaData.channels.length });
+  return res.json({ ok: true, platform: "facebook", accounts: accounts.length, channels: totalChannels });
 }
