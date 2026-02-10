@@ -291,6 +291,7 @@ export async function youtubeCallback(req, res) {
     const firstChannelTitle = ytData.channels[0]?.profile?.title || "YouTube";
     await upsertUser({ userId, username: firstChannelTitle });
     const accountsColl = db.collection("SocialAccounts");
+    const ytAnalyticsColl = db.collection("YouTubeAnalytics");
     const now = new Date();
     // Use the first channel id as a stable identity for this Google login in our DB.
     const platformUserId = String(ytData.channels[0]?.profile?.id || "youtube");
@@ -340,6 +341,23 @@ export async function youtubeCallback(req, res) {
         },
         { upsert: true }
       );
+      if (analytics) {
+        await ytAnalyticsColl.updateOne(
+          { userId, channelId: profile.id },
+          {
+            $set: {
+              userId,
+              channelId: profile.id,
+              username: appUsername,
+              profileTitle: profile.title || null,
+              analytics,
+              lastFetchedAt: now,
+              updatedAt: now,
+            },
+          },
+          { upsert: true }
+        );
+      }
     }
     return res.redirect(`${frontendBase}/accounts?connected=youtube`);
   } catch (err) {
@@ -356,6 +374,7 @@ export async function syncYoutube(req, res) {
   }
   const db = await getDb();
   const accountsColl = db.collection("SocialAccounts");
+  const ytAnalyticsColl = db.collection("YouTubeAnalytics");
   const accounts = await accountsColl.find({ userId, platform: "youtube" }).toArray();
   if (!accounts?.length) {
     return res.status(404).json({ error: "YouTube account not connected for this user" });
@@ -410,6 +429,23 @@ export async function syncYoutube(req, res) {
         },
         { upsert: true }
       );
+      if (analytics) {
+        await ytAnalyticsColl.updateOne(
+          { userId, channelId: profile.id },
+          {
+            $set: {
+              userId,
+              channelId: profile.id,
+              username: appUsername,
+              profileTitle: profile.title || null,
+              analytics,
+              lastFetchedAt: now,
+              updatedAt: now,
+            },
+          },
+          { upsert: true }
+        );
+      }
     }
   }
   return res.json({ ok: true, platform: "youtube", accounts: accounts.length, channels: totalChannels });
