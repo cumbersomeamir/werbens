@@ -393,6 +393,167 @@ function YouTubeAggregates({ videos }) {
   );
 }
 
+function YouTubeAnalyticsSection({ insights, videos }) {
+  if (!insights || typeof insights !== "object") return null;
+  const { channelDaily, topVideos, trafficSources, geography, devices } = insights;
+
+  const latest = Array.isArray(channelDaily) && channelDaily.length > 0 ? channelDaily[channelDaily.length - 1] : null;
+
+  const metricValue = (row, key) => {
+    const v = row?.[key];
+    if (v == null) return 0;
+    const n = Number(v);
+    return Number.isNaN(n) ? 0 : n;
+  };
+
+  // Build a lookup from videoId -> video metadata for nicer labels
+  const videoMap = new Map();
+  if (Array.isArray(videos)) {
+    for (const v of videos) {
+      if (!v?.id) continue;
+      videoMap.set(v.id, v);
+    }
+  }
+
+  return (
+    <div className="space-y-6 mb-4">
+      {latest && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-werbens-mist/60 to-werbens-dark-cyan/5 border border-werbens-dark-cyan/10">
+          <h4 className="text-xs font-semibold text-werbens-dark-cyan uppercase tracking-wider mb-3">
+            Latest day performance ({latest.day})
+          </h4>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+            <div>
+              <p className="text-lg font-bold text-werbens-dark-cyan">
+                {formatNumber(metricValue(latest, "views"))}
+              </p>
+              <p className="text-xs text-werbens-muted">Views</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-werbens-dark-cyan">
+                {formatNumber(metricValue(latest, "estimatedMinutesWatched"))}
+              </p>
+              <p className="text-xs text-werbens-muted">Watch time (min)</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-werbens-dark-cyan">
+                {formatNumber(metricValue(latest, "subscribersGained") - metricValue(latest, "subscribersLost"))}
+              </p>
+              <p className="text-xs text-werbens-muted">Net subscribers</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-werbens-dark-cyan">
+                {formatNumber(metricValue(latest, "averageViewDuration"))}s
+              </p>
+              <p className="text-xs text-werbens-muted">Avg. view duration</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {Array.isArray(topVideos) && topVideos.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">
+            Top videos (last 28 days, by watch time)
+          </h4>
+          <ul className="space-y-2">
+            {topVideos.slice(0, 10).map((row, idx) => {
+              const videoId = row.video;
+              const meta = videoMap.get(videoId);
+              const title = meta?.title || videoId || `Video ${idx + 1}`;
+              return (
+                <li
+                  key={videoId || `yt-top-${idx}`}
+                  className="p-3 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-werbens-text line-clamp-2">{title}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-xs text-werbens-muted sm:text-right">
+                    <span>{formatNumber(metricValue(row, "views"))} views</span>
+                    <span>{formatNumber(metricValue(row, "estimatedMinutesWatched"))} min watch time</span>
+                    <span>
+                      {formatNumber(metricValue(row, "averageViewDuration"))}s avg. view
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {Array.isArray(trafficSources) && trafficSources.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">
+            Traffic sources (last 30 days)
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {trafficSources.map((row, idx) => (
+              <div
+                key={row.insightTrafficSourceType || `yt-source-${idx}`}
+                className="p-3 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8"
+              >
+                <p className="text-xs text-werbens-muted uppercase tracking-wider mb-1">
+                  {row.insightTrafficSourceType}
+                </p>
+                <p className="text-sm font-semibold text-werbens-text">
+                  {formatNumber(metricValue(row, "views"))} views
+                </p>
+                <p className="text-xs text-werbens-muted">
+                  {formatNumber(metricValue(row, "estimatedMinutesWatched"))} min watch time
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {Array.isArray(geography) && geography.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">
+            Top countries (last 30 days)
+          </h4>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            {geography.map((row, idx) => (
+              <li
+                key={row.country || `yt-geo-${idx}`}
+                className="p-3 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8 flex items-center justify-between"
+              >
+                <span className="font-medium text-werbens-text">{row.country}</span>
+                <span className="text-xs text-werbens-muted">
+                  {formatNumber(metricValue(row, "views"))} views
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {Array.isArray(devices) && devices.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider">
+            Devices (last 30 days)
+          </h4>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            {devices.map((row, idx) => (
+              <li
+                key={row.deviceType || `yt-device-${idx}`}
+                className="p-3 rounded-xl bg-werbens-mist/40 border border-werbens-dark-cyan/8 flex items-center justify-between"
+              >
+                <span className="font-medium text-werbens-text">{row.deviceType}</span>
+                <span className="text-xs text-werbens-muted">
+                  {formatNumber(metricValue(row, "views"))} views
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function YouTubeVideos({ videos }) {
   if (!videos?.length) return <p className="text-sm text-werbens-muted">No videos yet.</p>;
   return (
@@ -749,6 +910,7 @@ function PlatformContent({ platform, doc }) {
         <YouTubeProfile profile={profile} />
         <YouTubeAggregates videos={videos} />
         <YouTubeVideos videos={videos} />
+        <YouTubeAnalyticsSection insights={doc.insights} videos={videos} />
       </>
     );
   }

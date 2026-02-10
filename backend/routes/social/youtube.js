@@ -4,8 +4,11 @@ import { upsertUser } from "../../lib/users.js";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-const YOUTUBE_SCOPE = "https://www.googleapis.com/auth/youtube.readonly";
+// Request both Data API and Analytics API scopes so we can fetch Studio-level metrics.
+const YOUTUBE_SCOPE =
+  "https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly";
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
+const YOUTUBE_ANALYTICS_BASE = "https://youtubeanalytics.googleapis.com/v2";
 const STATE_TTL_MS = 10 * 60 * 1000;
 
 function getFrontendBase() {
@@ -94,6 +97,124 @@ async function fetchYouTubeData(accessToken) {
     result.push({ profile, videos });
   }
   return { channels: result };
+}
+
+function mapAnalyticsRows(resp) {
+  if (!resp || !Array.isArray(resp.rows) || !Array.isArray(resp.columnHeaders)) return [];
+  const headers = resp.columnHeaders.map((h) => h.name);
+  return resp.rows.map((row) => {
+    const obj = {};
+    headers.forEach((name, idx) => {
+      obj[name] = row[idx];
+    });
+    return obj;
+  });
+}
+
+async function ytAnalyticsGet(params, accessToken) {
+  const search = new URLSearchParams(params);
+  const url = `${YOUTUBE_ANALYTICS_BASE}/reports?${search.toString()}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    console.error("YouTube Analytics error:", res.status, text);
+    return null;
+  }
+  return res.json();
+}
+
+/** Fetch richer analytics for a given channel (Studio-like data). */
+async function fetchYouTubeAnalytics(accessToken, channelId) {
+  if (!channelId) return null;
+  const today = new Date();
+  const endDate = today.toISOString().slice(0, 10);
+  const start30 = new Date(today);
+  start30.setDate(start30.getDate() - 30);
+  const start30Str = start30.toISOString().slice(0, 10);
+  const start28 = new Date(today);
+  start28.setDate(start28.getDate() - 28);
+  const start28Str = start28.toISOString().slice(0, 10);
+
+  const ids = `channel==${channelId}`;
+
+  // 1) Per-day channel metrics (last 30 days)
+  const channelDailyResp = await ytAnalyticsGet(
+    {
+      ids,
+      startDate: start30Str,
+      endDate,
+      metrics:
+        "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,likes,subscribersGained,subscribersLost",
+      dimensions: "day",
+      sort: "day",
+    },
+    accessToken
+  );
+
+  // 2) Top videos last 28 days by watch time
+  const topVideosResp = await ytAnalyticsGet(
+    {
+      ids,
+      startDate: start28Str,
+      endDate,
+      metrics:
+        "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,likes,comments,shares,subscribersGained,subscribersLost",
+      dimensions: "video",
+      sort: "-estimatedMinutesWatched",
+      maxResults: "10",
+    },
+    accessToken
+  );
+
+  // 3) Traffic sources (last 30 days)
+  const trafficSourcesResp = await ytAnalyticsGet(
+    {
+      ids,
+      startDate: start30Str,
+      endDate,
+      metrics: "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage",
+      dimensions: "insightTrafficSourceType",
+      sort: "-views",
+    },
+    accessToken
+  );
+
+  // 4) Geography (top countries, last 30 days)
+  const geographyResp = await ytAnalyticsGet(
+    {
+      ids,
+      startDate: start30Str,
+      endDate,
+      metrics: "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage",
+      dimensions: "country",
+      sort: "-views",
+      maxResults: "10",
+    },
+    accessToken
+  );
+
+  // 5) Device types (last 30 days)
+  const devicesResp = await ytAnalyticsGet(
+    {
+      ids,
+      startDate: start30Str,
+      endDate,
+      metrics: "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage",
+      dimensions: "deviceType",
+      sort: "-views",
+    },
+    accessToken
+  );
+
+  return {
+    channelDaily: mapAnalyticsRows(channelDailyResp),
+    topVideos: mapAnalyticsRows(topVideosResp),
+    trafficSources: mapAnalyticsRows(trafficSourcesResp),
+    geography: mapAnalyticsRows(geographyResp),
+    devices: mapAnalyticsRows(devicesResp),
+  };
 }
 
 export function getYoutubeAuthUrl(req, res) {
@@ -201,6 +322,7 @@ export async function youtubeCallback(req, res) {
     const userDoc = await usersColl.findOne({ userId });
     const appUsername = userDoc?.username || firstChannelTitle;
     for (const { profile, videos } of ytData.channels) {
+      const analytics = await fetchYouTubeAnalytics(accessToken, profile.id).catch(() => null);
       await socialColl.updateOne(
         { userId, platform: "youtube", channelId: profile.id },
         {
@@ -211,6 +333,7 @@ export async function youtubeCallback(req, res) {
             channelId: profile.id,
             profile,
             videos,
+            insights: analytics || null,
             lastFetchedAt: now,
             updatedAt: now,
           },
@@ -269,6 +392,7 @@ export async function syncYoutube(req, res) {
     );
 
     for (const { profile, videos } of ytData.channels) {
+      const analytics = await fetchYouTubeAnalytics(account.accessToken, profile.id).catch(() => null);
       await socialColl.updateOne(
         { userId, platform: "youtube", channelId: profile.id },
         {
@@ -279,6 +403,7 @@ export async function syncYoutube(req, res) {
             channelId: profile.id,
             profile,
             videos,
+            insights: analytics || null,
             lastFetchedAt: now,
             updatedAt: now,
           },
