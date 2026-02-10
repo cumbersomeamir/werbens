@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/SessionProvider";
+import { AuthGuard } from "@/components/AuthGuard";
 import { Header } from "@/components/Header";
 
 export const viewport = {
@@ -37,8 +38,10 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AuthSessionProvider>
-          <Header />
-          {children}
+          <AuthGuard>
+            <Header />
+            {children}
+          </AuthGuard>
         </AuthSessionProvider>
       </body>
     </html>
