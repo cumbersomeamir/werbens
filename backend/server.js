@@ -14,6 +14,7 @@ import { createPostHandler, runSchedulerHandler } from "./routes/social/posting.
 import { chatHandler } from "./routes/chat/index.js";
 import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
+import { automaticGenerateHandler } from "./routes/automatic.js";
 import {
   getOrCreateSessionHandler,
   clearSessionHandler,
@@ -78,6 +79,9 @@ app.post("/api/social/posting/run", runSchedulerHandler);
 app.post("/api/chat", chatHandler);
 app.post("/api/generate-image", imageGenerationHandler);
 app.post("/api/model-switcher/classify", classifyPromptHandler);
+
+// Automatic personalised content API
+app.post("/api/automatic/generate", automaticGenerateHandler);
 
 // Session management APIs
 app.post("/api/sessions/get-or-create", getOrCreateSessionHandler);

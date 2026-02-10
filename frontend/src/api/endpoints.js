@@ -54,4 +54,7 @@ export const API_ENDPOINTS = {
   // Social Posting
   SOCIAL_POST: "/api/social/post",
   SOCIAL_POSTING_RUN: "/api/social/posting/run",
+
+  // Automatic personalised content
+  AUTOMATIC_GENERATE: "/api/automatic/generate",
 };
