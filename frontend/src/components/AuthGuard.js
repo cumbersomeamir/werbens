@@ -15,7 +15,7 @@ export function AuthGuard({ children }) {
 
   // Public routes that don't require authentication
   // Note: basePath is "/app", but usePathname() returns pathname WITHOUT basePath
-  const publicRoutes = ["/", "/login"];
+  const publicRoutes = ["/", "/login", "/terms", "/privacy"];
 
   useEffect(() => {
     // Don't redirect if still loading or on public route

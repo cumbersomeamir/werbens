@@ -10,6 +10,7 @@ import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/soc
 import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/social/pinterest.js";
 import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js";
 import { getInstagramAuthUrl, instagramCallback, syncInstagram } from "./routes/social/instagram.js";
+import { createPostHandler, runSchedulerHandler } from "./routes/social/posting.js";
 import { chatHandler } from "./routes/chat/index.js";
 import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
@@ -68,6 +69,10 @@ app.post("/api/social/instagram/sync", syncInstagram);
 
 // Social analytics: GET data for analytics UI (no tokens)
 app.get("/api/social/analytics", getSocialAnalytics);
+
+// Social posting: create posts + run scheduler
+app.post("/api/social/post", createPostHandler);
+app.post("/api/social/posting/run", runSchedulerHandler);
 
 // Chat and Image Generation APIs
 app.post("/api/chat", chatHandler);

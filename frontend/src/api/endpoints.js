@@ -50,4 +50,8 @@ export const API_ENDPOINTS = {
   SOCIAL_PINTEREST_SYNC: "/api/social/pinterest/sync",
   SOCIAL_META_SYNC: "/api/social/meta/sync",
   SOCIAL_INSTAGRAM_SYNC: "/api/social/instagram/sync",
+
+  // Social Posting
+  SOCIAL_POST: "/api/social/post",
+  SOCIAL_POSTING_RUN: "/api/social/posting/run",
 };
