@@ -10,13 +10,16 @@ import { XContentForm, LinkedInContentForm, GenericContentForm } from "./platfor
 import { PLATFORM_LABELS, FRONTEND_PLATFORM_MAP, BACKEND_PLATFORM_MAP } from "./utils";
 
 function PlatformSelector({ availableTargets, selectedTargets, onToggle }) {
+  // For Post Now, only allow single selection
+  const selectedTarget = selectedTargets.length > 0 ? selectedTargets[0] : null;
+  
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {availableTargets.map((t) => {
         const label = PLATFORM_LABELS[t.platform] || t.platform;
-        const isSelected = selectedTargets.some(
-          (s) => s.platform === t.platform && s.channelId === t.channelId,
-        );
+        const isSelected = selectedTarget && 
+          selectedTarget.platform === t.platform && 
+          selectedTarget.channelId === t.channelId;
         return (
           <button
             key={`${t.platform}-${t.channelId}`}
@@ -24,6 +27,7 @@ function PlatformSelector({ availableTargets, selectedTargets, onToggle }) {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              // Single selection: toggle this target (select if not selected, deselect if already selected)
               onToggle(t);
             }}
             className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-all ${
@@ -137,12 +141,15 @@ export function PostNow() {
   }, [userId]); // Only depend on userId, not targets or loadingTargets to avoid loops
 
   function handleToggleTarget(t) {
+    // For Post Now, only allow single selection
     setSelectedTargets((prev) => {
       const exists = prev.some((p) => p.platform === t.platform && p.channelId === t.channelId);
       if (exists) {
-        return prev.filter((p) => !(p.platform === t.platform && p.channelId === t.channelId));
+        // Deselect if clicking the same target
+        return [];
       }
-      return [...prev, t];
+      // Select only this target (replace any existing selection)
+      return [t];
     });
   }
 
