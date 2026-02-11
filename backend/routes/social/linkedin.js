@@ -5,7 +5,7 @@ import { upsertUser } from "../../lib/users.js";
 const LINKEDIN_AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
 const LINKEDIN_TOKEN_URL = "https://www.linkedin.com/oauth/v2/accessToken";
 const LINKEDIN_USERINFO_URL = "https://api.linkedin.com/v2/userinfo";
-const SCOPES = ["openid", "profile", "email"];
+const SCOPES = ["openid", "profile", "email", "w_member_social"];
 const STATE_TTL_MS = 10 * 60 * 1000;
 
 function getFrontendBase() {

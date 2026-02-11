@@ -1,12 +1,13 @@
-import { PostFlow } from "./components/PostFlow";
+import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Post & Schedule | Werbens — Plan Social Content",
+  title: "Post | Werbens — Plan Social Content",
   description:
-    "Create, schedule, and orchestrate content across social platforms from a single place. Plan posts safely without spamming your audience.",
+    "Create, schedule, and orchestrate content across social platforms from a single place.",
 };
 
 export default function PostPage() {
-  return <PostFlow />;
+  // Redirect to /post/now by default
+  redirect("/post/now");
 }
 

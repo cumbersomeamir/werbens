@@ -52,7 +52,10 @@ export const API_ENDPOINTS = {
   SOCIAL_INSTAGRAM_SYNC: "/api/social/instagram/sync",
 
   // Social Posting
-  SOCIAL_POST: "/api/social/post",
+  SOCIAL_POST: "/api/social/post", // Legacy endpoint (still works)
+  SOCIAL_POST_NOW: "/api/social/post/now",
+  SOCIAL_POST_SCHEDULE: "/api/social/post/schedule",
+  SOCIAL_POST_AUTOMATE: "/api/social/post/automate",
   SOCIAL_POSTING_RUN: "/api/social/posting/run",
 
   // Automatic personalised content

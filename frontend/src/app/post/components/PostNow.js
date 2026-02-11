@@ -4,36 +4,10 @@ import { useState, useEffect } from "react";
 import { PostLayout } from "./PostLayout";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import { getSocialAccounts } from "@/lib/socialApi";
-import { createPost } from "@/api/services/postingService";
+import { post } from "@/api/client.js";
+import { API_ENDPOINTS } from "@/api/endpoints.js";
 import { XContentForm, LinkedInContentForm, GenericContentForm } from "./platforms";
 import { PLATFORM_LABELS, FRONTEND_PLATFORM_MAP, BACKEND_PLATFORM_MAP } from "./utils";
-
-function ModeTabs({ value, onChange }) {
-  const modes = [
-    { id: "immediate", label: "Post now" },
-    { id: "scheduled", label: "Schedule" },
-    { id: "automatic", label: "Automatic (rules)" },
-  ];
-  return (
-    <div className="inline-flex rounded-xl bg-werbens-surface p-1 border border-werbens-steel/30 shadow-sm">
-      {modes.map((m) => (
-        <button
-          key={m.id}
-          type="button"
-          onClick={() => onChange(m.id)}
-          className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-all ${
-            value === m.id
-              ? "bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan text-white shadow"
-              : "text-werbens-muted hover:text-werbens-text"
-          }`}
-        >
-          {m.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 
 function PlatformSelector({ availableTargets, selectedTargets, onToggle }) {
   return (
@@ -104,12 +78,11 @@ async function fetchTargets(userId) {
   return targets.filter((t) => t.channelId);
 }
 
-export function PostFlow() {
+export function PostNow() {
   const { userId } = useCurrentUser();
   const [loadingTargets, setLoadingTargets] = useState(false);
   const [targets, setTargets] = useState([]);
   const [selectedTargets, setSelectedTargets] = useState([]);
-  const [mode, setMode] = useState("immediate");
   
   // Platform-specific content state
   const [content, setContent] = useState({
@@ -135,7 +108,6 @@ export function PostFlow() {
     linkedin_disable_reshare: false,
   });
   
-  const [scheduledAt, setScheduledAt] = useState("");
   const [status, setStatus] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   
@@ -206,10 +178,6 @@ export function PostFlow() {
         return;
       }
     }
-    if (mode === "scheduled" && !scheduledAt) {
-      setStatus({ type: "error", text: "Choose a date and time for scheduled posts." });
-      return;
-    }
     setSubmitting(true);
     setStatus(null);
     try {
@@ -272,7 +240,7 @@ export function PostFlow() {
       
       const payload = {
         userId,
-        mode,
+        mode: "immediate",
         targets: selectedTargets.map((t) => ({
           platform: BACKEND_PLATFORM_MAP[FRONTEND_PLATFORM_MAP[t.platform] || t.platform] || t.platform,
           channelId: t.channelId,
@@ -281,18 +249,18 @@ export function PostFlow() {
           ...contentPayload,
           metadata: {},
         },
-        scheduledAt: mode === "scheduled" ? scheduledAt : null,
       };
       
       console.log("Form payload:", JSON.stringify(payload, null, 2));
 
-      const data = await createPost(userId, payload);
+      // Use the new /now endpoint for immediate posts
+      const data = await post(API_ENDPOINTS.SOCIAL_POST_NOW, payload);
       if (!data.ok) {
         throw new Error(data.error || "Failed to create post");
       }
       
-      // Check if post was posted immediately (for immediate mode)
-      if (mode === "immediate" && data.results && Array.isArray(data.results)) {
+      // Check if post was posted immediately
+      if (data.results && Array.isArray(data.results)) {
         const postedResults = data.results.filter((r) => r.status === "posted");
         const errorResults = data.results.filter((r) => r.error);
         
@@ -317,39 +285,34 @@ export function PostFlow() {
       } else {
         setStatus({
           type: "success",
-          text:
-            mode === "immediate"
-              ? "Post published successfully!"
-              : "Post scheduled successfully.",
+          text: "Post published successfully!",
         });
       }
       
-      // Reset form for immediate posts
-      if (mode === "immediate") {
-        setSelectedTargets([]);
-        setContent({
-          title: "",
-          body: "",
-          hashtags: "",
-          x_text: "",
-          x_media_ids: [],
-          x_poll_options: [],
-          x_poll_duration_minutes: 60,
-          x_reply_to_tweet_id: "",
-          x_quote_tweet_id: "",
-          x_geo_place_id: "",
-          x_for_super_followers_only: false,
-          linkedin_text: "",
-          linkedin_media_urn: "",
-          linkedin_media_title: "",
-          linkedin_media_alt_text: "",
-          linkedin_visibility: "PUBLIC",
-          linkedin_disable_reshare: false,
-        });
-      }
+      // Reset form after successful post
+      setSelectedTargets([]);
+      setContent({
+        title: "",
+        body: "",
+        hashtags: "",
+        x_text: "",
+        x_media_ids: [],
+        x_poll_options: [],
+        x_poll_duration_minutes: 60,
+        x_reply_to_tweet_id: "",
+        x_quote_tweet_id: "",
+        x_geo_place_id: "",
+        x_for_super_followers_only: false,
+        linkedin_text: "",
+        linkedin_media_urn: "",
+        linkedin_media_title: "",
+        linkedin_media_alt_text: "",
+        linkedin_visibility: "PUBLIC",
+        linkedin_disable_reshare: false,
+      });
     } catch (err) {
       console.error("Post submission error:", err);
-      const errorMessage = err.message || err.data?.error || err.data?.message || "Failed to schedule post.";
+      const errorMessage = err.message || err.data?.error || err.data?.message || "Failed to post.";
       setStatus({ 
         type: "error", 
         text: errorMessage
@@ -363,13 +326,11 @@ export function PostFlow() {
     <PostLayout>
       <div className="mb-8 sm:mb-10">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-werbens-text">
-          Plan &amp; post{" "}
-          <span className="gradient-text">social content</span>
+          Post{" "}
+          <span className="gradient-text">now</span>
         </h1>
         <p className="mt-3 text-sm sm:text-base text-werbens-muted max-w-2xl">
-          Create once, distribute everywhere. Choose platforms, compose your content,
-          and either post now or schedule for later. Automatic posting rules can be
-          added on top without spamming your audience.
+          Create and publish content immediately across your connected social media platforms.
         </p>
       </div>
 
@@ -396,14 +357,11 @@ export function PostFlow() {
           }
         }}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold text-werbens-text">Destinations</h2>
-            <p className="text-xs text-werbens-muted mt-0.5">
-              Pick the channels you want this content to go to.
-            </p>
-          </div>
-          <ModeTabs value={mode} onChange={setMode} />
+        <div>
+          <h2 className="text-sm font-semibold text-werbens-text">Destinations</h2>
+          <p className="text-xs text-werbens-muted mt-0.5">
+            Pick the channels you want this content to go to.
+          </p>
         </div>
 
         {loadingTargets ? (
@@ -442,62 +400,16 @@ export function PostFlow() {
           )}
         </div>
 
-        {mode === "scheduled" && (
-          <div className="border-t border-werbens-steel/20 pt-4 space-y-3">
-            <div>
-              <h2 className="text-sm font-semibold text-werbens-text">Schedule</h2>
-              <p className="text-xs text-werbens-muted mt-0.5">
-                Choose when this content should go live. We&apos;ll respect platform
-                safety limits and may delay posts slightly to avoid spamming.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-              <input
-                type="datetime-local"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                className="w-full sm:w-auto rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
-              />
-            </div>
-          </div>
-        )}
-
-        {mode === "automatic" && (
-          <div className="border-t border-werbens-steel/20 pt-4 space-y-3">
-            <div>
-              <h2 className="text-sm font-semibold text-werbens-text">Automatic mode</h2>
-              <p className="text-xs text-werbens-muted mt-0.5">
-                Automatic rules will eventually handle frequency and timing for you. For
-                now, we&apos;ll simply queue posts created here as &quot;automatic&quot;
-                so they can be triggered by your future rules or a manual automation
-                run.
-              </p>
-            </div>
-            <p className="text-xs text-werbens-muted">
-              This UI is intentionally conservative: it won&apos;t auto‑blast content.
-              All posting still goes through the same safety filters as manual
-              scheduling.
-            </p>
-          </div>
-        )}
-
         <div className="pt-2 flex flex-wrap gap-3">
           <button
             type="submit"
             disabled={submitting}
             className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md focus-ring disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {submitting
-              ? mode === "immediate"
-                ? "Queuing post..."
-                : "Scheduling..."
-              : mode === "immediate"
-                ? "Post now"
-                : "Schedule"}
+            {submitting ? "Publishing..." : "Post now"}
           </button>
         </div>
       </form>
     </PostLayout>
   );
 }
-

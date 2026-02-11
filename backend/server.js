@@ -11,6 +11,9 @@ import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/
 import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js";
 import { getInstagramAuthUrl, instagramCallback, syncInstagram } from "./routes/social/instagram.js";
 import { createPostHandler, runSchedulerHandler } from "./routes/social/posting.js";
+import { createPostNowHandler } from "./routes/social/posting/now/index.js";
+import { createSchedulePostHandler, getScheduledPostsHandler, deleteScheduledPostHandler } from "./routes/social/posting/schedule/index.js";
+import { createAutomatePostHandler, getAutomatePostsHandler, deleteAutomatePostHandler } from "./routes/social/posting/automate/index.js";
 import { chatHandler } from "./routes/chat/index.js";
 import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
@@ -71,8 +74,23 @@ app.post("/api/social/instagram/sync", syncInstagram);
 // Social analytics: GET data for analytics UI (no tokens)
 app.get("/api/social/analytics", getSocialAnalytics);
 
-// Social posting: create posts + run scheduler
+// Social posting: create posts + run scheduler (legacy endpoint - routes to /now)
 app.post("/api/social/post", createPostHandler);
+
+// Immediate posting (Post Now)
+app.post("/api/social/post/now", createPostNowHandler);
+
+// Scheduled posting
+app.post("/api/social/post/schedule", createSchedulePostHandler);
+app.get("/api/social/post/schedule", getScheduledPostsHandler);
+app.delete("/api/social/post/schedule/:id", deleteScheduledPostHandler);
+
+// Automated posting
+app.post("/api/social/post/automate", createAutomatePostHandler);
+app.get("/api/social/post/automate", getAutomatePostsHandler);
+app.delete("/api/social/post/automate/:id", deleteAutomatePostHandler);
+
+// Scheduler trigger
 app.post("/api/social/posting/run", runSchedulerHandler);
 
 // Chat and Image Generation APIs
