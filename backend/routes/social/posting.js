@@ -14,6 +14,15 @@ export async function createPostHandler(req, res) {
 
   try {
     const result = await createScheduledPostsFromRequest(userId, req.body);
+    
+    // If mode is "immediate", trigger scheduler to process immediately
+    if (req.body.mode === "immediate") {
+      // Run scheduler in background (don't wait for it)
+      runDueScheduledPosts().catch((err) => {
+        console.error("Error running scheduler for immediate post:", err);
+      });
+    }
+    
     return res.json({ ok: true, ...result });
   } catch (err) {
     console.error("createPostHandler error:", err);

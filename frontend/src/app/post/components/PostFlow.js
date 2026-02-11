@@ -4,7 +4,7 @@ import { useState } from "react";
 import { PostLayout } from "./PostLayout";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import { getSocialAccounts } from "@/lib/socialApi";
-import { API_ENDPOINTS } from "@/api/endpoints";
+import { createPost } from "@/api/services/postingService";
 
 const PLATFORM_LABELS = {
   youtube: "YouTube",
@@ -40,6 +40,240 @@ function ModeTabs({ value, onChange }) {
           {m.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+function XContentForm({ content, setContent }) {
+  const [pollOption, setPollOption] = useState("");
+  
+  const addPollOption = () => {
+    if (pollOption.trim() && content.x_poll_options.length < 4) {
+      setContent((c) => ({
+        ...c,
+        x_poll_options: [...c.x_poll_options, pollOption.trim()],
+      }));
+      setPollOption("");
+    }
+  };
+  
+  const removePollOption = (index) => {
+    setContent((c) => ({
+      ...c,
+      x_poll_options: c.x_poll_options.filter((_, i) => i !== index),
+    }));
+  };
+  
+  return (
+    <div className="space-y-4">
+      {/* Tweet Text (Required) */}
+      <div>
+        <label className="block text-xs font-medium text-werbens-muted mb-1">
+          Tweet Text <span className="text-red-500">*</span> (max 280 characters)
+        </label>
+        <textarea
+          rows={4}
+          value={content.x_text}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val.length <= 280) {
+              setContent((c) => ({ ...c, x_text: val }));
+            }
+          }}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring resize-y"
+          placeholder="What's happening?"
+          required
+        />
+        <p className="text-xs text-werbens-muted mt-1">
+          {content.x_text.length}/280 characters
+        </p>
+      </div>
+      
+      {/* Media IDs */}
+      <div>
+        <label className="block text-xs font-medium text-werbens-muted mb-1">
+          Media IDs (optional, comma-separated)
+        </label>
+        <input
+          type="text"
+          value={content.x_media_ids.join(", ")}
+          onChange={(e) => {
+            const ids = e.target.value
+              .split(",")
+              .map((id) => id.trim())
+              .filter(Boolean);
+            setContent((c) => ({ ...c, x_media_ids: ids }));
+          }}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
+          placeholder="1234567890, 0987654321"
+        />
+        <p className="text-xs text-werbens-muted mt-1">
+          Upload media first via X API, then use the media IDs here. Max 4 media items.
+        </p>
+      </div>
+      
+      {/* Poll */}
+      <div className="border border-werbens-steel/20 rounded-lg p-3 space-y-2">
+        <label className="block text-xs font-medium text-werbens-muted">
+          Poll (optional, mutually exclusive with media)
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={pollOption}
+            onChange={(e) => setPollOption(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addPollOption())}
+            className="flex-1 rounded-lg border border-werbens-steel/40 bg-white px-3 py-1.5 text-sm text-werbens-text shadow-sm focus-ring"
+            placeholder="Add poll option (2-4 options)"
+            disabled={content.x_poll_options.length >= 4}
+          />
+          <button
+            type="button"
+            onClick={addPollOption}
+            disabled={!pollOption.trim() || content.x_poll_options.length >= 4}
+            className="px-3 py-1.5 rounded-lg bg-werbens-dark-cyan text-white text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Add
+          </button>
+        </div>
+        {content.x_poll_options.length > 0 && (
+          <div className="space-y-1">
+            {content.x_poll_options.map((opt, idx) => (
+              <div key={idx} className="flex items-center justify-between bg-werbens-surface rounded px-2 py-1">
+                <span className="text-xs text-werbens-text">{opt}</span>
+                <button
+                  type="button"
+                  onClick={() => removePollOption(idx)}
+                  className="text-red-500 text-xs hover:text-red-700"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {content.x_poll_options.length >= 2 && (
+          <div className="mt-2">
+            <label className="block text-xs font-medium text-werbens-muted mb-1">
+              Poll Duration (minutes)
+            </label>
+            <input
+              type="number"
+              min="5"
+              max="10080"
+              value={content.x_poll_duration_minutes}
+              onChange={(e) =>
+                setContent((c) => ({
+                  ...c,
+                  x_poll_duration_minutes: parseInt(e.target.value) || 60,
+                }))
+              }
+              className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-1.5 text-sm text-werbens-text shadow-sm focus-ring"
+            />
+          </div>
+        )}
+      </div>
+      
+      {/* Reply to Tweet */}
+      <div>
+        <label className="block text-xs font-medium text-werbens-muted mb-1">
+          Reply to Tweet ID (optional)
+        </label>
+        <input
+          type="text"
+          value={content.x_reply_to_tweet_id}
+          onChange={(e) => setContent((c) => ({ ...c, x_reply_to_tweet_id: e.target.value }))}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
+          placeholder="1234567890123456789"
+        />
+      </div>
+      
+      {/* Quote Tweet */}
+      <div>
+        <label className="block text-xs font-medium text-werbens-muted mb-1">
+          Quote Tweet ID (optional)
+        </label>
+        <input
+          type="text"
+          value={content.x_quote_tweet_id}
+          onChange={(e) => setContent((c) => ({ ...c, x_quote_tweet_id: e.target.value }))}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
+          placeholder="1234567890123456789"
+        />
+      </div>
+      
+      {/* Geo Place ID */}
+      <div>
+        <label className="block text-xs font-medium text-werbens-muted mb-1">
+          Geo Place ID (optional, requires geo enabled in profile)
+        </label>
+        <input
+          type="text"
+          value={content.x_geo_place_id}
+          onChange={(e) => setContent((c) => ({ ...c, x_geo_place_id: e.target.value }))}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
+          placeholder="Place ID"
+        />
+      </div>
+      
+      {/* Super Followers Only */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="x_super_followers"
+          checked={content.x_for_super_followers_only}
+          onChange={(e) =>
+            setContent((c) => ({ ...c, x_for_super_followers_only: e.target.checked }))
+          }
+          className="rounded border-werbens-steel/40"
+        />
+        <label htmlFor="x_super_followers" className="text-xs font-medium text-werbens-muted">
+          For Super Followers only
+        </label>
+      </div>
+    </div>
+  );
+}
+
+function GenericContentForm({ content, setContent }) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="block text-xs font-medium text-werbens-muted mb-1">
+          Title (optional, recommended for YouTube)
+        </label>
+        <input
+          type="text"
+          value={content.title}
+          onChange={(e) => setContent((c) => ({ ...c, title: e.target.value }))}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
+          placeholder="E.g. 5 AI tools to automate your marketing"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-werbens-muted mb-1">
+          Main content
+        </label>
+        <textarea
+          rows={5}
+          value={content.body}
+          onChange={(e) => setContent((c) => ({ ...c, body: e.target.value }))}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring resize-y"
+          placeholder="Write your post copy here (we'll reuse it across platforms)."
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-werbens-muted mb-1">
+          Hashtags (optional)
+        </label>
+        <input
+          type="text"
+          value={content.hashtags}
+          onChange={(e) => setContent((c) => ({ ...c, hashtags: e.target.value }))}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
+          placeholder="#marketing, #ai, #startup"
+        />
+      </div>
     </div>
   );
 }
@@ -115,14 +349,30 @@ export function PostFlow() {
   const [targets, setTargets] = useState([]);
   const [selectedTargets, setSelectedTargets] = useState([]);
   const [mode, setMode] = useState("immediate");
+  
+  // Platform-specific content state
   const [content, setContent] = useState({
+    // Generic fields
     title: "",
     body: "",
     hashtags: "",
+    // X-specific fields
+    x_text: "",
+    x_media_ids: [],
+    x_poll_options: [],
+    x_poll_duration_minutes: 60,
+    x_reply_to_tweet_id: "",
+    x_quote_tweet_id: "",
+    x_geo_place_id: "",
+    x_for_super_followers_only: false,
   });
+  
   const [scheduledAt, setScheduledAt] = useState("");
   const [status, setStatus] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Determine if X is selected
+  const isXSelected = selectedTargets.some((t) => t.platform === "x");
 
   async function ensureTargetsLoaded() {
     if (loadingTargets || targets.length > 0 || !userId) return;
@@ -158,9 +408,21 @@ export function PostFlow() {
       setStatus({ type: "error", text: "Select at least one platform/channel." });
       return;
     }
-    if (!content.body && !content.title) {
-      setStatus({ type: "error", text: "Add a title or description." });
-      return;
+    // Validate content based on selected platforms
+    if (isXSelected) {
+      if (!content.x_text || content.x_text.trim().length === 0) {
+        setStatus({ type: "error", text: "Tweet text is required for X." });
+        return;
+      }
+      if (content.x_text.length > 280) {
+        setStatus({ type: "error", text: `Tweet exceeds 280 characters (${content.x_text.length} characters).` });
+        return;
+      }
+    } else {
+      if (!content.body && !content.title) {
+        setStatus({ type: "error", text: "Add a title or description." });
+        return;
+      }
     }
     if (mode === "scheduled" && !scheduledAt) {
       setStatus({ type: "error", text: "Choose a date and time for scheduled posts." });
@@ -169,6 +431,45 @@ export function PostFlow() {
     setSubmitting(true);
     setStatus(null);
     try {
+      // Build platform-specific content
+      const contentPayload = {};
+      
+      if (isXSelected) {
+        // X-specific payload
+        contentPayload.x_text = content.x_text.trim();
+        if (content.x_media_ids && content.x_media_ids.length > 0) {
+          contentPayload.x_media_ids = content.x_media_ids;
+        }
+        if (content.x_poll_options && content.x_poll_options.length >= 2) {
+          contentPayload.x_poll = {
+            options: content.x_poll_options,
+            duration_minutes: content.x_poll_duration_minutes || 60,
+          };
+        }
+        if (content.x_reply_to_tweet_id) {
+          contentPayload.x_reply_to_tweet_id = content.x_reply_to_tweet_id.trim();
+        }
+        if (content.x_quote_tweet_id) {
+          contentPayload.x_quote_tweet_id = content.x_quote_tweet_id.trim();
+        }
+        if (content.x_geo_place_id) {
+          contentPayload.x_geo_place_id = content.x_geo_place_id.trim();
+        }
+        if (content.x_for_super_followers_only) {
+          contentPayload.x_for_super_followers_only = true;
+        }
+      } else {
+        // Generic payload for other platforms
+        contentPayload.title = content.title;
+        contentPayload.body = content.body;
+        contentPayload.hashtags = content.hashtags
+          ? content.hashtags
+              .split(/[,\s]+/)
+              .map((h) => h.trim())
+              .filter(Boolean)
+          : [];
+      }
+      
       const payload = {
         userId,
         mode,
@@ -177,26 +478,14 @@ export function PostFlow() {
           channelId: t.channelId,
         })),
         content: {
-          title: content.title,
-          body: content.body,
-          hashtags: content.hashtags
-            ? content.hashtags
-                .split(/[,\s]+/)
-                .map((h) => h.trim())
-                .filter(Boolean)
-            : [],
+          ...contentPayload,
           metadata: {},
         },
         scheduledAt: mode === "scheduled" ? scheduledAt : null,
       };
 
-      const res = await fetch(API_ENDPOINTS.SOCIAL_POST, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
+      const data = await createPost(userId, payload);
+      if (!data.ok) {
         throw new Error(data.error || "Failed to create post");
       }
       setStatus({
@@ -206,6 +495,23 @@ export function PostFlow() {
             ? "Post queued to be published shortly."
             : "Post scheduled successfully.",
       });
+      
+      // Reset form for immediate posts
+      if (mode === "immediate") {
+        setContent({
+          title: "",
+          body: "",
+          hashtags: "",
+          x_text: "",
+          x_media_ids: [],
+          x_poll_options: [],
+          x_poll_duration_minutes: 60,
+          x_reply_to_tweet_id: "",
+          x_quote_tweet_id: "",
+          x_geo_place_id: "",
+          x_for_super_followers_only: false,
+        });
+      }
     } catch (err) {
       setStatus({ type: "error", text: err.message || "Failed to schedule post." });
     } finally {
@@ -274,48 +580,17 @@ export function PostFlow() {
           <div>
             <h2 className="text-sm font-semibold text-werbens-text">Content</h2>
             <p className="text-xs text-werbens-muted mt-0.5">
-              We&apos;ll adapt this content to each platform. YouTube will use the title +
-              description; other platforms will use the body text.
+              {isXSelected
+                ? "X (Twitter) specific fields. All parameters supported by X API v2."
+                : "We'll adapt this content to each platform. YouTube will use the title + description; other platforms will use the body text."}
             </p>
           </div>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-werbens-muted mb-1">
-                Title (optional, recommended for YouTube)
-              </label>
-              <input
-                type="text"
-                value={content.title}
-                onChange={(e) => setContent((c) => ({ ...c, title: e.target.value }))}
-                className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
-                placeholder="E.g. 5 AI tools to automate your marketing"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-werbens-muted mb-1">
-                Main content
-              </label>
-              <textarea
-                rows={5}
-                value={content.body}
-                onChange={(e) => setContent((c) => ({ ...c, body: e.target.value }))}
-                className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring resize-y"
-                placeholder="Write your post copy here (we'll reuse it across platforms)."
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-werbens-muted mb-1">
-                Hashtags (optional)
-              </label>
-              <input
-                type="text"
-                value={content.hashtags}
-                onChange={(e) => setContent((c) => ({ ...c, hashtags: e.target.value }))}
-                className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
-                placeholder="#marketing, #ai, #startup"
-              />
-            </div>
-          </div>
+          
+          {isXSelected ? (
+            <XContentForm content={content} setContent={setContent} />
+          ) : (
+            <GenericContentForm content={content} setContent={setContent} />
+          )}
         </div>
 
         {mode === "scheduled" && (

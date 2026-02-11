@@ -7,7 +7,7 @@ const X_AUTHORIZE_URL = "https://x.com/i/oauth2/authorize";
 const X_TOKEN_URL = "https://api.x.com/2/oauth2/token";
 const X_API_BASE = "https://api.x.com/2";
 
-const SCOPES = ["tweet.read", "users.read", "offline.access"];
+const SCOPES = ["tweet.read", "tweet.write", "users.read", "offline.access"];
 const STATE_TTL_MS = 10 * 60 * 1000;
 
 const USER_FIELDS = "id,name,username,profile_image_url,description,created_at,public_metrics,verified,location,url";
