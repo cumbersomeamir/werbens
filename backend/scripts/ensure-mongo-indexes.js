@@ -36,7 +36,7 @@ async function main() {
   await usersColl.createIndex({ userId: 1 }, { unique: true });
 
   const onboardingColl = db.collection("Onboarding");
-  await onboardingColl.createIndex({ userId: 1 });
+  await onboardingColl.createIndex({ userId: 1 }, { unique: true });
 
   const accountsColl = db.collection("SocialAccounts");
   await accountsColl.createIndex({ userId: 1 });

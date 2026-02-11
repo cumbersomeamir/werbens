@@ -5,16 +5,8 @@ import { saveOnboardingData } from "../services/onboardingService.js";
 
 export async function saveOnboarding(req, res) {
   try {
-    const { userId, username, platforms, business, goals } = req.body;
-
-    const result = await saveOnboardingData({
-      userId,
-      username,
-      platforms,
-      business,
-      goals,
-    });
-
+    const body = req.body || {};
+    const result = await saveOnboardingData(body);
     res.status(201).json(result);
   } catch (err) {
     const isMongoDown =
@@ -28,7 +20,7 @@ export async function saveOnboarding(req, res) {
         skipped: true,
       });
     }
-    if (err.message === "At least one platform is required") {
+    if (err.message === "userId is required" || (err.message && err.message.includes("Invalid"))) {
       return res.status(400).json({ error: err.message });
     }
     res.status(500).json({ error: "Failed to save onboarding" });
