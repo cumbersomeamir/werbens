@@ -44,6 +44,12 @@ export async function createScheduledPostsFromRequest(userId, payload) {
     throw new Error("At least one target platform/channel is required");
   }
 
+  // For immediate posts, set scheduledAt to now (or slightly in the past to ensure it's picked up)
+  const isImmediate = mode === "immediate" || (!mode && !scheduledAt);
+  const finalScheduledAt = isImmediate 
+    ? new Date(now.getTime() - 1000) // 1 second in the past to ensure scheduler picks it up
+    : (mode === "scheduled" && scheduledAt ? new Date(scheduledAt) : now);
+
   const docs = targets.map((t) => ({
     userId,
     platform: t.platform,
@@ -70,7 +76,7 @@ export async function createScheduledPostsFromRequest(userId, payload) {
       x_for_super_followers_only: content?.x_for_super_followers_only ?? false,
       metadata: content?.metadata ?? {},
     },
-    scheduledAt: mode === "scheduled" && scheduledAt ? new Date(scheduledAt) : now,
+    scheduledAt: finalScheduledAt,
     executedAt: null,
     ruleId: content?.ruleId ?? null,
     platformPostId: null,

@@ -495,19 +495,45 @@ export function PostFlow() {
         },
         scheduledAt: mode === "scheduled" ? scheduledAt : null,
       };
+      
+      console.log("Form payload:", JSON.stringify(payload, null, 2));
 
       const data = await createPost(userId, payload);
       if (!data.ok) {
         throw new Error(data.error || "Failed to create post");
       }
       
-      setStatus({
-        type: "success",
-        text:
-          mode === "immediate"
-            ? "Post queued to be published shortly."
-            : "Post scheduled successfully.",
-      });
+      // Check if post was posted immediately (for immediate mode)
+      if (mode === "immediate" && data.results && Array.isArray(data.results)) {
+        const postedResults = data.results.filter((r) => r.status === "posted");
+        const errorResults = data.results.filter((r) => r.error);
+        
+        if (errorResults.length > 0) {
+          const errors = errorResults.map((r) => r.error).join(", ");
+          throw new Error(errors);
+        }
+        
+        if (postedResults.length > 0) {
+          const platformPostIds = postedResults.map((r) => r.platformPostId).filter(Boolean);
+          setStatus({
+            type: "success",
+            text: `Post published successfully!${platformPostIds.length > 0 ? ` Tweet ID: ${platformPostIds[0]}` : ""}`,
+          });
+        } else {
+          setStatus({
+            type: "success",
+            text: "Post queued to be published shortly.",
+          });
+        }
+      } else {
+        setStatus({
+          type: "success",
+          text:
+            mode === "immediate"
+              ? "Post published successfully!"
+              : "Post scheduled successfully.",
+        });
+      }
       
       // Reset form for immediate posts
       if (mode === "immediate") {
