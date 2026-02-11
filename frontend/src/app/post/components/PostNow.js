@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import { getSocialAccounts } from "@/lib/socialApi";
 import { post } from "@/api/client.js";
 import { API_ENDPOINTS } from "@/api/endpoints.js";
-import { XContentForm, LinkedInContentForm, InstagramContentForm, GenericContentForm } from "./platforms";
+import { XContentForm, LinkedInContentForm, InstagramContentForm, FacebookContentForm, GenericContentForm } from "./platforms";
 import { PLATFORM_LABELS, FRONTEND_PLATFORM_MAP, BACKEND_PLATFORM_MAP } from "./utils";
 
 function PlatformSelector({ availableTargets, selectedTargets, onToggle }) {
@@ -114,15 +114,19 @@ export function PostNow() {
     instagram_image_url: "",
     instagram_caption: "",
     instagram_alt_text: "",
+    // Facebook-specific fields
+    facebook_message: "",
+    facebook_link: "",
   });
   
   const [status, setStatus] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   
-  // Determine if X, LinkedIn, or Instagram is selected
+  // Determine if X, LinkedIn, Instagram, or Facebook is selected
   const isXSelected = selectedTargets.some((t) => t.platform === "x");
   const isLinkedInSelected = selectedTargets.some((t) => t.platform === "linkedin");
   const isInstagramSelected = selectedTargets.some((t) => t.platform === "instagram");
+  const isFacebookSelected = selectedTargets.some((t) => t.platform === "facebook");
 
   async function ensureTargetsLoaded() {
     if (loadingTargets || targets.length > 0 || !userId) return;
@@ -200,6 +204,19 @@ export function PostNow() {
         setStatus({ type: "error", text: "Instagram caption exceeds 2200 characters." });
         return;
       }
+    } else if (isFacebookSelected) {
+      if (!content.facebook_message || content.facebook_message.trim().length === 0) {
+        setStatus({ type: "error", text: "Facebook message is required." });
+        return;
+      }
+      if (content.facebook_link) {
+        try {
+          new URL(content.facebook_link.trim());
+        } catch {
+          setStatus({ type: "error", text: "Please provide a valid link URL." });
+          return;
+        }
+      }
     } else {
       if (!content.body && !content.title) {
         setStatus({ type: "error", text: "Add a title or description." });
@@ -262,6 +279,12 @@ export function PostNow() {
         }
         if (content.instagram_alt_text) {
           contentPayload.instagram_alt_text = content.instagram_alt_text.trim();
+        }
+      } else if (isFacebookSelected) {
+        // Facebook-specific payload
+        contentPayload.facebook_message = content.facebook_message.trim();
+        if (content.facebook_link) {
+          contentPayload.facebook_link = content.facebook_link.trim();
         }
       } else {
         // Generic payload for other platforms
@@ -349,6 +372,8 @@ export function PostNow() {
         instagram_image_url: "",
         instagram_caption: "",
         instagram_alt_text: "",
+        facebook_message: "",
+        facebook_link: "",
       });
     } catch (err) {
       console.error("Post submission error:", err);
@@ -429,6 +454,8 @@ export function PostNow() {
                 ? "LinkedIn specific fields. All parameters supported by LinkedIn Posts API."
                 : isInstagramSelected
                 ? "Instagram specific fields. Image is required - text-only posts are not supported."
+                : isFacebookSelected
+                ? "Facebook specific fields. Post to your Facebook Page."
                 : "We'll adapt this content to each platform. YouTube will use the title + description; other platforms will use the body text."}
             </p>
           </div>
@@ -439,6 +466,8 @@ export function PostNow() {
             <LinkedInContentForm content={content} setContent={setContent} />
           ) : isInstagramSelected ? (
             <InstagramContentForm content={content} setContent={setContent} />
+          ) : isFacebookSelected ? (
+            <FacebookContentForm content={content} setContent={setContent} />
           ) : (
             <GenericContentForm content={content} setContent={setContent} />
           )}

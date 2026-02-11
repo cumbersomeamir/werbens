@@ -11,6 +11,7 @@ const SCOPES = [
   "pages_show_list",
   "pages_read_engagement",
   "pages_read_user_content",
+  "pages_manage_posts", // Required for posting to Facebook pages
   "instagram_basic",
   "instagram_manage_insights",
 ];
