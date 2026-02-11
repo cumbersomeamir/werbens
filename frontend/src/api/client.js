@@ -26,7 +26,31 @@ async function apiRequest(url, options = {}) {
 
   try {
     const response = await fetch(`${API_BASE}${url}`, config);
-    const data = await response.json().catch(() => ({}));
+    
+    // Check content type before parsing JSON
+    const contentType = response.headers.get("content-type");
+    let data = {};
+    
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        const text = await response.text();
+        throw new ApiError(
+          `Invalid JSON response: ${text.substring(0, 200)}`,
+          response.status,
+          { raw: text }
+        );
+      }
+    } else {
+      const text = await response.text();
+      throw new ApiError(
+        `Expected JSON but got ${contentType || "unknown"}: ${text.substring(0, 200)}`,
+        response.status,
+        { raw: text }
+      );
+    }
 
     if (!response.ok) {
       throw new ApiError(

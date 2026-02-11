@@ -12,8 +12,6 @@ import { API_ENDPOINTS } from "../endpoints.js";
  */
 export async function createPost(userId, payload) {
   if (!userId) throw new Error("userId is required");
-  return post(API_ENDPOINTS.SOCIAL_POST, {
-    userId,
-    ...payload,
-  });
+  // payload already contains userId, don't duplicate it
+  return post(API_ENDPOINTS.SOCIAL_POST, payload);
 }

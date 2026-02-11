@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PostLayout } from "./PostLayout";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import { getSocialAccounts } from "@/lib/socialApi";
@@ -290,7 +290,11 @@ function PlatformSelector({ availableTargets, selectedTargets, onToggle }) {
           <button
             key={`${t.platform}-${t.channelId}`}
             type="button"
-            onClick={() => onToggle(t)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggle(t);
+            }}
             className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-all ${
               isSelected
                 ? "border-werbens-light-cyan bg-werbens-light-cyan/10 text-werbens-text"
@@ -388,6 +392,13 @@ export function PostFlow() {
     }
   }
 
+  // Load targets once on mount if userId is available
+  useEffect(() => {
+    if (userId && targets.length === 0 && !loadingTargets) {
+      ensureTargetsLoaded();
+    }
+  }, [userId]); // Only depend on userId, not targets or loadingTargets to avoid loops
+
   function handleToggleTarget(t) {
     setSelectedTargets((prev) => {
       const exists = prev.some((p) => p.platform === t.platform && p.channelId === t.channelId);
@@ -400,6 +411,7 @@ export function PostFlow() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    e.stopPropagation();
     if (!userId) {
       setStatus({ type: "error", text: "Sign in to post content." });
       return;
@@ -488,6 +500,7 @@ export function PostFlow() {
       if (!data.ok) {
         throw new Error(data.error || "Failed to create post");
       }
+      
       setStatus({
         type: "success",
         text:
@@ -498,6 +511,7 @@ export function PostFlow() {
       
       // Reset form for immediate posts
       if (mode === "immediate") {
+        setSelectedTargets([]);
         setContent({
           title: "",
           body: "",
@@ -513,7 +527,12 @@ export function PostFlow() {
         });
       }
     } catch (err) {
-      setStatus({ type: "error", text: err.message || "Failed to schedule post." });
+      console.error("Post submission error:", err);
+      const errorMessage = err.message || err.data?.error || err.data?.message || "Failed to schedule post.";
+      setStatus({ 
+        type: "error", 
+        text: errorMessage
+      });
     } finally {
       setSubmitting(false);
     }
@@ -549,7 +568,12 @@ export function PostFlow() {
       <form
         onSubmit={handleSubmit}
         className="space-y-6 rounded-2xl bg-white/90 border border-werbens-steel/30 shadow-elevated p-4 sm:p-6 lg:p-7"
-        onFocus={ensureTargetsLoaded}
+        onFocus={(e) => {
+          // Only load if focus is on an input/textarea, not on buttons
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            ensureTargetsLoaded();
+          }
+        }}
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
