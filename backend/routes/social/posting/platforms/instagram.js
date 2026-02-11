@@ -37,6 +37,7 @@ export async function publishToInstagramDirectly(userId, target, content) {
   const containerParams = new URLSearchParams({
     access_token: accessToken,
     image_url: content.instagram_image_url,
+    media_type: "IMAGE", // Explicitly specify media type
   });
 
   // Add caption if provided
@@ -50,8 +51,6 @@ export async function publishToInstagramDirectly(userId, target, content) {
   }
 
   const createContainerUrl = `${IG_GRAPH_BASE}/${igUserId}/media`;
-  console.log(`[Instagram] Creating container for user ${igUserId}`);
-  console.log(`[Instagram] Container URL: ${createContainerUrl}`);
   const containerResponse = await fetch(createContainerUrl, {
     method: "POST",
     headers: {
@@ -80,15 +79,6 @@ export async function publishToInstagramDirectly(userId, target, content) {
       }
     }
 
-    // Log full error for debugging
-    console.error("Instagram container creation error:", {
-      status: containerResponse.status,
-      statusText: containerResponse.statusText,
-      errorText,
-      errorDetails,
-      igUserId,
-      url: createContainerUrl,
-    });
 
     if (containerResponse.status === 401) {
       errorMessage += " (Token expired. Please reconnect your Instagram account.)";
