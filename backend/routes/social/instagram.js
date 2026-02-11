@@ -7,7 +7,7 @@ const IG_OAUTH_ACCESS_TOKEN = "https://api.instagram.com/oauth/access_token";
 const IG_GRAPH_BASE = "https://graph.instagram.com/v21.0";
 const STATE_TTL_MS = 10 * 60 * 1000;
 
-const SCOPES = ["instagram_business_basic", "instagram_business_manage_insights"];
+const SCOPES = ["instagram_business_basic", "instagram_business_manage_insights", "instagram_business_content_publish"];
 
 const stateStore = new Map();
 
@@ -123,6 +123,7 @@ export function getInstagramAuthUrl(req, res) {
     response_type: "code",
     scope: SCOPES.join(","),
     state,
+    auth_type: "reauthorize", // Force re-authorization to request new permissions
   });
   res.json({ url: `${IG_OAUTH_AUTHORIZE}?${params.toString()}` });
 }

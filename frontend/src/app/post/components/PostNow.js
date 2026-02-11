@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import { getSocialAccounts } from "@/lib/socialApi";
 import { post } from "@/api/client.js";
 import { API_ENDPOINTS } from "@/api/endpoints.js";
-import { XContentForm, LinkedInContentForm, GenericContentForm } from "./platforms";
+import { XContentForm, LinkedInContentForm, InstagramContentForm, GenericContentForm } from "./platforms";
 import { PLATFORM_LABELS, FRONTEND_PLATFORM_MAP, BACKEND_PLATFORM_MAP } from "./utils";
 
 function PlatformSelector({ availableTargets, selectedTargets, onToggle }) {
@@ -110,14 +110,19 @@ export function PostNow() {
     linkedin_media_alt_text: "",
     linkedin_visibility: "PUBLIC",
     linkedin_disable_reshare: false,
+    // Instagram-specific fields
+    instagram_image_url: "",
+    instagram_caption: "",
+    instagram_alt_text: "",
   });
   
   const [status, setStatus] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   
-  // Determine if X or LinkedIn is selected
+  // Determine if X, LinkedIn, or Instagram is selected
   const isXSelected = selectedTargets.some((t) => t.platform === "x");
   const isLinkedInSelected = selectedTargets.some((t) => t.platform === "linkedin");
+  const isInstagramSelected = selectedTargets.some((t) => t.platform === "instagram");
 
   async function ensureTargetsLoaded() {
     if (loadingTargets || targets.length > 0 || !userId) return;
@@ -179,6 +184,22 @@ export function PostNow() {
         setStatus({ type: "error", text: "Post text is required for LinkedIn." });
         return;
       }
+    } else if (isInstagramSelected) {
+      if (!content.instagram_image_url || content.instagram_image_url.trim().length === 0) {
+        setStatus({ type: "error", text: "Image URL is required for Instagram." });
+        return;
+      }
+      // Validate URL format
+      try {
+        new URL(content.instagram_image_url.trim());
+      } catch {
+        setStatus({ type: "error", text: "Please provide a valid image URL." });
+        return;
+      }
+      if (content.instagram_caption && content.instagram_caption.length > 2200) {
+        setStatus({ type: "error", text: "Instagram caption exceeds 2200 characters." });
+        return;
+      }
     } else {
       if (!content.body && !content.title) {
         setStatus({ type: "error", text: "Add a title or description." });
@@ -232,6 +253,15 @@ export function PostNow() {
         }
         if (content.linkedin_disable_reshare) {
           contentPayload.linkedin_disable_reshare = true;
+        }
+      } else if (isInstagramSelected) {
+        // Instagram-specific payload
+        contentPayload.instagram_image_url = content.instagram_image_url.trim();
+        if (content.instagram_caption) {
+          contentPayload.instagram_caption = content.instagram_caption.trim();
+        }
+        if (content.instagram_alt_text) {
+          contentPayload.instagram_alt_text = content.instagram_alt_text.trim();
         }
       } else {
         // Generic payload for other platforms
@@ -316,6 +346,9 @@ export function PostNow() {
         linkedin_media_alt_text: "",
         linkedin_visibility: "PUBLIC",
         linkedin_disable_reshare: false,
+        instagram_image_url: "",
+        instagram_caption: "",
+        instagram_alt_text: "",
       });
     } catch (err) {
       console.error("Post submission error:", err);
@@ -394,6 +427,8 @@ export function PostNow() {
                 ? "X (Twitter) specific fields. All parameters supported by X API v2."
                 : isLinkedInSelected
                 ? "LinkedIn specific fields. All parameters supported by LinkedIn Posts API."
+                : isInstagramSelected
+                ? "Instagram specific fields. Image is required - text-only posts are not supported."
                 : "We'll adapt this content to each platform. YouTube will use the title + description; other platforms will use the body text."}
             </p>
           </div>
@@ -402,6 +437,8 @@ export function PostNow() {
             <XContentForm content={content} setContent={setContent} />
           ) : isLinkedInSelected ? (
             <LinkedInContentForm content={content} setContent={setContent} />
+          ) : isInstagramSelected ? (
+            <InstagramContentForm content={content} setContent={setContent} />
           ) : (
             <GenericContentForm content={content} setContent={setContent} />
           )}

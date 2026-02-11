@@ -4,7 +4,7 @@
  * This module handles immediate posting for platforms that support it.
  */
 
-import { publishToXDirectly, publishToLinkedInDirectly } from "../platforms/index.js";
+import { publishToXDirectly, publishToLinkedInDirectly, publishToInstagramDirectly } from "../platforms/index.js";
 import { createScheduledPostsFromRequest, runDueScheduledPosts } from "../../../../services/socialPostingService.js";
 
 /**
@@ -33,6 +33,9 @@ export async function createPostNowHandler(req, res) {
         } else if (target.platform === "linkedin") {
           const postId = await publishToLinkedInDirectly(userId, target, content);
           results.push({ platform: target.platform, channelId: target.channelId, platformPostId: postId, status: "posted" });
+        } else if (target.platform === "instagram") {
+          const mediaId = await publishToInstagramDirectly(userId, target, content);
+          results.push({ platform: target.platform, channelId: target.channelId, platformPostId: mediaId, status: "posted" });
         } else {
           // For other platforms, still use scheduler for now
           const result = await createScheduledPostsFromRequest(userId, {
