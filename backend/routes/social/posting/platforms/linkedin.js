@@ -107,7 +107,7 @@ export async function publishToLinkedInDirectly(userId, target, content) {
   }
 
   // Post to LinkedIn API (format: YYYYMM)
-  const LINKEDIN_VERSION = "202411"; // Use a stable version
+  const LINKEDIN_VERSION = "202502"; // Use latest active version
   
   const postToLinkedIn = async (token) => {
     const response = await fetch(LINKEDIN_POSTS_URL, {
