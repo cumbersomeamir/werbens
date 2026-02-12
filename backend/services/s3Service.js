@@ -1,7 +1,7 @@
 /**
  * AWS S3 service - handles image uploads
  */
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3Client = new S3Client({
@@ -15,12 +15,12 @@ const s3Client = new S3Client({
 const BUCKET = process.env.AWS_S3_BUCKET || "werbens";
 
 /**
- * Upload image to S3
+ * Upload image to S3 (private bucket, use presigned URLs for access)
  * @param {Object} params
  * @param {Buffer} params.buffer - Image buffer
  * @param {string} params.key - S3 key (path)
  * @param {string} params.contentType - MIME type (e.g., "image/png")
- * @returns {Promise<string>} Public URL of uploaded image
+ * @returns {Promise<void>} Uploads to S3, no return value
  */
 export async function uploadImageToS3({ buffer, key, contentType = "image/png" }) {
   const command = new PutObjectCommand({
@@ -28,14 +28,35 @@ export async function uploadImageToS3({ buffer, key, contentType = "image/png" }
     Key: key,
     Body: buffer,
     ContentType: contentType,
-    ACL: "public-read", // Make image publicly accessible
+    // No ACL - bucket is private, access via presigned URLs
   });
 
   await s3Client.send(command);
+}
 
-  // Return public URL (format: https://bucket-name.s3.region.amazonaws.com/key)
-  const region = process.env.AWS_REGION || "eu-north-1";
-  return `https://${BUCKET}.s3.${region}.amazonaws.com/${key}`;
+/**
+ * Generate presigned URL for S3 object
+ * @param {string} key - S3 key (path)
+ * @param {number} expiresIn - Expiration time in seconds (default: 1 hour)
+ * @param {boolean} forceDownload - If true, sets Content-Disposition header to force download
+ * @returns {Promise<string>} Presigned URL
+ */
+export async function getPresignedUrl(key, expiresIn = 3600, forceDownload = false) {
+  const commandParams = {
+    Bucket: BUCKET,
+    Key: key,
+  };
+
+  // If forceDownload is true, set Content-Disposition header to force download
+  if (forceDownload) {
+    // Extract filename from key (last part after /)
+    const filename = key.split("/").pop() || "download.png";
+    commandParams.ResponseContentDisposition = `attachment; filename="${filename}"`;
+  }
+
+  const command = new GetObjectCommand(commandParams);
+  const url = await getSignedUrl(s3Client, command, { expiresIn });
+  return url;
 }
 
 /**

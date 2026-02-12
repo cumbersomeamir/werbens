@@ -1,7 +1,7 @@
 /**
  * Automatic routes - thin route definitions
  */
-import { automaticGenerateHandler } from "../controllers/automaticController.js";
+import { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler } from "../controllers/automaticController.js";
 
-export { automaticGenerateHandler };
+export { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler };
 

@@ -1,26 +1,32 @@
 /**
- * Onboarding data source - extracts onboarding data from MongoDB.
- * Supports both legacy schema (platforms, business, goals) and new onboarding_v1 schema (global defaults).
+ * Onboarding context - fetches onboarding data for a user only.
+ * Kept separate from /context (platform data). Do not mix with platform sources.
+ *
+ * Returns: the questions we posed on onboarding and the user's choices (formatted text).
  */
-import { getDb } from "../../db.js";
+
+import { getDb } from "../db.js";
 
 /**
- * Extract onboarding data for a user
+ * Fetch onboarding context for a user (onboarding questions + user choices).
  * @param {string} userId
- * @returns {Promise<string>} Formatted text string
+ * @returns {Promise<string>} Formatted text string of onboarding data
  */
-export async function getOnboardingData(userId) {
+export async function getOnboardingContext(userId) {
   try {
-    const db = await getDb();
-    const collection = db.collection("Onboarding");
-
-    const doc = await collection.findOne({ userId });
-
-    if (!doc) {
-      return "No onboarding data found.";
+    if (!userId || typeof userId !== "string") {
+      return "No user ID provided.";
     }
 
-    let text = "=== ONBOARDING DATA ===\n\n";
+    const db = await getDb();
+    const collection = db.collection("Onboarding");
+    const doc = await collection.findOne({ userId: userId.trim() });
+
+    if (!doc) {
+      return "No onboarding data found for this user.";
+    }
+
+    let text = "=== ONBOARDING (user choices) ===\n\n";
 
     // New schema (onboarding_v1)
     if (doc.source === "onboarding_v1" || doc.primaryRole != null) {
@@ -61,12 +67,11 @@ export async function getOnboardingData(userId) {
       }
     }
 
-    if (doc.completedAt) text += `\nCompleted At: ${doc.completedAt}\n`;
-    if (doc.updatedAt) text += `Updated At: ${doc.updatedAt}\n`;
+    if (doc.updatedAt) text += `\nUpdated At: ${doc.updatedAt}\n`;
 
     return text;
   } catch (err) {
-    console.error("Error extracting onboarding data:", err.message);
-    return "Error extracting onboarding data.";
+    console.error("Error fetching onboarding context:", err.message);
+    return "Error fetching onboarding context.";
   }
 }

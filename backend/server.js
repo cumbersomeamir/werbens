@@ -17,7 +17,7 @@ import { createAutomatePostHandler, getAutomatePostsHandler, deleteAutomatePostH
 import { chatHandler } from "./routes/chat/index.js";
 import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
-import { automaticGenerateHandler } from "./routes/automatic.js";
+import { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler } from "./routes/automatic.js";
 import {
   getOrCreateSessionHandler,
   clearSessionHandler,
@@ -100,6 +100,8 @@ app.post("/api/model-switcher/classify", classifyPromptHandler);
 
 // Automatic personalised content API
 app.post("/api/automatic/generate", automaticGenerateHandler);
+app.get("/api/automatic/images", automaticGetImagesHandler);
+app.get("/api/automatic/download", automaticDownloadHandler);
 
 // Session management APIs
 app.post("/api/sessions/get-or-create", getOrCreateSessionHandler);

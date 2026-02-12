@@ -5,6 +5,7 @@
  */
 import { getDb } from "../db.js";
 import { upsertUser } from "../lib/users.js";
+import { collateAndSaveOnboardingContext } from "../onboarding-context/onboarding-data-collator.js";
 import {
   PRIMARY_ROLES,
   CONTENT_GOALS,
@@ -141,6 +142,15 @@ export async function saveOnboardingData(body) {
     { userId },
     { $set: { onboardingComplete: true, updatedAt: now } }
   );
+
+  // Collate and save general_onboarding_context to Onboarding collection (non-blocking)
+  void (async () => {
+    try {
+      await collateAndSaveOnboardingContext(userId);
+    } catch (err) {
+      console.error("Error collating onboarding context (non-blocking):", err.message);
+    }
+  })();
 
   return {
     success: true,

@@ -1,17 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AutomaticLayout } from "./AutomaticLayout";
+import { ImageViewer } from "./ImageViewer";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
-import { generateAutomatic } from "@/api/services/automaticService.js";
+import { generateAutomatic, getAutomaticImages } from "@/api/services/automaticService.js";
 
-function AutomaticCard({ item }) {
+function AutomaticCard({ item, onClick }) {
   return (
-    <div className="group overflow-hidden rounded-2xl bg-white/90 shadow-elevated hover-lift transition-all duration-300 border border-werbens-dark-cyan/5">
+    <div
+      className="group overflow-hidden rounded-2xl bg-white/90 shadow-elevated hover-lift transition-all duration-300 border border-werbens-dark-cyan/5 cursor-pointer"
+      onClick={() => onClick(item)}
+    >
       <div className="aspect-[4/5] bg-werbens-cloud/60 overflow-hidden">
-        {item.image && (
+        {item.imageUrl && (
           <img
-            src={item.image}
+            src={item.imageUrl}
             alt={item.prompt || "Generated content"}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
@@ -30,7 +34,31 @@ export function AutomaticFlow() {
   const { userId, loading } = useCurrentUser();
   const [items, setItems] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [viewerItem, setViewerItem] = useState(null);
+
+  // Fetch cached images on mount
+  useEffect(() => {
+    if (!userId || loading) return;
+
+    const fetchCachedImages = async () => {
+      setIsLoading(true);
+      try {
+        const result = await getAutomaticImages({ userId });
+        if (result?.items && Array.isArray(result.items)) {
+          setItems(result.items);
+        }
+      } catch (err) {
+        console.error("Error fetching cached images:", err);
+        // Don't show error for initial load, just log it
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCachedImages();
+  }, [userId, loading]);
 
   const handleGenerate = async () => {
     if (!userId || isGenerating) return;
@@ -40,14 +68,13 @@ export function AutomaticFlow() {
     try {
       const result = await generateAutomatic({ userId });
       if (result?.image) {
-        setItems((prev) => [
-          {
-            prompt: result.prompt,
-            image: result.image,
-            createdAt: new Date().toISOString(),
-          },
-          ...prev,
-        ]);
+        // Add new item to the top of the list
+        const newItem = {
+          prompt: result.prompt,
+          imageUrl: result.image,
+          createdAt: new Date().toISOString(),
+        };
+        setItems((prev) => [newItem, ...prev]);
       }
     } catch (err) {
       const message =
@@ -101,7 +128,13 @@ export function AutomaticFlow() {
 
       <section className="px-4 sm:px-6 pb-16 sm:pb-24">
         <div className="mx-auto max-w-5xl">
-          {items.length === 0 && !isGenerating && !error && (
+          {isLoading && (
+            <div className="py-16 sm:py-20 text-center text-werbens-muted">
+              <p className="text-sm sm:text-base">Loading your content...</p>
+            </div>
+          )}
+
+          {!isLoading && items.length === 0 && !isGenerating && !error && (
             <div className="py-16 sm:py-20 text-center text-werbens-muted">
               <p className="text-sm sm:text-base">
                 The automatic feed is empty for now.
@@ -113,11 +146,27 @@ export function AutomaticFlow() {
             </div>
           )}
 
-          <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {items.map((item, idx) => (
-              <AutomaticCard key={idx} item={item} />
-            ))}
-          </div>
+          {!isLoading && items.length > 0 && (
+            <div className="grid gap-4 sm:gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {items.map((item, idx) => (
+                <AutomaticCard
+                  key={item.imageKey || item.imageUrl || idx}
+                  item={item}
+                  onClick={(item) => setViewerItem(item)}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Image Viewer Modal */}
+          {viewerItem && (
+            <ImageViewer
+              image={viewerItem.imageUrl || viewerItem.image}
+              prompt={viewerItem.prompt}
+              imageKey={viewerItem.imageKey}
+              onClose={() => setViewerItem(null)}
+            />
+          )}
 
           {/* Simple lazy loading: generate another item when user clicks */}
           {items.length > 0 && (

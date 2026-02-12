@@ -38,6 +38,9 @@ async function main() {
   const onboardingColl = db.collection("Onboarding");
   await onboardingColl.createIndex({ userId: 1 }, { unique: true });
 
+  const automaticColl = db.collection("Automatic");
+  await automaticColl.createIndex({ userId: 1 }, { unique: true });
+
   const accountsColl = db.collection("SocialAccounts");
   await accountsColl.createIndex({ userId: 1 });
   // Allow multiple connected accounts per platform.

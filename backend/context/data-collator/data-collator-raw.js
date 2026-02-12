@@ -1,10 +1,10 @@
 /**
- * Data Collator Raw - aggregates all source data into a single text file
+ * Data Collator Raw - aggregates platform/social source data into a single text file.
+ * Onboarding data is kept separate; use backend/onboarding-context for that.
  */
 import { writeFile, mkdir } from "fs/promises";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { getOnboardingData } from "../sources/onboarding-data.js";
 import { getXData } from "../sources/x-data.js";
 import { getInstagramData } from "../sources/instagram-data.js";
 import { getYouTubeData } from "../sources/youtube-data.js";
@@ -24,9 +24,8 @@ const OUTPUT_FILE = join(OUTPUT_DIR, "all-context-raw.txt");
  */
 export async function collateRawContext(userId) {
   try {
-    // Collect data from all sources
+    // Collect data from platform sources only (onboarding is in onboarding-context)
     const [
-      onboardingText,
       xText,
       instagramText,
       youtubeText,
@@ -34,7 +33,6 @@ export async function collateRawContext(userId) {
       pinterestText,
       facebookText,
     ] = await Promise.all([
-      getOnboardingData(userId),
       getXData(userId),
       getInstagramData(userId),
       getYouTubeData(userId),
@@ -43,10 +41,8 @@ export async function collateRawContext(userId) {
       getFacebookData(userId),
     ]);
 
-    // Combine all text
+    // Combine platform/social text only
     const aggregatedText = [
-      onboardingText,
-      "\n\n",
       xText,
       "\n\n",
       instagramText,

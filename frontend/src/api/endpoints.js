@@ -60,4 +60,6 @@ export const API_ENDPOINTS = {
 
   // Automatic personalised content
   AUTOMATIC_GENERATE: "/api/automatic/generate",
+  AUTOMATIC_IMAGES: "/api/automatic/images",
+  AUTOMATIC_DOWNLOAD: "/api/automatic/download",
 };
