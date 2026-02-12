@@ -4,14 +4,47 @@ import { useState, useEffect } from "react";
 import { AutomaticLayout } from "./AutomaticLayout";
 import { ImageViewer } from "./ImageViewer";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
-import { generateAutomatic, getAutomaticImages } from "@/api/services/automaticService.js";
+import { generateAutomatic, getAutomaticImages, deleteAutomaticImage } from "@/api/services/automaticService.js";
+import { getSocialAccounts } from "@/lib/socialApi";
 
-function AutomaticCard({ item, onClick }) {
+const PLATFORM_LABELS = {
+  x: "X",
+  instagram: "Instagram",
+  youtube: "YouTube",
+  linkedin: "LinkedIn",
+  facebook: "Facebook",
+  pinterest: "Pinterest",
+};
+
+function AutomaticCard({ item, onClick, onDelete, userId }) {
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    if (!userId || !item.imageKey || !onDelete) return;
+    try {
+      await deleteAutomaticImage({ userId, imageKey: item.imageKey });
+      onDelete(item);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  };
+
   return (
     <div
-      className="group overflow-hidden rounded-2xl bg-white/90 shadow-elevated hover-lift transition-all duration-300 border border-werbens-dark-cyan/5 cursor-pointer"
+      className="group overflow-hidden rounded-2xl bg-white/90 shadow-elevated hover-lift transition-all duration-300 border border-werbens-dark-cyan/5 cursor-pointer relative"
       onClick={() => onClick(item)}
     >
+      {item.imageKey && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="absolute top-2 right-2 z-10 p-1.5 rounded-lg bg-white/90 shadow-sm border border-werbens-steel/20 text-werbens-muted hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all focus:outline-none"
+          aria-label="Delete"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      )}
       <div className="aspect-[4/5] bg-werbens-cloud/60 overflow-hidden">
         {item.imageUrl && (
           <img
@@ -22,6 +55,11 @@ function AutomaticCard({ item, onClick }) {
         )}
       </div>
       <div className="p-3.5">
+        {item.platform && (
+          <span className="inline-block text-[10px] font-medium text-werbens-dark-cyan/80 uppercase tracking-wide mb-1">
+            {PLATFORM_LABELS[item.platform] || item.platform}
+          </span>
+        )}
         <p className="text-xs text-werbens-muted leading-relaxed line-clamp-2">
           {item.prompt}
         </p>
@@ -37,6 +75,17 @@ export function AutomaticFlow() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [viewerItem, setViewerItem] = useState(null);
+  const [selectedPlatform, setSelectedPlatform] = useState(null); // null = priority
+  const [connectedPlatforms, setConnectedPlatforms] = useState([]);
+
+  // Fetch connected platforms
+  useEffect(() => {
+    if (!userId || loading) return;
+    getSocialAccounts(userId).then((res) => {
+      const platforms = [...new Set((res?.accounts || []).map((a) => a.platform).filter(Boolean))];
+      setConnectedPlatforms(platforms);
+    }).catch(() => {});
+  }, [userId, loading]);
 
   // Fetch cached images on mount
   useEffect(() => {
@@ -66,12 +115,16 @@ export function AutomaticFlow() {
     setError(null);
 
     try {
-      const result = await generateAutomatic({ userId });
+      const result = await generateAutomatic({
+        userId,
+        platform: selectedPlatform || undefined,
+      });
       if (result?.image) {
-        // Add new item to the top of the list
         const newItem = {
           prompt: result.prompt,
           imageUrl: result.image,
+          imageKey: result.imageKey,
+          platform: result.platform || null,
           createdAt: new Date().toISOString(),
         };
         setItems((prev) => [newItem, ...prev]);
@@ -118,6 +171,37 @@ export function AutomaticFlow() {
               </button>
             </div>
           </div>
+          {/* Platform selector */}
+          {connectedPlatforms.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2 items-center">
+              <span className="text-xs text-werbens-muted font-medium">Generate for:</span>
+              <button
+                type="button"
+                onClick={() => setSelectedPlatform(null)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  selectedPlatform === null
+                    ? "bg-werbens-dark-cyan text-white border-2 border-werbens-dark-cyan"
+                    : "bg-white/80 text-werbens-muted border border-werbens-dark-cyan/20 hover:border-werbens-dark-cyan/40"
+                }`}
+              >
+                Priority
+              </button>
+              {connectedPlatforms.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setSelectedPlatform(p)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    selectedPlatform === p
+                      ? "bg-werbens-dark-cyan text-white border-2 border-werbens-dark-cyan"
+                      : "bg-white/80 text-werbens-muted border border-werbens-dark-cyan/20 hover:border-werbens-dark-cyan/40"
+                  }`}
+                >
+                  {PLATFORM_LABELS[p] || p}
+                </button>
+              ))}
+            </div>
+          )}
           {error && (
             <p className="mt-3 text-xs text-red-600">
               {error}
@@ -152,7 +236,9 @@ export function AutomaticFlow() {
                 <AutomaticCard
                   key={item.imageKey || item.imageUrl || idx}
                   item={item}
+                  userId={userId}
                   onClick={(item) => setViewerItem(item)}
+                  onDelete={(item) => setItems((prev) => prev.filter((i) => (i.imageKey || i.imageUrl) !== (item.imageKey || item.imageUrl)))}
                 />
               ))}
             </div>

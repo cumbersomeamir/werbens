@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
   // Context
   CONTEXT: "/api/context",
   CONTEXT_UPDATE: "/api/context/update",
+  CONTEXT_UPDATE_PLATFORM: "/api/context/update-platform",
 
   // Social Accounts
   SOCIAL_ACCOUNTS: "/api/social/accounts",
@@ -62,4 +63,5 @@ export const API_ENDPOINTS = {
   AUTOMATIC_GENERATE: "/api/automatic/generate",
   AUTOMATIC_IMAGES: "/api/automatic/images",
   AUTOMATIC_DOWNLOAD: "/api/automatic/download",
+  AUTOMATIC_DELETE_IMAGE: "/api/automatic/images/delete",
 };

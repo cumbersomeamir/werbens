@@ -1,6 +1,34 @@
 === X (TWITTER) DATA ===
 
-No X account connected.
+Username: Amir Kidwai
+Channel ID: 1732020451021299713
+
+--- Profile ---
+Name: Amir Kidwai
+
+--- Recent Posts (22) ---
+1. testing again and again
+   Likes: 0, Retweets: 0
+2. new post coming soon
+   Likes: 0, Retweets: 0
+3. Final verification - direct immediate posting works perfectly
+   Likes: 0, Retweets: 0
+4. Testing direct immediate posting - no scheduler queue
+   Likes: 0, Retweets: 0
+5. ✅ Successfully tested automated posting from Werbens! The X API integration is now working correctly with tweet.write scope.
+   Likes: 0, Retweets: 0
+6. Stock market crash coming in the next 10 mins
+   Likes: 0, Retweets: 0
+7. Create images of yourself using Ideaverse AI, they have a mobile and web app https://t.co/l3xpYFq0d0
+   Likes: 0, Retweets: 0
+8. Create personalised images like this on Ideaverse AI. https://t.co/f3VtgVmxE8 https://t.co/3GUjqy5XCX
+   Likes: 0, Retweets: 0
+9. @cly3d @AmazonHelp @amazonIN @JeffBezos To this day it is happening ffs
+   Likes: 0, Retweets: 0
+10. @sama @sama please offer me a job so i can join meta
+   Likes: 0, Retweets: 0
+
+Last Fetched: Thu Feb 12 2026 13:47:26 GMT+0530 (India Standard Time)
 
 
 === INSTAGRAM DATA ===
@@ -51,7 +79,87 @@ Last Fetched: Sun Feb 08 2026 23:19:53 GMT+0530 (India Standard Time)
 
 === YOUTUBE DATA ===
 
-No YouTube account connected.
+Username: Amir In Tech
+Channel ID: UCI1Cj72aFpmTxtwPimy6KUg
+
+--- Profile ---
+Channel Name: Amir In Tech
+Description: Experimenting with AI, my goal is to create every non creator a creator
+
+--- Recent Videos (50) ---
+1. London Bus Exit Goes Horribly Wrong 😳🚌 #shorts
+   Just a normal exit… until manners kick in at the worst moment.
+Awkward, realistic, and painfully British chaos.
+
+#londonlife #darkhumor #absurdcomedy ...
+   Views: 1664, Likes: 13
+2. Feeding a Polar Bear Broccoli in the Arctic 🐻‍❄️🥦 #shorts
+   Cold air. Calm moment.
+Unexpected friendship in the Arctic.
+Surreal but strangely wholesome.
+
+#nature #cinematicai #unexpected #aivideo #viral #wholes...
+   Views: 849, Likes: 5
+3. London Street Turns Into Absolute Madness 🎤🔥 #shorts
+   Luxury, chaos, screaming crowds.
+No barricades. No stopping.
+Pure cinematic celebrity energy.
+
+#streetstyle #cinematicshort #absurdhumor #aivideo #vir...
+   Views: 1530, Likes: 6
+4. @sexyelon999 Stops Surgery for a Selfie 🏥📱 #shorts
+   High-pressure operation.
+Perfect lighting.
+Just one photo.
+
+#darkcomedy #absurdhumor #cinematicshort #aivideo #viral #unexpected #shorts
+   Views: 549, Likes: 1
+5. @sexyelon999 Orders Food… The Drive-Through Never Stops 🍔🚗 #shorts
+   Confidence was high.
+The staff already knew.
+The food just kept coming.
+
+#funnyshorts #darkhumor #absurdcomedy #cinematicai #viralshorts #unexpected #...
+   Views: 1865, Likes: 7
+6. @sexyelon999 Proposes… Then Realizes He Forgot the Ring 💍😭 #shorts
+   Sunset. Emotions. Panic.
+Love doesn’t need diamonds… sometimes a Cheeto works.
+Cinema-level romance with a stupid twist.
+
+#love #proposal #absurdcomed...
+   Views: 1499, Likes: 14
+7. @sexyelon999 Orders McDonald’s From a Helicopter 🚁🍟 #shorts
+   Rich decisions were made.
+The food didn’t survive the helicopter blades.
+Shot like real iPhone chaos.
+
+#absurdcomedy #darkhumor #cinematicshort #aivid...
+   Views: 1712, Likes: 10
+8. @sexyelon999 Goes Fishing… The Fish Wins 🎣😳 #shorts
+   It started peaceful.
+Then the food chain updated.
+Nature had other plans.
+
+#darkhumor #absurdcomedy #cinematicshort #aivideo #viralshorts #unexpected ...
+   Views: 1994, Likes: 9
+9. @sexyelon999 Opens Baked Beans… Instant Disaster 🫘💥 #shorts
+   Pressure was building.
+The beans chose violence.
+His review? Perfect.
+
+#funnyshorts #absurdhumor #cinematicai #darkcomedy #viral #unexpected #shorts
+   Views: 1285, Likes: 8
+10. @sexyelon999 vs London’s Rudest Pigeon ☕🕊️ #shorts
+   London manners tested.
+The pigeon made the first move… and the last.
+Calmness at its peak.
+
+#londonlife #darkcomedy #absurdhumor #cinematicshort #aish...
+   Views: 1646, Likes: 10
+
+--- Insights ---
+
+Last Fetched: Thu Feb 12 2026 13:43:26 GMT+0530 (India Standard Time)
 
 
 === LINKEDIN DATA ===

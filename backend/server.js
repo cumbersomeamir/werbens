@@ -17,13 +17,13 @@ import { createAutomatePostHandler, getAutomatePostsHandler, deleteAutomatePostH
 import { chatHandler } from "./routes/chat/index.js";
 import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
-import { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler } from "./routes/automatic.js";
+import { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler, automaticDeleteImageHandler } from "./routes/automatic.js";
 import {
   getOrCreateSessionHandler,
   clearSessionHandler,
   getSessionMessagesHandler,
 } from "./routes/sessions/index.js";
-import { getContextHandler, updateContextHandler } from "./routes/context.js";
+import { getContextHandler, updateContextHandler, updateContextPlatformHandler } from "./routes/context.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -101,6 +101,7 @@ app.post("/api/model-switcher/classify", classifyPromptHandler);
 // Automatic personalised content API
 app.post("/api/automatic/generate", automaticGenerateHandler);
 app.get("/api/automatic/images", automaticGetImagesHandler);
+app.post("/api/automatic/images/delete", automaticDeleteImageHandler);
 app.get("/api/automatic/download", automaticDownloadHandler);
 
 // Session management APIs
@@ -111,6 +112,7 @@ app.get("/api/sessions/:sessionId/messages", getSessionMessagesHandler);
 // Context management APIs
 app.get("/api/context", getContextHandler);
 app.post("/api/context/update", updateContextHandler);
+app.post("/api/context/update-platform", updateContextPlatformHandler);
 
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);

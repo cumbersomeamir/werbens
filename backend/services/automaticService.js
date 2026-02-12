@@ -2,15 +2,13 @@
  * Automatic personalised content service
  *
  * Uses:
- * - Onboarding.general_onboarding_context from MongoDB (onboarding questions + user choices)
- * - runCommonChat (Gemini text) to derive a single prompt
+ * - automatic-context + automatic-prompts (onboarding + platform context)
  * - runCommonImage (Nano Banana Pro) to generate an image from that prompt
  * - Uploads images to S3 and saves metadata to Automatic collection
  */
 import { getDb } from "../db.js";
-import { runCommonChat } from "./commonChat.js";
 import { runCommonImage } from "./commonImage.js";
-import { collateAndSaveOnboardingContext } from "../onboarding-context/onboarding-data-collator.js";
+import { generatePrompt } from "../automatic-prompts/generatePrompt.js";
 import { uploadImageToS3, getPresignedUrl } from "./s3Service.js";
 
 /**
@@ -18,10 +16,11 @@ import { uploadImageToS3, getPresignedUrl } from "./s3Service.js";
  *
  * @param {Object} params
  * @param {string} params.userId
+ * @param {string} [params.platform] - e.g. "x", "instagram". Default: priority from onboarding
  * @param {string} params.apiKey - Gemini API key
- * @returns {Promise<{ prompt: string, image: string }>} - image is presigned S3 URL (valid for 1 hour)
+ * @returns {Promise<{ prompt: string, image: string, platform: string }>} - image is presigned S3 URL (valid for 1 hour)
  */
-export async function generateAutomaticContent({ userId, apiKey }) {
+export async function generateAutomaticContent({ userId, platform, apiKey }) {
   if (!userId) {
     throw new Error("generateAutomaticContent: userId is required");
   }
@@ -29,48 +28,22 @@ export async function generateAutomaticContent({ userId, apiKey }) {
     throw new Error("generateAutomaticContent: apiKey is required");
   }
 
-  // 1) Load onboarding context from MongoDB (Onboarding collection)
+  // 1) Check onboarding exists
   const db = await getDb();
-  const onboardingColl = db.collection("Onboarding");
-  const onboardingDoc = await onboardingColl.findOne({ userId: userId.trim() });
-
+  const onboardingDoc = await db.collection("Onboarding").findOne({ userId: userId.trim() });
   if (!onboardingDoc) {
     throw new Error(
       "No onboarding data found for this user. Please complete onboarding first."
     );
   }
 
-  // Check if general_onboarding_context exists, if not generate it on-the-fly
-  let generalOnboardingContext = onboardingDoc?.general_onboarding_context?.trim();
-  
-  if (!generalOnboardingContext) {
-    // Generate it now if onboarding data exists but context hasn't been collated yet
-    try {
-      generalOnboardingContext = await collateAndSaveOnboardingContext(userId);
-    } catch (err) {
-      console.error("Error generating onboarding context:", err.message);
-      throw new Error(
-        "Failed to generate onboarding context. Please try again or complete onboarding."
-      );
-    }
-  }
-
-  // 2) Ask Gemini (text) for a single content prompt based on onboarding context
-  const metaPrompt = [
-    "This is some info about the user from onboarding:",
-    generalOnboardingContext,
-    "",
-    "Give me a prompt which will create appropriate content for this user.",
-    "Think by first principles.",
-    "And only give one prompt.",
-  ].join("\n");
-
-  const { text: rawPrompt } = await runCommonChat({
+  // 2) Generate prompt using automatic-context + automatic-prompts (platform-specific)
+  const { prompt, platform: resolvedPlatform } = await generatePrompt({
+    userId,
+    platform,
     apiKey,
-    prompt: metaPrompt,
   });
 
-  const prompt = (rawPrompt || "").trim();
   if (!prompt) {
     throw new Error("Failed to generate prompt from user context.");
   }
@@ -116,6 +89,7 @@ export async function generateAutomaticContent({ userId, apiKey }) {
   const item = {
     prompt,
     imageKey: s3Key, // Store only the S3 key, not the URL
+    platform: resolvedPlatform || null,
     createdAt: now,
   };
 
@@ -131,7 +105,7 @@ export async function generateAutomaticContent({ userId, apiKey }) {
     { upsert: true }
   );
 
-  return { prompt, image: presignedUrl };
+  return { prompt, image: presignedUrl, imageKey: s3Key, platform: resolvedPlatform };
 }
 
 /**
@@ -201,4 +175,28 @@ export async function getAutomaticImageDownloadUrl(userId, imageKey) {
   // Generate fresh presigned URL with Content-Disposition header to force download (valid for 1 hour)
   const presignedUrl = await getPresignedUrl(imageKey, 3600, true);
   return presignedUrl;
+}
+
+/**
+ * Delete an automatic image by imageKey
+ * @param {string} userId
+ * @param {string} imageKey - S3 key of the image
+ */
+export async function deleteAutomaticImage(userId, imageKey) {
+  if (!userId) throw new Error("deleteAutomaticImage: userId is required");
+  if (!imageKey) throw new Error("deleteAutomaticImage: imageKey is required");
+
+  const db = await getDb();
+  const collection = db.collection("Automatic");
+
+  const result = await collection.updateOne(
+    { userId: userId.trim() },
+    { $pull: { items: { imageKey } } }
+  );
+
+  if (result.matchedCount === 0) {
+    throw new Error("User document not found");
+  }
+
+  return { success: true };
 }

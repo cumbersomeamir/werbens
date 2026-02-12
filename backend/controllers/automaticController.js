@@ -1,7 +1,7 @@
 /**
  * Automatic controller - handles automatic personalised content API
  */
-import { generateAutomaticContent, getAutomaticImages, getAutomaticImageDownloadUrl } from "../services/automaticService.js";
+import { generateAutomaticContent, getAutomaticImages, getAutomaticImageDownloadUrl, deleteAutomaticImage } from "../services/automaticService.js";
 
 /**
  * POST /api/automatic/generate
@@ -21,17 +21,20 @@ export async function automaticGenerateHandler(req, res) {
   }
 
   const userId = req.body.userId || req.query.userId || "default-user";
+  const platform = req.body.platform || req.query.platform || null;
 
   if (!userId) {
     return res.status(400).json({ error: "userId required" });
   }
 
   try {
-    const result = await generateAutomaticContent({ userId, apiKey });
+    const result = await generateAutomaticContent({ userId, platform, apiKey });
     return res.json({
       success: true,
       prompt: result.prompt,
       image: result.image,
+      imageKey: result.imageKey || null,
+      platform: result.platform || null,
     });
   } catch (err) {
     console.error("Automatic generation error:", err);
@@ -95,6 +98,30 @@ export async function automaticDownloadHandler(req, res) {
     console.error("Error generating download URL:", err);
     return res.status(500).json({
       error: "Failed to generate download URL",
+      message: err instanceof Error ? err.message : "Unknown error",
+    });
+  }
+}
+
+/**
+ * POST /api/automatic/images/delete
+ * Delete an automatic image by imageKey
+ */
+export async function automaticDeleteImageHandler(req, res) {
+  const userId = req.body.userId || req.query.userId;
+  const imageKey = req.body.imageKey || req.query.imageKey;
+
+  if (!userId || !imageKey) {
+    return res.status(400).json({ error: "userId and imageKey required" });
+  }
+
+  try {
+    await deleteAutomaticImage(userId, imageKey);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Error deleting automatic image:", err);
+    return res.status(500).json({
+      error: "Failed to delete image",
       message: err instanceof Error ? err.message : "Unknown error",
     });
   }

@@ -56,3 +56,30 @@ export async function updateContext(userId) {
     throw err;
   }
 }
+
+/**
+ * Update a single platform's context (user-edited)
+ * @param {string} userId
+ * @param {string} platform - "x", "instagram", "youtube", "linkedin", "pinterest", "facebook"
+ * @param {string} value - new context text
+ * @returns {Promise<Object>} Updated context doc
+ */
+export async function updateContextPlatform(userId, platform, value) {
+  const key = `${platform}_context`;
+  const db = await getDb();
+  const collection = db.collection("Context");
+
+  await collection.updateOne(
+    { userId: userId.trim() },
+    {
+      $set: {
+        [key]: value,
+        updatedAt: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+
+  const doc = await collection.findOne({ userId: userId.trim() });
+  return doc;
+}
