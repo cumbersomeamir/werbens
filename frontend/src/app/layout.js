@@ -40,7 +40,9 @@ export default function RootLayout({ children }) {
         <AuthSessionProvider>
           <AuthGuard>
             <Header />
-            {children}
+            <div className="pt-20">
+              {children}
+            </div>
           </AuthGuard>
         </AuthSessionProvider>
       </body>
