@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/post", label: "Post" },
   { href: "/onboarding", label: "Onboarding" },
   { href: "/automatic", label: "Automatic" },
+  { href: "/agents", label: "Agents" },
   { href: "/pricing", label: "Pricing" },
   { href: "/create", label: "Create" },
   { href: "/splash", label: "Splash", splash: true },

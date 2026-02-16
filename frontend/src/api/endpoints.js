@@ -64,4 +64,11 @@ export const API_ENDPOINTS = {
   AUTOMATIC_IMAGES: "/api/automatic/images",
   AUTOMATIC_DOWNLOAD: "/api/automatic/download",
   AUTOMATIC_DELETE_IMAGE: "/api/automatic/images/delete",
+
+  // Agents (human-in-the-loop flows)
+  AGENTS: "/api/agents",
+  AGENTS_CONSTANTS: "/api/agents/constants",
+  AGENT_BY_ID: (id) => `/api/agents/${id}`,
+  AGENT_GENERATE_FLOW: (id) => `/api/agents/${id}/generate-flow`,
+  AGENT_RUN: (id) => `/api/agents/${id}/run`,
 };

@@ -24,6 +24,16 @@ import {
   getSessionMessagesHandler,
 } from "./routes/sessions/index.js";
 import { getContextHandler, updateContextHandler, updateContextPlatformHandler } from "./routes/context.js";
+import {
+  createAgentHandler,
+  getAgentsHandler,
+  getAgentByIdHandler,
+  updateAgentHandler,
+  deleteAgentHandler,
+  generateFlowHandler,
+  runAgentHandler,
+  getConstantsHandler,
+} from "./agents/index.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -113,6 +123,16 @@ app.get("/api/sessions/:sessionId/messages", getSessionMessagesHandler);
 app.get("/api/context", getContextHandler);
 app.post("/api/context/update", updateContextHandler);
 app.post("/api/context/update-platform", updateContextPlatformHandler);
+
+// Agents APIs (human-in-the-loop flows)
+app.get("/api/agents/constants", getConstantsHandler);
+app.post("/api/agents", createAgentHandler);
+app.get("/api/agents", getAgentsHandler);
+app.get("/api/agents/:id", getAgentByIdHandler);
+app.patch("/api/agents/:id", updateAgentHandler);
+app.delete("/api/agents/:id", deleteAgentHandler);
+app.post("/api/agents/:id/generate-flow", generateFlowHandler);
+app.post("/api/agents/:id/run", runAgentHandler);
 
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);

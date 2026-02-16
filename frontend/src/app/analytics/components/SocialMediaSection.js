@@ -1041,6 +1041,26 @@ export function SocialMediaSection({ userId }) {
       return String(a.channelId || "").localeCompare(String(b.channelId || ""));
     });
 
+  const getDisplayName = (doc) => {
+    const platform = doc.platform;
+    const profile = doc.profile || {};
+    if (platform === "youtube") return profile.title || doc.username || "Channel";
+    if (platform === "linkedin") return (typeof profile.name === "string" && profile.name) ? profile.name : ([profile.given_name, profile.family_name].filter(Boolean).join(" ").trim() || doc.username || "LinkedIn");
+    if (platform === "pinterest") return (typeof profile.username === "string" && profile.username) || doc.username || "Pinterest";
+    if (platform === "facebook") return (typeof profile.name === "string" && profile.name) || doc.username || "Facebook";
+    if (platform === "instagram") return (typeof profile.username === "string" && profile.username) ? `@${profile.username}` : doc.username || "Instagram";
+    if (platform === "x") return profile.username ? `@${profile.username}` : profile.name || doc.username || "";
+    return doc.username || "";
+  };
+
+  const titleCounts = new Map();
+  for (const doc of sortedList) {
+    const platformLabel = PLATFORM_LABELS[doc.platform] || doc.platform;
+    const baseName = getDisplayName(doc);
+    const key = `${platformLabel} – ${baseName}`.trim();
+    titleCounts.set(key, (titleCounts.get(key) || 0) + 1);
+  }
+
   return (
     <section className="px-4 sm:px-6 pb-12 sm:pb-16" aria-label="Social accounts data">
       <div className="mx-auto max-w-7xl">
@@ -1058,23 +1078,12 @@ export function SocialMediaSection({ userId }) {
           <div className="space-y-4">
             {sortedList.map((doc) => {
               const platformLabel = PLATFORM_LABELS[doc.platform] || doc.platform;
-              const displayName =
-                doc.platform === "youtube"
-                  ? (doc.profile?.title || doc.username || "Channel")
-                  : doc.platform === "linkedin"
-                    ? (typeof doc.profile?.name === "string" && doc.profile.name)
-                      ? doc.profile.name
-                      : ([doc.profile?.given_name, doc.profile?.family_name].filter(Boolean).join(" ").trim() || doc.username || "LinkedIn")
-                    : doc.platform === "pinterest"
-                      ? (typeof doc.profile?.username === "string" && doc.profile.username) || doc.username || "Pinterest"
-                      : doc.platform === "facebook"
-                        ? (typeof doc.profile?.name === "string" && doc.profile.name) || doc.username || "Facebook"
-                        : doc.platform === "instagram"
-                          ? (typeof doc.profile?.username === "string" && doc.profile.username) ? `@${doc.profile.username}` : doc.username || "Instagram"
-                          : doc.profile?.username
-                            ? `@${doc.profile.username}`
-                            : doc.username || "";
-              const title = `${platformLabel} – ${displayName}`.trim() || `${platformLabel} – Connected`;
+              const displayName = getDisplayName(doc);
+              let title = `${platformLabel} – ${displayName}`.trim() || `${platformLabel} – Connected`;
+              if (titleCounts.get(title) > 1 && doc.channelId) {
+                const shortId = String(doc.channelId).replace(/\s/g, "").slice(-6);
+                title = shortId ? `${title} (${shortId})` : title;
+              }
               const cardKey = `${doc.platform}-${doc.channelId ?? doc.profile?.id ?? doc.userId}`;
               return (
                 <CollapsibleCard key={cardKey} title={title}>
