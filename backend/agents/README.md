@@ -34,14 +34,22 @@ agents/
 │   └── flowGeneratorPrompt.js # System + user prompt for AI flow generation
 ├── services/
 │   ├── agentService.js       # CRUD, generateFlow, runAgent
+│   ├── flowService.js        # Persists flows to Flows collection
 │   └── flowGeneratorService.js # Calls LLM to produce blocks from description
 ├── orchestrator/
 │   └── flowOrchestrator.js   # Topological sort, executes blocks, handles human pause
 ├── models/
-│   └── agentModel.js        # Agent document schema
+│   └── agentModel.js        # Agent + Flow document schemas
 └── routes/
     └── agents.js            # API handlers
 ```
+
+## MongoDB Collections
+
+| Collection | Purpose |
+|------------|---------|
+| **Agents** | Agent metadata (name, description, context) + current flow.blocks. Indexed by userId, updatedAt. |
+| **Flows** | Flow definitions (blocks) per agent, versioned. Each generate-flow creates a new flow doc. Indexed by agentId, version. |
 
 ---
 

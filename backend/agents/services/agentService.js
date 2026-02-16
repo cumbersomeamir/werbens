@@ -4,6 +4,7 @@
 import { getDb } from "../../db.js";
 import { generateFlowFromDescription } from "./flowGeneratorService.js";
 import { executeFlow } from "../orchestrator/flowOrchestrator.js";
+import { saveFlow, deleteFlowsByAgentId } from "./flowService.js";
 import { BLOCK_TYPES, PLATFORM_SERVICES, HUMAN_TASK_INPUT_TYPES } from "../constants/blockTypes.js";
 
 const COLLECTION = "Agents";
@@ -77,6 +78,9 @@ export async function deleteAgent(userId, agentId) {
   const id = ObjectId.isValid(agentId) ? new ObjectId(agentId) : null;
   if (!id) return false;
   const result = await coll.deleteOne({ _id: id, userId: userId.trim() });
+  if (result.deletedCount > 0) {
+    await deleteFlowsByAgentId(agentId);
+  }
   return result.deletedCount > 0;
 }
 
@@ -95,6 +99,7 @@ export async function generateFlow(apiKey, userId, agentId) {
     referenceImages: agent.referenceImageKeys || [],
   });
 
+  await saveFlow(agentId, blocks);
   await updateAgent(userId, agentId, { flow: { blocks } });
   return { blocks };
 }
