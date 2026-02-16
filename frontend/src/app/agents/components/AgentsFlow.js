@@ -126,17 +126,148 @@ function CreateAgentModal({ onClose, onCreated }) {
   );
 }
 
-function FlowBlock({ block }) {
+/** Topological order - same as backend execution order (sequential) */
+function flowOrder(blocks) {
+  const idToBlock = new Map(blocks.map((b) => [b.id, b]));
+  const visited = new Set();
+  const order = [];
+  const sorted = [...blocks].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  function visit(id) {
+    if (visited.has(id)) return;
+    visited.add(id);
+    const block = idToBlock.get(id);
+    if (block?.inputs?.length) for (const inp of block.inputs) visit(inp);
+    order.push(id);
+  }
+  for (const b of sorted) visit(b.id);
+  return order.map((id) => blocks.find((b) => b.id === id)).filter(Boolean);
+}
+
+function getInputTypeLabel(block) {
+  if (block.type !== "human_task") return null;
+  const t = block.config?.inputType || "text";
+  const inst = (block.config?.instruction || "").toLowerCase();
+  if (t === "url") return "Requires: URL";
+  if (t === "image") return "Requires: Image upload";
+  if (t === "urls") return "Requires: URLs";
+  if (t === "text" || t === "freeform") {
+    if (/comment|comma/.test(inst)) return "Requires: Text (comma-separated)";
+    return "Requires: Text";
+  }
+  return `Requires: ${t}`;
+}
+
+function FlowBlock({ block, value, onChange, isMissing }) {
   const typeColors = {
-    llm: "bg-blue-50 text-blue-800",
-    image_gen: "bg-purple-50 text-purple-800",
-    human_task: "bg-amber-50 text-amber-800",
-    url_fetch: "bg-green-50 text-green-800",
+    llm: "bg-blue-50 text-blue-800 border-blue-200",
+    image_gen: "bg-purple-50 text-purple-800 border-purple-200",
+    human_task: "bg-amber-50 text-amber-800 border-amber-200",
+    url_fetch: "bg-green-50 text-green-800 border-green-200",
   };
-  const color = typeColors[block.type] || "bg-gray-50 text-gray-800";
+  const color = typeColors[block.type] || "bg-gray-50 text-gray-800 border-gray-200";
+  const inputLabel = getInputTypeLabel(block);
+  const isHumanTask = block.type === "human_task";
+
   return (
-    <div className={`rounded-xl px-4 py-2 ${color} text-sm font-medium`}>
-      {block.label} <span className="opacity-70">({block.type})</span>
+    <div className={`rounded-xl border ${color} text-sm font-medium min-w-[240px] max-w-[340px] shadow-sm overflow-hidden ${isMissing ? "ring-2 ring-red-400/60" : ""}`}>
+      <div className="px-4 py-3 text-center">
+        <div>{block.label}</div>
+        {isHumanTask && inputLabel ? (
+          <span className="block text-xs font-semibold text-amber-700 mt-1">{inputLabel}</span>
+        ) : !isHumanTask ? (
+          <span className="block text-xs opacity-70 mt-0.5">{block.type.replace("_", " ")}</span>
+        ) : null}
+      </div>
+      {isHumanTask && (
+        <div className="px-4 pb-4 pt-0 border-t border-amber-200/50 bg-amber-50/50">
+          <HumanTaskInputBlock block={block} value={value} onChange={onChange} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HumanTaskInputBlock({ block, value, onChange }) {
+  const inputType = block.config?.inputType || "text";
+  const instruction = block.config?.instruction || "Provide input";
+  const isComments = /comment|comma/i.test(instruction || "");
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => onChange(block.id, reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const isDataUrl = typeof value === "string" && value.startsWith("data:image");
+  const placeholder =
+    inputType === "url"
+      ? "e.g. https://instagram.com/p/..."
+      : inputType === "image"
+        ? null
+        : isComments
+          ? "Comment 1, Comment 2, Comment 3..."
+          : "Enter your input...";
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-werbens-text/90 font-medium">{instruction}</p>
+      {inputType === "url" && (
+        <input
+          type="url"
+          value={value ?? ""}
+          onChange={(e) => onChange(block.id, e.target.value)}
+          placeholder={placeholder}
+          className="w-full px-3 py-2 rounded-lg border border-werbens-dark-cyan/20 text-sm focus:ring-2 focus:ring-werbens-dark-cyan/30"
+        />
+      )}
+      {(inputType === "text" || inputType === "freeform" || inputType === "urls") && (
+        <textarea
+          value={value ?? ""}
+          onChange={(e) => onChange(block.id, e.target.value)}
+          placeholder={placeholder}
+          rows={3}
+          className="w-full px-3 py-2 rounded-lg border border-werbens-dark-cyan/20 text-sm focus:ring-2 focus:ring-werbens-dark-cyan/30"
+        />
+      )}
+      {inputType === "image" && (
+        <label className="flex flex-col items-center justify-center w-full min-h-[90px] border-2 border-dashed border-werbens-dark-cyan/30 rounded-lg cursor-pointer hover:bg-amber-100/50 transition-colors">
+          <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          {isDataUrl ? (
+            <img src={value} alt="Preview" className="max-h-20 object-contain rounded" />
+          ) : (
+            <span className="text-xs text-werbens-muted py-2">Click to upload image</span>
+          )}
+        </label>
+      )}
+    </div>
+  );
+}
+
+function FlowChart({ blocks, humanInputs, onHumanInputChange, missingBlockId }) {
+  const ordered = flowOrder(blocks);
+  if (ordered.length === 0) return null;
+  return (
+    <div className="flex flex-col items-center gap-0 py-4">
+      {ordered.map((block, i) => (
+        <div key={block.id} className="flex flex-col items-center">
+          <FlowBlock
+            block={block}
+            value={block.type === "human_task" ? humanInputs[block.id] : undefined}
+            onChange={block.type === "human_task" ? onHumanInputChange : undefined}
+            isMissing={missingBlockId === block.id}
+          />
+          {i < ordered.length - 1 && (
+            <div className="flex flex-col items-center py-2">
+              <div className="w-0.5 h-3 bg-werbens-dark-cyan/40" />
+              <svg className="w-5 h-5 text-werbens-dark-cyan/60 -mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -146,18 +277,23 @@ function AgentDetail({ agent, onBack, onUpdated }) {
   const [localAgent, setLocalAgent] = useState(agent);
   const [generating, setGenerating] = useState(false);
   const [running, setRunning] = useState(false);
-  const [humanTask, setHumanTask] = useState(null);
   const [humanInputs, setHumanInputs] = useState({});
+  const [missingBlockId, setMissingBlockId] = useState(null);
   const [result, setResult] = useState(null);
 
-  useEffect(() => setLocalAgent(agent), [agent]);
+  useEffect(() => {
+    setLocalAgent(agent);
+    setHumanInputs({});
+  }, [agent]);
 
   const handleGenerateFlow = async () => {
     if (!userId) return;
     setGenerating(true);
+    setMissingBlockId(null);
     try {
       const { blocks } = await generateFlow(userId, agent._id);
       setLocalAgent((a) => ({ ...a, flow: { blocks } }));
+      setHumanInputs({});
       onUpdated?.();
     } catch (err) {
       alert(err.message || "Failed to generate flow");
@@ -166,19 +302,22 @@ function AgentDetail({ agent, onBack, onUpdated }) {
     }
   };
 
-  const handleRun = async (extraHumanInputs = {}) => {
+  const handleRun = async () => {
     if (!userId) return;
+    const inputsForApi = {};
+    for (const [k, v] of Object.entries(humanInputs)) {
+      inputsForApi[k] = typeof v === "string" && v.startsWith("data:image") ? v.split(",")[1] : v;
+    }
     setRunning(true);
-    setHumanTask(null);
+    setMissingBlockId(null);
     setResult(null);
     try {
       const res = await runAgent(userId, agent._id, {
         initialContext: {},
-        humanInputs: { ...humanInputs, ...extraHumanInputs },
+        humanInputs: inputsForApi,
       });
       if (res.status === "human_required") {
-        setHumanTask(res.humanTask);
-        setHumanInputs((prev) => ({ ...prev, [res.humanTask.blockId]: null }));
+        setMissingBlockId(res.humanTask.blockId);
       } else {
         setResult(res);
       }
@@ -189,21 +328,9 @@ function AgentDetail({ agent, onBack, onUpdated }) {
     }
   };
 
-  const handleHumanSubmit = (blockId, value) => {
-    const next = { ...humanInputs, [blockId]: value };
-    setHumanInputs(next);
-    setHumanTask(null);
-    setRunning(true);
-    runAgent(userId, agent._id, { initialContext: {}, humanInputs: next })
-      .then((res) => {
-        if (res.status === "human_required") {
-          setHumanTask(res.humanTask);
-        } else {
-          setResult(res);
-        }
-      })
-      .catch((err) => alert(err.message || "Failed to run"))
-      .finally(() => setRunning(false));
+  const handleHumanInputChange = (blockId, value) => {
+    setHumanInputs((prev) => ({ ...prev, [blockId]: value }));
+    setMissingBlockId(null);
   };
 
   const blocks = localAgent?.flow?.blocks || [];
@@ -225,10 +352,24 @@ function AgentDetail({ agent, onBack, onUpdated }) {
         {blocks.length === 0 ? (
           <p className="text-sm text-werbens-muted mb-3">No flow yet. Generate one from your description.</p>
         ) : (
-          <div className="flex flex-wrap gap-2 mb-3">
-            {blocks.map((b) => (
-              <FlowBlock key={b.id} block={b} />
-            ))}
+          <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white/50 p-6 mb-3">
+            <p className="text-sm text-werbens-muted mb-4">Fill all inputs below, then run.</p>
+            <FlowChart
+              blocks={blocks}
+              humanInputs={humanInputs}
+              onHumanInputChange={handleHumanInputChange}
+              missingBlockId={missingBlockId}
+            />
+            <div className="flex justify-center mt-6">
+              <button
+                type="button"
+                onClick={handleRun}
+                disabled={running}
+                className="px-5 py-2.5 bg-werbens-dark-cyan text-white rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50"
+              >
+                {running ? "Running…" : "Run agent"}
+              </button>
+            </div>
           </div>
         )}
         <button
@@ -240,54 +381,6 @@ function AgentDetail({ agent, onBack, onUpdated }) {
           {generating ? "Generating…" : blocks.length ? "Regenerate flow" : "Generate flow"}
         </button>
       </div>
-
-      {blocks.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-werbens-dark-cyan mb-3">Run</h2>
-          {humanTask ? (
-            <div className="rounded-xl border border-werbens-dark-cyan/20 p-4 bg-werbens-mist/30">
-              <p className="text-sm font-medium text-werbens-text mb-2">{humanTask.instruction}</p>
-              {humanTask.inputType === "url" ? (
-                <input
-                  type="url"
-                  placeholder="Paste URL..."
-                  className="w-full px-4 py-2 rounded-lg border mb-2"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleHumanSubmit(humanTask.blockId, e.target.value);
-                  }}
-                  id="human-url"
-                />
-              ) : (
-                <textarea
-                  placeholder="Paste or type..."
-                  rows={3}
-                  className="w-full px-4 py-2 rounded-lg border mb-2"
-                  id="human-text"
-                />
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  const el = document.getElementById(humanTask.inputType === "url" ? "human-url" : "human-text");
-                  handleHumanSubmit(humanTask.blockId, el?.value || "");
-                }}
-                className="px-4 py-2 bg-werbens-dark-cyan text-white rounded-lg text-sm"
-              >
-                Submit & continue
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => handleRun()}
-              disabled={running}
-              className="px-4 py-2 bg-werbens-dark-cyan text-white rounded-xl text-sm hover:opacity-90 disabled:opacity-50"
-            >
-              {running ? "Running…" : "Run agent"}
-            </button>
-          )}
-        </div>
-      )}
 
       {result?.context && (() => {
         const img = result.context.image || result.context.imageBase64;

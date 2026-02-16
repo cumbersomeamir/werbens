@@ -2,9 +2,27 @@
  * URL fetch block - downloads content from URL (e.g. image)
  */
 export async function executeUrlFetchBlock(block, context, options = {}) {
-  const url = context[block.config?.urlKey || "url"] || block.config?.url;
+  const urlKey = block.config?.urlKey || "url";
+  let url = context[urlKey] || block.config?.url;
+  if (!url && options.humanInputs) {
+    for (const inpId of block.inputs || []) {
+      const v = options.humanInputs[inpId];
+      if (typeof v === "string" && /^https?:\/\//i.test(v)) {
+        url = v;
+        break;
+      }
+    }
+    if (!url) {
+      for (const v of Object.values(options.humanInputs)) {
+        if (typeof v === "string" && /^https?:\/\//i.test(v)) {
+          url = v;
+          break;
+        }
+      }
+    }
+  }
   if (!url || typeof url !== "string") {
-    throw new Error("URL fetch block: no URL in context or config");
+    throw new Error("URL fetch block: no URL in context or config. Ensure the URL input block is filled before this step.");
   }
 
   const res = await fetch(url.trim());

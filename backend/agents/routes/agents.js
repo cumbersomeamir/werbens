@@ -1,4 +1,15 @@
 /**
+ * Normalize Google API errors (429, resource exhausted) to user-friendly messages
+ */
+function normalizeApiError(err) {
+  const raw = String(err?.message ?? err ?? "");
+  if (/429|resource exhausted|RESOURCE_EXHAUSTED/i.test(raw)) {
+    return "Your Google AI API quota is exhausted. Please try again later or check your quota at console.cloud.google.com.";
+  }
+  return err?.message || "Request failed";
+}
+
+/**
  * Agents API routes
  */
 import {
@@ -139,7 +150,8 @@ export async function generateFlowHandler(req, res) {
     res.json({ blocks });
   } catch (err) {
     console.error("generateFlow error:", err.message);
-    res.status(500).json({ error: err.message || "Failed to generate flow" });
+    const msg = normalizeApiError(err);
+    res.status(500).json({ error: msg });
   }
 }
 
@@ -167,7 +179,8 @@ export async function runAgentHandler(req, res) {
     res.json(result);
   } catch (err) {
     console.error("runAgent error:", err.message);
-    res.status(500).json({ error: err.message || "Failed to run agent" });
+    const msg = normalizeApiError(err);
+    res.status(500).json({ error: msg });
   }
 }
 

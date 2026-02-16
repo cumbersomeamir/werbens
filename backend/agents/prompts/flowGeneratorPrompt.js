@@ -21,11 +21,12 @@ Human input types: ${Object.values(HUMAN_TASK_INPUT_TYPES).join(", ")}
 ## Rules
 
 1. Use human blocks ONLY for what the platform cannot do (e.g. pasting comments, providing a link, uploading an image).
-2. Chain blocks: each block can reference outputs from previous blocks via {{outputKey}}.
-3. First block(s) can be human tasks for initial user input (e.g. URL, comments).
-4. Output valid JSON only. No markdown, no explanation.
+2. Create a SEQUENTIAL flow: blocks execute one after another. Each block (except the first) must list the previous block(s) in inputs. Order: block_1 → block_2 → block_3 → ... (each block's inputs = ids of blocks whose outputs it needs).
+3. Chain blocks: each block can reference outputs from previous blocks via {{outputKey}}.
+4. Output ONLY a raw JSON array. No markdown code blocks (no \`\`\`), no explanation, no text before or after.
 5. Each block needs: id (unique, e.g. "block_1"), type, label, config, inputs (array of block ids this depends on).
-6. For "Comments to Image" or similar: human provides URL + optional comments → url_fetch gets image → llm filters/structures comments → image_gen creates final image.
+6. Human task: ALWAYS set inputType explicitly—"url" for links, "text" for comma-separated lists (e.g. comments), "image" for reference images. Never use "Optional" in labels. Reference image is required when image_gen needs style—use outputKey "reference_image".
+7. For "Comments to Image": block_1 human (url) → block_2 url_fetch → block_3 human (text, comments) → block_4 human (image, reference_image) → block_5 llm → block_6 image_gen. Sequential.
 `;
 
 export function buildFlowGeneratorUserPrompt({ name, description, context, referenceImages }) {
@@ -43,7 +44,7 @@ export function buildFlowGeneratorUserPrompt({ name, description, context, refer
     prompt += `\n**Reference images:** User has ${referenceImages.length} reference image(s) for style.\n`;
   }
 
-  prompt += `\nOutput a JSON array of blocks. Each block: { "id": "block_1", "type": "...", "label": "...", "config": {...}, "inputs": [] }`;
+  prompt += `\nOutput ONLY a raw JSON array (no \`\`\`json, no markdown). Example: [{"id":"block_1","type":"human_task","label":"Get URL","config":{"inputType":"url","instruction":"Paste the post URL","outputKey":"url"},"inputs":[]}]`;
 
   return prompt;
 }
