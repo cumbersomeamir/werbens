@@ -1,4 +1,4 @@
 /**
  * Context routes
  */
-export { getContextHandler, updateContextHandler } from "../controllers/contextController.js";
+export { getContextHandler, updateContextHandler, updateContextPlatformHandler } from "../controllers/contextController.js";

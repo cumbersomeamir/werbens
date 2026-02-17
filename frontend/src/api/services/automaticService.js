@@ -9,10 +9,11 @@ import { API_ENDPOINTS } from "../endpoints.js";
  *
  * @param {Object} params
  * @param {string} params.userId
- * @returns {Promise<{ success: boolean, prompt: string, image: string }>}
+ * @param {string} [params.platform] - e.g. "x", "instagram". Default: priority from onboarding
+ * @returns {Promise<{ success: boolean, prompt: string, image: string, platform?: string }>}
  */
-export async function generateAutomatic({ userId }) {
-  return post(API_ENDPOINTS.AUTOMATIC_GENERATE, { userId });
+export async function generateAutomatic({ userId, platform }) {
+  return post(API_ENDPOINTS.AUTOMATIC_GENERATE, { userId, platform });
 }
 
 /**
@@ -36,5 +37,15 @@ export async function getAutomaticImages({ userId }) {
  */
 export async function getAutomaticImageDownloadUrl({ userId, imageKey }) {
   return get(`${API_ENDPOINTS.AUTOMATIC_DOWNLOAD}?userId=${encodeURIComponent(userId)}&imageKey=${encodeURIComponent(imageKey)}`);
+}
+
+/**
+ * Delete an automatic image by imageKey.
+ * @param {Object} params
+ * @param {string} params.userId
+ * @param {string} params.imageKey
+ */
+export async function deleteAutomaticImage({ userId, imageKey }) {
+  return post(API_ENDPOINTS.AUTOMATIC_DELETE_IMAGE, { userId, imageKey });
 }
 

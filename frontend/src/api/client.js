@@ -104,6 +104,17 @@ export async function put(url, body, options = {}) {
 }
 
 /**
+ * PATCH request
+ */
+export async function patch(url, body, options = {}) {
+  return apiRequest(url, {
+    ...options,
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+/**
  * DELETE request
  */
 export async function del(url, options = {}) {

@@ -17,19 +17,29 @@ import { createAutomatePostHandler, getAutomatePostsHandler, deleteAutomatePostH
 import { chatHandler } from "./routes/chat/index.js";
 import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
-import { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler } from "./routes/automatic.js";
+import { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler, automaticDeleteImageHandler } from "./routes/automatic.js";
 import {
   getOrCreateSessionHandler,
   clearSessionHandler,
   getSessionMessagesHandler,
 } from "./routes/sessions/index.js";
-import { getContextHandler, updateContextHandler } from "./routes/context.js";
+import { getContextHandler, updateContextHandler, updateContextPlatformHandler } from "./routes/context.js";
+import {
+  createAgentHandler,
+  getAgentsHandler,
+  getAgentByIdHandler,
+  updateAgentHandler,
+  deleteAgentHandler,
+  generateFlowHandler,
+  runAgentHandler,
+  getConstantsHandler,
+} from "./agents/index.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", service: "werbens-backend" });
@@ -101,6 +111,7 @@ app.post("/api/model-switcher/classify", classifyPromptHandler);
 // Automatic personalised content API
 app.post("/api/automatic/generate", automaticGenerateHandler);
 app.get("/api/automatic/images", automaticGetImagesHandler);
+app.post("/api/automatic/images/delete", automaticDeleteImageHandler);
 app.get("/api/automatic/download", automaticDownloadHandler);
 
 // Session management APIs
@@ -111,6 +122,17 @@ app.get("/api/sessions/:sessionId/messages", getSessionMessagesHandler);
 // Context management APIs
 app.get("/api/context", getContextHandler);
 app.post("/api/context/update", updateContextHandler);
+app.post("/api/context/update-platform", updateContextPlatformHandler);
+
+// Agents APIs (human-in-the-loop flows)
+app.get("/api/agents/constants", getConstantsHandler);
+app.post("/api/agents", createAgentHandler);
+app.get("/api/agents", getAgentsHandler);
+app.get("/api/agents/:id", getAgentByIdHandler);
+app.patch("/api/agents/:id", updateAgentHandler);
+app.delete("/api/agents/:id", deleteAgentHandler);
+app.post("/api/agents/:id/generate-flow", generateFlowHandler);
+app.post("/api/agents/:id/run", runAgentHandler);
 
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);

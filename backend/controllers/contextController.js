@@ -1,7 +1,7 @@
 /**
  * Context controller - handles context API requests
  */
-import { getContext, updateContext } from "../services/contextService.js";
+import { getContext, updateContext, updateContextPlatform } from "../services/contextService.js";
 
 /**
  * Get user context
@@ -46,6 +46,37 @@ export async function updateContextHandler(req, res) {
     });
   } catch (err) {
     console.error("Update context error:", err);
+    return res.status(500).json({
+      error: "Failed to update context",
+      message: err instanceof Error ? err.message : "Unknown error",
+    });
+  }
+}
+
+/**
+ * Update platform-specific context (user-edited)
+ * POST /api/context/update-platform
+ * Body: { userId, platform, value }
+ */
+export async function updateContextPlatformHandler(req, res) {
+  const userId = req.body.userId;
+  const platform = (req.body.platform || "").toLowerCase();
+  const value = typeof req.body.value === "string" ? req.body.value : "";
+
+  if (!userId || !platform) {
+    return res.status(400).json({ error: "userId and platform required" });
+  }
+
+  const validPlatforms = ["x", "instagram", "youtube", "linkedin", "pinterest", "facebook"];
+  if (!validPlatforms.includes(platform)) {
+    return res.status(400).json({ error: "Invalid platform" });
+  }
+
+  try {
+    const context = await updateContextPlatform(userId, platform, value);
+    return res.json({ success: true, context });
+  } catch (err) {
+    console.error("Update context platform error:", err);
     return res.status(500).json({
       error: "Failed to update context",
       message: err instanceof Error ? err.message : "Unknown error",

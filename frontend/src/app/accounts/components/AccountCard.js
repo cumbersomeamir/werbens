@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 const PLATFORM_META = {
   instagram: { name: "Instagram", icon: "📷", color: "bg-pink-500/10" },
   facebook: { name: "Facebook", icon: "👍", color: "bg-blue-500/10" },
@@ -13,12 +15,16 @@ const PLATFORM_META = {
 export function AccountCard({
   platformId,
   accounts,
+  platformContext,
   onConnect,
   onRemoveAccount,
   onRemoveAll,
   onManage,
+  onSaveContext,
   connectLoading,
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(platformContext || "");
   const meta = PLATFORM_META[platformId] ?? { name: platformId, icon: "🔗", color: "bg-gray-500/10" };
   const normalizedAccounts = Array.isArray(accounts) ? accounts : [];
   const connected = normalizedAccounts.length > 0;
@@ -83,6 +89,63 @@ export function AccountCard({
           )}
         </div>
       </div>
+
+      {/* Current Context (only for connected platforms) */}
+      {connected && (
+        <div className="mt-4 pt-4 border-t border-werbens-steel/10">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-xs font-semibold text-werbens-dark-cyan/90 uppercase tracking-wide">Current Context</span>
+            {!isEditing ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditValue(platformContext || "");
+                  setIsEditing(true);
+                }}
+                className="rounded-lg border border-werbens-steel/20 bg-white/60 px-3 py-1.5 text-xs font-medium text-werbens-text/80 transition-all duration-200 hover:border-werbens-dark-cyan/30 hover:text-werbens-dark-cyan hover:bg-werbens-light-cyan/5 focus-ring"
+              >
+                Edit
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onSaveContext) onSaveContext(platformId, editValue);
+                    setIsEditing(false);
+                  }}
+                  className="rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-3 py-1.5 text-xs font-semibold text-white transition-all hover:shadow-md focus-ring"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditValue(platformContext || "");
+                    setIsEditing(false);
+                  }}
+                  className="rounded-lg border border-werbens-steel/20 px-3 py-1.5 text-xs font-medium text-werbens-muted hover:text-werbens-text focus-ring"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+          {isEditing ? (
+            <textarea
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              rows={4}
+              className="w-full rounded-xl border border-werbens-steel/20 bg-werbens-mist/30 px-4 py-3 text-sm text-werbens-text placeholder:text-werbens-muted/50 focus:outline-none focus:border-werbens-dark-cyan focus:ring-2 focus:ring-werbens-dark-cyan/20"
+              placeholder="Context extracted from this platform..."
+            />
+          ) : (
+            <p className="text-sm text-werbens-muted leading-relaxed whitespace-pre-wrap">
+              {platformContext || "No context yet. Run Update Context to extract."}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Connected accounts list */}
       {connected && (

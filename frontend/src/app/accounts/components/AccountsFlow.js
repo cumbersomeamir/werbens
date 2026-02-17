@@ -8,7 +8,7 @@ import { ManageAccountModal } from "./ManageAccountModal";
 import Link from "next/link";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import { getSocialAccounts, getXAuthUrl, getYoutubeAuthUrl, getLinkedInAuthUrl, getPinterestAuthUrl, getMetaAuthUrl, getInstagramAuthUrl, disconnectAccount } from "@/lib/socialApi";
-import { updateContext } from "@/api/services/contextService.js";
+import { updateContext, getContext, updateContextPlatform } from "@/api/services/contextService.js";
 
 const PLATFORM_IDS = [
   "instagram",
@@ -22,6 +22,15 @@ const PLATFORM_IDS = [
 
 const BACKEND_PLATFORM_MAP = { twitter: "x" };
 const FRONTEND_PLATFORM_MAP = { x: "twitter" };
+// Map frontend platformId to backend context key
+const PLATFORM_TO_CONTEXT_KEY = {
+  twitter: "x",
+  linkedin: "linkedin",
+  instagram: "instagram",
+  youtube: "youtube",
+  facebook: "facebook",
+  pinterest: "pinterest",
+};
 
 export function AccountsFlow() {
   const searchParams = useSearchParams();
@@ -31,6 +40,7 @@ export function AccountsFlow() {
   const [connectLoading, setConnectLoading] = useState(null);
   const [message, setMessage] = useState(null);
   const [contextUpdating, setContextUpdating] = useState(false);
+  const [contextDoc, setContextDoc] = useState(null);
 
   const loadAccounts = useCallback(async () => {
     if (!userId) {
@@ -83,6 +93,20 @@ export function AccountsFlow() {
   useEffect(() => {
     loadAccounts();
   }, [loadAccounts]);
+
+  const loadContext = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const ctx = await getContext(userId);
+      setContextDoc(ctx);
+    } catch {
+      setContextDoc(null);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    loadContext();
+  }, [loadContext]);
 
   useEffect(() => {
     const connected = searchParams.get("connected");
@@ -264,12 +288,26 @@ export function AccountsFlow() {
     setContextUpdating(true);
     setMessage(null);
     try {
-      await updateContext(userId);
+      const res = await updateContext(userId);
+      setContextDoc(res?.context || res);
       setMessage({ type: "success", text: "Context updated successfully!" });
     } catch (err) {
       setMessage({ type: "error", text: err.message || "Failed to update context." });
     } finally {
       setContextUpdating(false);
+    }
+  };
+
+  const handleSaveContext = async (platformId, value) => {
+    if (!userId) return;
+    const backendPlatform = PLATFORM_TO_CONTEXT_KEY[platformId];
+    if (!backendPlatform) return;
+    try {
+      const res = await updateContextPlatform(userId, backendPlatform, value);
+      setContextDoc(res?.context || res);
+      setMessage({ type: "success", text: "Context saved." });
+    } catch (err) {
+      setMessage({ type: "error", text: err.message || "Failed to save context." });
     }
   };
 
@@ -349,18 +387,24 @@ export function AccountsFlow() {
         <div className="text-werbens-muted text-sm">Loading…</div>
       ) : (
         <div className="space-y-4 sm:space-y-5">
-          {PLATFORM_IDS.map((id) => (
-            <AccountCard
-              key={id}
-              platformId={id}
-              accounts={accountsByPlatform[id] || []}
-              onConnect={handleConnect}
-              onRemoveAll={handleRemove}
-              onRemoveAccount={handleRemoveAccount}
-              onManage={handleManage}
-              connectLoading={connectLoading === id}
-            />
-          ))}
+          {PLATFORM_IDS.map((id) => {
+            const backendKey = PLATFORM_TO_CONTEXT_KEY[id];
+            const platformContext = backendKey && contextDoc ? (contextDoc[`${backendKey}_context`] || "") : "";
+            return (
+              <AccountCard
+                key={id}
+                platformId={id}
+                accounts={accountsByPlatform[id] || []}
+                platformContext={platformContext}
+                onConnect={handleConnect}
+                onRemoveAll={handleRemove}
+                onRemoveAccount={handleRemoveAccount}
+                onManage={handleManage}
+                onSaveContext={handleSaveContext}
+                connectLoading={connectLoading === id}
+              />
+            );
+          })}
         </div>
       )}
 

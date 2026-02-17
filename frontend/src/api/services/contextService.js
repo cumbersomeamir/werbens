@@ -23,3 +23,14 @@ export async function updateContext(userId) {
   if (!userId) throw new Error("userId required");
   return post(API_ENDPOINTS.CONTEXT_UPDATE, { userId });
 }
+
+/**
+ * Update platform-specific context (user-edited)
+ * @param {string} userId
+ * @param {string} platform - backend key: "x", "linkedin", "instagram", etc.
+ * @param {string} value - new context text
+ */
+export async function updateContextPlatform(userId, platform, value) {
+  if (!userId || !platform) throw new Error("userId and platform required");
+  return post(API_ENDPOINTS.CONTEXT_UPDATE_PLATFORM, { userId, platform, value });
+}

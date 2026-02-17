@@ -80,9 +80,17 @@ async function main() {
   );
   await socialColl.createIndex({ userId: 1, platform: 1, channelId: 1 }, { unique: true });
 
+  const agentsColl = db.collection("Agents");
+  await agentsColl.createIndex({ userId: 1 });
+  await agentsColl.createIndex({ userId: 1, updatedAt: -1 });
+
+  const flowsColl = db.collection("Flows");
+  await flowsColl.createIndex({ agentId: 1 });
+  await flowsColl.createIndex({ agentId: 1, version: -1 });
+
   const collections = await db.listCollections().toArray();
   console.log("Collections in", dbName + ":", collections.map((c) => c.name).join(", "));
-  console.log("Indexes ensured (Users.userId unique; SocialAccounts userId+platform+platformUserId unique (partial); SocialMedia userId+platform+channelId unique).");
+  console.log("Indexes ensured (Users, Onboarding, SocialAccounts, SocialMedia, Agents, Flows).");
   process.exit(0);
 }
 
