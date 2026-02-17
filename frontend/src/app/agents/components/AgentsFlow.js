@@ -382,17 +382,37 @@ function AgentDetail({ agent, onBack, onUpdated }) {
         </button>
       </div>
 
-      {result?.context && (() => {
-        const img = result.context.image || result.context.imageBase64;
-        if (!img) return null;
-        const src = typeof img === "string" && img.startsWith("data:") ? img : `data:image/png;base64,${img}`;
-        return (
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold text-werbens-dark-cyan mb-2">Output</h3>
-            <img src={src} alt="Generated" className="rounded-xl max-w-full border" />
-          </div>
-        );
-      })()}
+      {result && (
+        <div className="mt-6 rounded-xl border border-werbens-dark-cyan/20 p-4 bg-werbens-mist/20">
+          <h3 className="text-sm font-semibold text-werbens-dark-cyan mb-3">Output</h3>
+          {result.status === "completed" ? (
+            (() => {
+              const img = result.context?.image || result.context?.imageBase64;
+              const fetched = result.context?.fetched_image;
+              const src = (raw) =>
+                typeof raw === "string" && raw.startsWith("data:") ? raw : `data:image/png;base64,${raw}`;
+              if (img) {
+                return <img src={src(img)} alt="Generated" className="rounded-xl max-w-full border" />;
+              }
+              if (fetched) {
+                return (
+                  <div>
+                    <p className="text-xs text-werbens-muted mb-2">Fetched image (no image_gen in flow yet)</p>
+                    <img src={src(fetched)} alt="Fetched" className="rounded-xl max-w-full border" />
+                  </div>
+                );
+              }
+              return (
+                <p className="text-sm text-werbens-muted">
+                  Flow completed. No image output—ensure the flow includes an image_gen (Nano Banana Pro) block.
+                </p>
+              );
+            })()
+          ) : (
+            <p className="text-sm text-werbens-muted">{result.status || "Done"}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

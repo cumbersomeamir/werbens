@@ -16,6 +16,7 @@ function resolveTemplate(template, context) {
 
 /**
  * Execute image generation block
+ * Uses: reference_image (style), fetched_image (content from URL), and prompt with comments.
  * @param {Object} block - Flow block
  * @param {Object} context - Flow execution context
  * @param {Object} options - { apiKey, userId }
@@ -30,6 +31,8 @@ export async function executeImageGenBlock(block, context, options = {}) {
 
   let referenceImageBase64 = null;
   let referenceImageMime = "image/jpeg";
+  let contentImageBase64 = null;
+  let contentImageMime = "image/jpeg";
 
   if (block.config?.referenceFromBlock) {
     const refKey = `ref_image_${block.config.referenceFromBlock}`;
@@ -40,11 +43,19 @@ export async function executeImageGenBlock(block, context, options = {}) {
     referenceImageMime = context.reference_image_mime || "image/jpeg";
   }
 
+  const fetched = context.fetched_image || context.fetchedImage;
+  if (fetched) {
+    contentImageBase64 = fetched;
+    contentImageMime = context.fetched_image_mime || context.fetchedImage_mime || "image/jpeg";
+  }
+
   const result = await runCommonImage({
     apiKey,
     prompt,
     referenceImageBase64: referenceImageBase64 || undefined,
     referenceImageMime,
+    contentImageBase64: contentImageBase64 || undefined,
+    contentImageMime,
     aspectRatio: block.config?.aspectRatio,
   });
 

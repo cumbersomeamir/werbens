@@ -11,13 +11,15 @@ import { IMAGE_GENERATION_CONSTANTS } from "../constants/imageGeneration.js";
  * Generate an image using Nano Banana Pro (Gemini 3 Pro Image).
  *
  * - No conversation history or memory.
- * - Prompt is sent as-is (optional aspect ratio instruction only when provided).
+ * - Supports: style reference image, content image (e.g. fetched from URL), and prompt.
  *
  * @param {Object} params
  * @param {string} params.apiKey - Gemini API key
  * @param {string} params.prompt - Image generation prompt (sent as-is)
- * @param {string} [params.referenceImageBase64] - Optional reference image in base64
+ * @param {string} [params.referenceImageBase64] - Style reference image (match this aesthetic)
  * @param {string} [params.referenceImageMime] - MIME type of reference image (default: "image/jpeg")
+ * @param {string} [params.contentImageBase64] - Content image (e.g. Instagram image to use as base)
+ * @param {string} [params.contentImageMime] - MIME type of content image (default: "image/jpeg")
  * @param {string} [params.aspectRatio] - Optional aspect ratio (e.g. "1:1", "16:9", "9:16")
  * @param {string} [params.model] - Optional model override (defaults to Nano Banana Pro)
  * @param {number} [params.temperature] - Optional temperature override
@@ -28,6 +30,8 @@ export async function runCommonImage({
   prompt,
   referenceImageBase64,
   referenceImageMime = "image/jpeg",
+  contentImageBase64,
+  contentImageMime = "image/jpeg",
   aspectRatio,
   model = IMAGE_GENERATION_CONSTANTS.MODEL,
   temperature = IMAGE_GENERATION_CONSTANTS.TEMPERATURE,
@@ -45,17 +49,16 @@ export async function runCommonImage({
     ? `Generate the image with aspect ratio ${aspectRatio}. `
     : "";
 
-  // Reuse the shared image-generation instructions so the model reliably returns an image
-  const parts = [
-    {
-      text: `${IMAGE_GENERATION_CONSTANTS.PROMPT}\n\n${aspectRatioPrompt}User request: ${prompt}`,
-    },
-  ];
+  const parts = [];
   if (referenceImageBase64) {
-    parts.unshift({
-      inlineData: { mimeType: referenceImageMime, data: referenceImageBase64 },
-    });
+    parts.push({ inlineData: { mimeType: referenceImageMime, data: referenceImageBase64 } });
   }
+  if (contentImageBase64) {
+    parts.push({ inlineData: { mimeType: contentImageMime, data: contentImageBase64 } });
+  }
+  parts.push({
+    text: `${IMAGE_GENERATION_CONSTANTS.PROMPT}\n\n${aspectRatioPrompt}User request: ${prompt}`,
+  });
 
   const response = await client.models.generateContent({
     model,

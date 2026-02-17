@@ -78,5 +78,41 @@ export async function generateFlowFromDescription({ apiKey, name, description, c
     };
   });
 
+  // Ensure llm + image_gen when description suggests image output (comments, styled, etc.)
+  const desc = `${name || ""} ${description || ""}`.toLowerCase();
+  const needsImage = /comment|image|styled|nano banana|create.*image|generate.*image/i.test(desc);
+  const hasLlm = blocks.some((b) => b.type === "llm");
+  const hasImageGen = blocks.some((b) => b.type === "image_gen");
+
+  if (needsImage && (!hasLlm || !hasImageGen)) {
+    const lastId = blocks[blocks.length - 1]?.id || `block_${blocks.length}`;
+    if (!hasLlm) {
+      blocks.push({
+        id: `block_${blocks.length + 1}`,
+        type: "llm",
+        label: "Structure comments for display",
+        config: {
+          prompt: "Format these for display on an image. Keep funny and readable. Input: {{comments}}{{top_comments}}{{text}}",
+          outputKey: "structured_comments",
+        },
+        inputs: [lastId],
+      });
+    }
+    const llmId = blocks[blocks.length - 1]?.id;
+    if (!hasImageGen) {
+      blocks.push({
+        id: `block_${blocks.length + 1}`,
+        type: "image_gen",
+        label: "Generate styled image (Nano Banana Pro)",
+        config: {
+          prompt:
+            "First image: STYLE REFERENCE - match this aesthetic exactly. Second image: CONTENT from Instagram - use as base. Overlay these comments in a readable, fun style: {{structured_comments}}{{comments}}{{top_comments}}",
+          aspectRatio: "1:1",
+        },
+        inputs: llmId ? [llmId] : [lastId],
+      });
+    }
+  }
+
   return { blocks };
 }
