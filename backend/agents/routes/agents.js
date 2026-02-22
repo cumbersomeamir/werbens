@@ -38,6 +38,7 @@ export async function createAgentHandler(req, res) {
       description: req.body.description,
       context: req.body.context,
       referenceImageKeys: req.body.referenceImageKeys,
+      templateKey: req.body.templateKey,
     });
     res.json(agent);
   } catch (err) {
@@ -133,20 +134,16 @@ export async function deleteAgentHandler(req, res) {
 }
 
 /**
- * POST /api/agents/:id/generate-flow - Generate flow using AI
+ * POST /api/agents/:id/generate-flow - Return predefined flow for template agents
  */
 export async function generateFlowHandler(req, res) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(503).json({ error: "GEMINI_API_KEY not configured" });
-    }
     const userId = req.body?.userId?.trim();
     const agentId = req.params?.id;
     if (!userId || !agentId) {
       return res.status(400).json({ error: "userId and agentId required" });
     }
-    const { blocks } = await generateFlow(apiKey, userId, agentId);
+    const { blocks } = await generateFlow(null, userId, agentId);
     res.json({ blocks });
   } catch (err) {
     console.error("generateFlow error:", err.message);

@@ -1,7 +1,7 @@
 /**
  * Image generation block executor - uses runCommonImage (Nano Banana Pro)
  */
-import { runCommonImage } from "../../services/commonImage.js";
+import { runNanoBananaModel } from "../tools/image/nanoBanana.js";
 
 /**
  * Resolve template with context variables
@@ -49,7 +49,7 @@ export async function executeImageGenBlock(block, context, options = {}) {
     contentImageMime = context.fetched_image_mime || context.fetchedImage_mime || "image/jpeg";
   }
 
-  const result = await runCommonImage({
+  const result = await runNanoBananaModel({
     apiKey,
     prompt,
     referenceImageBase64: referenceImageBase64 || undefined,

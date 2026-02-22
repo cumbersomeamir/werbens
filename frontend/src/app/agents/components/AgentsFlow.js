@@ -4,10 +4,7 @@ import { useState, useEffect } from "react";
 import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 import {
   getAgents,
-  createAgent,
-  updateAgent,
   deleteAgent,
-  generateFlow,
   runAgent,
 } from "@/api/services/agentService.js";
 
@@ -25,102 +22,21 @@ function AgentCard({ agent, onSelect, onDelete }) {
             <p className="text-xs text-werbens-dark-cyan mt-2">{agent.flow.blocks.length} blocks</p>
           )}
         </div>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(agent);
-          }}
-          className="text-werbens-muted hover:text-red-600 p-1"
-          aria-label="Delete"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function CreateAgentModal({ onClose, onCreated }) {
-  const { userId } = useCurrentUser();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [context, setContext] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!userId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const agent = await createAgent(userId, { name, description, context });
-      onCreated(agent);
-      onClose();
-    } catch (err) {
-      setError(err.message || "Failed to create");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-xl font-bold text-werbens-dark-cyan mb-4">Create new agent</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-werbens-text mb-1">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Comments to Image"
-              className="w-full px-4 py-2 rounded-xl border border-werbens-dark-cyan/20 focus:ring-2 focus:ring-werbens-dark-cyan/30"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-werbens-text mb-1">Type / Description</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. Takes Instagram URL + comments, creates styled image"
-              className="w-full px-4 py-2 rounded-xl border border-werbens-dark-cyan/20 focus:ring-2 focus:ring-werbens-dark-cyan/30"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-werbens-text mb-1">Context (optional)</label>
-            <textarea
-              value={context}
-              onChange={(e) => setContext(e.target.value)}
-              placeholder="Additional context, style preferences..."
-              rows={3}
-              className="w-full px-4 py-2 rounded-xl border border-werbens-dark-cyan/20 focus:ring-2 focus:ring-werbens-dark-cyan/30"
-            />
-          </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-3 justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-werbens-muted hover:text-werbens-text">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2 bg-werbens-dark-cyan text-white rounded-xl hover:opacity-90 disabled:opacity-50"
-            >
-              {loading ? "Creating…" : "Create"}
-            </button>
-          </div>
-        </form>
+        {!agent.isSystemAgent && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(agent);
+            }}
+            className="text-werbens-muted hover:text-red-600 p-1"
+            aria-label="Delete"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -272,10 +188,9 @@ function FlowChart({ blocks, humanInputs, onHumanInputChange, missingBlockId }) 
   );
 }
 
-function AgentDetail({ agent, onBack, onUpdated }) {
+function AgentDetail({ agent, onBack }) {
   const { userId } = useCurrentUser();
   const [localAgent, setLocalAgent] = useState(agent);
-  const [generating, setGenerating] = useState(false);
   const [running, setRunning] = useState(false);
   const [humanInputs, setHumanInputs] = useState({});
   const [missingBlockId, setMissingBlockId] = useState(null);
@@ -285,22 +200,6 @@ function AgentDetail({ agent, onBack, onUpdated }) {
     setLocalAgent(agent);
     setHumanInputs({});
   }, [agent]);
-
-  const handleGenerateFlow = async () => {
-    if (!userId) return;
-    setGenerating(true);
-    setMissingBlockId(null);
-    try {
-      const { blocks } = await generateFlow(userId, agent._id);
-      setLocalAgent((a) => ({ ...a, flow: { blocks } }));
-      setHumanInputs({});
-      onUpdated?.();
-    } catch (err) {
-      alert(err.message || "Failed to generate flow");
-    } finally {
-      setGenerating(false);
-    }
-  };
 
   const handleRun = async () => {
     if (!userId) return;
@@ -350,7 +249,7 @@ function AgentDetail({ agent, onBack, onUpdated }) {
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-werbens-dark-cyan mb-3">Flow</h2>
         {blocks.length === 0 ? (
-          <p className="text-sm text-werbens-muted mb-3">No flow yet. Generate one from your description.</p>
+          <p className="text-sm text-werbens-muted mb-3">This agent has no configured flow.</p>
         ) : (
           <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white/50 p-6 mb-3">
             <p className="text-sm text-werbens-muted mb-4">Fill all inputs below, then run.</p>
@@ -372,14 +271,6 @@ function AgentDetail({ agent, onBack, onUpdated }) {
             </div>
           </div>
         )}
-        <button
-          type="button"
-          onClick={handleGenerateFlow}
-          disabled={generating}
-          className="px-4 py-2 bg-werbens-dark-cyan text-white rounded-xl text-sm hover:opacity-90 disabled:opacity-50"
-        >
-          {generating ? "Generating…" : blocks.length ? "Regenerate flow" : "Generate flow"}
-        </button>
       </div>
 
       {result && (
@@ -421,7 +312,6 @@ export function AgentsFlow() {
   const { userId } = useCurrentUser();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
@@ -449,49 +339,26 @@ export function AgentsFlow() {
   };
 
   if (selected) {
-    return (
-      <AgentDetail
-        agent={selected}
-        onBack={() => setSelected(null)}
-        onUpdated={() => {
-          const updated = agents.find((a) => a._id === selected._id);
-          if (updated) setSelected(updated);
-        }}
-      />
-    );
+    return <AgentDetail agent={selected} onBack={() => setSelected(null)} />;
   }
 
   return (
     <section className="px-4 sm:px-6 pb-12">
       <div className="mx-auto max-w-5xl">
-        <div className="flex justify-between items-center mb-8">
+        <div className="mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-werbens-dark-cyan">Agents</h1>
             <p className="text-werbens-muted mt-1">
-              Create custom flows. Describe what you want, AI designs the flow. Human tasks for what we can&apos;t do.
+              Fixed app agents with predefined backend steps.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            className="px-5 py-2.5 bg-werbens-dark-cyan text-white rounded-xl font-medium hover:opacity-90"
-          >
-            Create new agent
-          </button>
         </div>
 
         {loading ? (
           <p className="text-werbens-muted">Loading…</p>
         ) : agents.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed border-werbens-dark-cyan/20 p-12 text-center">
-            <p className="text-werbens-muted mb-4">No agents yet.</p>
-            <button
-              type="button"
-              onClick={() => setShowCreate(true)}
-              className="text-werbens-dark-cyan font-medium hover:underline"
-            >
-              Create your first agent
-            </button>
+            <p className="text-werbens-muted mb-4">No agents available.</p>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -501,17 +368,6 @@ export function AgentsFlow() {
           </div>
         )}
       </div>
-
-      {showCreate && (
-        <CreateAgentModal
-          onClose={() => setShowCreate(false)}
-          onCreated={(agent) => {
-            setAgents((prev) => [agent, ...prev]);
-            setSelected(agent);
-            setShowCreate(false);
-          }}
-        />
-      )}
     </section>
   );
 }
