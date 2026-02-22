@@ -2,20 +2,39 @@
  * Agent service - CRUD and flow operations
  */
 import { getDb } from "../../db.js";
-import { generateFlowFromDescription } from "./flowGeneratorService.js";
 import { executeFlow } from "../orchestrator/flowOrchestrator.js";
 import { saveFlow, deleteFlowsByAgentId } from "./flowService.js";
 import { BLOCK_TYPES, PLATFORM_SERVICES, HUMAN_TASK_INPUT_TYPES } from "../constants/blockTypes.js";
+import {
+  ensurePredefinedAgentsForUser,
+  upsertPredefinedAgent,
+} from "./predefinedAgentService.js";
+import { getPredefinedAgentTemplate } from "../tools/catalog/predefinedAgents.js";
 
 const COLLECTION = "Agents";
 
-export async function createAgent(userId, { name, description, context, referenceImageKeys = [] }) {
+export async function createAgent(
+  userId,
+  { name, description, context, referenceImageKeys = [], templateKey }
+) {
+  const normalizedUserId = userId?.trim();
+  if (!normalizedUserId) throw new Error("userId required");
+
+  // Predefined templates are initialized with fixed backend flow/tooling.
+  if (templateKey) {
+    const template = getPredefinedAgentTemplate(templateKey);
+    if (!template) {
+      throw new Error(`Unknown agent template: ${templateKey}`);
+    }
+    return upsertPredefinedAgent(normalizedUserId, template.key);
+  }
+
   const db = await getDb();
   const coll = db.collection(COLLECTION);
   const now = new Date();
 
   const doc = {
-    userId: userId.trim(),
+    userId: normalizedUserId,
     name: name?.trim() || "Untitled Agent",
     description: description?.trim() || "",
     context: context?.trim() || "",
@@ -30,22 +49,30 @@ export async function createAgent(userId, { name, description, context, referenc
 }
 
 export async function getAgents(userId) {
+  const normalizedUserId = userId?.trim();
+  if (!normalizedUserId) return [];
+
+  await ensurePredefinedAgentsForUser(normalizedUserId);
+
   const db = await getDb();
   const coll = db.collection(COLLECTION);
   const list = await coll
-    .find({ userId: userId.trim() })
+    .find({ userId: normalizedUserId })
     .sort({ updatedAt: -1 })
     .toArray();
   return list;
 }
 
 export async function getAgentById(userId, agentId) {
+  const normalizedUserId = userId?.trim();
+  if (!normalizedUserId) return null;
+
   const db = await getDb();
   const coll = db.collection(COLLECTION);
   const { ObjectId } = await import("mongodb");
   const id = ObjectId.isValid(agentId) ? new ObjectId(agentId) : null;
   if (!id) return null;
-  const doc = await coll.findOne({ _id: id, userId: userId.trim() });
+  const doc = await coll.findOne({ _id: id, userId: normalizedUserId });
   return doc;
 }
 
@@ -85,19 +112,19 @@ export async function deleteAgent(userId, agentId) {
 }
 
 /**
- * Generate flow for an agent using AI
+ * Returns fixed flow for predefined agents.
+ * Dynamic flow generation is intentionally disabled.
  */
 export async function generateFlow(apiKey, userId, agentId) {
   const agent = await getAgentById(userId, agentId);
   if (!agent) throw new Error("Agent not found");
 
-  const { blocks } = await generateFlowFromDescription({
-    apiKey,
-    name: agent.name,
-    description: agent.description,
-    context: agent.context,
-    referenceImages: agent.referenceImageKeys || [],
-  });
+  if (!agent.templateKey) {
+    throw new Error("Flow generation is disabled. This app now uses predefined backend flows.");
+  }
+
+  const updated = await upsertPredefinedAgent(userId, agent.templateKey);
+  const blocks = updated?.flow?.blocks || [];
 
   await saveFlow(agentId, blocks);
   await updateAgent(userId, agentId, { flow: { blocks } });
@@ -108,17 +135,26 @@ export async function generateFlow(apiKey, userId, agentId) {
  * Execute agent flow
  */
 export async function runAgent(apiKey, userId, agentId, { initialContext = {}, humanInputs = {} }) {
-  const agent = await getAgentById(userId, agentId);
+  let agent = await getAgentById(userId, agentId);
   if (!agent) throw new Error("Agent not found");
 
+  if (agent.templateKey) {
+    agent = (await upsertPredefinedAgent(userId, agent.templateKey)) || agent;
+  }
+
   const blocks = agent.flow?.blocks || [];
-  if (blocks.length === 0) throw new Error("Agent has no flow. Generate flow first.");
+  if (blocks.length === 0) throw new Error("Agent has no configured flow.");
 
   return executeFlow({
     blocks,
     initialContext,
     humanInputs,
-    options: { apiKey, userId },
+    options: {
+      apiKey,
+      userId,
+      agentId: String(agent._id),
+      agentTemplateKey: agent.templateKey,
+    },
   });
 }
 
