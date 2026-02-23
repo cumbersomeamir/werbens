@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -12,11 +12,14 @@ const NAV_ITEMS = [
   { href: "/onboarding", label: "Onboarding" },
   { href: "/automatic", label: "Automatic" },
   { href: "/agents", label: "Agents" },
+  { label: "Apps", apps: true },
   { href: "/pricing", label: "Pricing" },
   { href: "/create", label: "Create" },
   { href: "/splash", label: "Splash", splash: true },
   { href: "/templates/admin", label: "Admin", muted: true },
 ];
+
+const APP_ITEMS = [{ href: "/youtube/comment-replier", label: "Youtube Comment Replier" }];
 
 function NavLink({ href, label, muted, isActive, onClick, isCta, isSplash }) {
   if (isSplash) {
@@ -137,7 +140,12 @@ function DesktopNav({ pathname }) {
       className="hidden md:flex items-center gap-6"
       aria-label="Main"
     >
-      {NAV_ITEMS.map(({ href, label, muted, splash }) => {
+      {NAV_ITEMS.map((item) => {
+        if (item?.apps) {
+          return <DesktopAppsMenu key="apps-nav" pathname={pathname} />;
+        }
+
+        const { href, label, muted, splash } = item;
         const isActive =
           href === "/"
             ? pathname === "/"
@@ -160,6 +168,167 @@ function DesktopNav({ pathname }) {
   );
 }
 
+function DesktopAppsMenu({ pathname }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+  const isAppActive = APP_ITEMS.some(
+    ({ href }) => pathname === href || pathname.startsWith(`${href}/`)
+  );
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`
+          relative inline-flex items-center gap-1 text-sm transition-colors duration-300 ease-out
+          py-3 px-4 rounded-lg min-h-[44px] md:py-1 md:px-1 md:min-h-0 md:rounded-none group
+          ${isAppActive ? "text-werbens-dark-cyan font-medium" : "text-werbens-text hover:text-werbens-dark-cyan"}
+        `}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Open apps menu"
+      >
+        Apps
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
+          aria-hidden="true"
+        >
+          <path d="M5 7.5L10 12.5L15 7.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span
+          className={`
+            hidden md:block absolute -bottom-0.5 left-1/2 h-[2px] rounded-full
+            bg-werbens-dark-cyan transition-all duration-300 ease-out
+            ${
+              isAppActive
+                ? "w-full -translate-x-1/2 opacity-100"
+                : "w-0 -translate-x-1/2 opacity-0 group-hover:w-full group-hover:opacity-60"
+            }
+          `}
+          aria-hidden="true"
+        />
+      </button>
+      <div
+        className={`
+          absolute left-0 top-full mt-2 w-64 rounded-xl border border-werbens-dark-cyan/10
+          bg-white shadow-xl shadow-werbens-dark-cyan/10 p-2
+          transition-all duration-180 ease-out
+          ${open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-1 pointer-events-none"}
+        `}
+        role="menu"
+        aria-label="Apps menu"
+      >
+        {APP_ITEMS.map(({ href, label }) => {
+          const isActive = pathname === href || pathname.startsWith(`${href}/`);
+          return (
+            <Link
+              key={href}
+              href={href}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className={`
+                block rounded-lg px-3 py-2 text-sm transition-colors
+                ${
+                  isActive
+                    ? "bg-werbens-dark-cyan/10 text-werbens-dark-cyan font-medium"
+                    : "text-werbens-text hover:bg-werbens-dark-cyan/5 hover:text-werbens-dark-cyan"
+                }
+              `}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MobileAppsMenu({ pathname, onClose }) {
+  const [open, setOpen] = useState(false);
+  const isAppActive = APP_ITEMS.some(
+    ({ href }) => pathname === href || pathname.startsWith(`${href}/`)
+  );
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  return (
+    <div className="animate-fade-in-down">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`
+          w-full flex items-center justify-between text-left text-sm py-3 px-4 rounded-lg min-h-[44px]
+          transition-colors duration-300 ease-out
+          ${isAppActive ? "text-werbens-dark-cyan font-medium" : "text-werbens-text hover:text-werbens-dark-cyan"}
+        `}
+        aria-expanded={open}
+        aria-label="Toggle apps menu"
+      >
+        <span>Apps</span>
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
+          aria-hidden="true"
+        >
+          <path d="M5 7.5L10 12.5L15 7.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-250 ease-out ${open ? "max-h-40 opacity-100" : "max-h-0 opacity-0"}`}
+      >
+        <div className="pl-4 space-y-1 pb-1">
+          {APP_ITEMS.map(({ href, label }) => {
+            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className={`
+                  block py-2 px-4 rounded-lg text-sm transition-colors
+                  ${
+                    isActive
+                      ? "bg-werbens-dark-cyan/10 text-werbens-dark-cyan font-medium"
+                      : "text-werbens-steel hover:text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5"
+                  }
+                `}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MobileNav({ pathname, isOpen, onClose }) {
   return (
     <div
@@ -177,7 +346,23 @@ function MobileNav({ pathname, isOpen, onClose }) {
         "
         aria-label="Main"
       >
-        {NAV_ITEMS.map(({ href, label, muted, splash }, index) => {
+        {NAV_ITEMS.map((item, index) => {
+          if (item?.apps) {
+            return (
+              <div
+                key="apps-nav-mobile"
+                className="animate-fade-in-down"
+                style={{
+                  animationDelay: isOpen ? `${index * 50}ms` : "0ms",
+                  animationFillMode: "backwards",
+                }}
+              >
+                <MobileAppsMenu pathname={pathname} onClose={onClose} />
+              </div>
+            );
+          }
+
+          const { href, label, muted, splash } = item;
           const isActive =
             href === "/"
               ? pathname === "/"

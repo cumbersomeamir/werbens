@@ -2,6 +2,7 @@
  * Social media API service
  */
 import { get, post, del } from "../client.js";
+import { API_BASE } from "../client.js";
 import { API_ENDPOINTS } from "../endpoints.js";
 
 /**
@@ -101,6 +102,53 @@ export async function syncSocialPlatform(userId, platform) {
     }
     throw error;
   }
+}
+
+/**
+ * Run YouTube comment replier (auto mode by default).
+ * Backend replies to up to 3 unreplied comments in one call.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @param {string} [options.commentId] - optional single-comment mode
+ * @param {string} [options.commentText] - optional for single-comment mode
+ * @param {string} [options.authorName]
+ * @param {string} [options.platformUserId]
+ * @returns {Promise<Object>}
+ */
+export async function runYoutubeCommentReplier(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const payload = { userId };
+  if (options.channelId) payload.channelId = options.channelId;
+  if (options.commentId) payload.commentId = options.commentId;
+  if (options.commentText) payload.commentText = options.commentText;
+  if (options.authorName) payload.authorName = options.authorName;
+  if (options.platformUserId) payload.platformUserId = options.platformUserId;
+  return post(API_ENDPOINTS.SOCIAL_YOUTUBE_REPLY, payload);
+}
+
+/**
+ * Build EventSource URL for streaming YouTube comment reply job progress.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @param {string} [options.commentId]
+ * @param {string} [options.commentText]
+ * @param {string} [options.authorName]
+ * @param {string} [options.platformUserId]
+ * @returns {string}
+ */
+export function getYoutubeCommentReplierStreamUrl(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  if (options.commentId) q.set("commentId", String(options.commentId));
+  if (options.commentText) q.set("commentText", String(options.commentText));
+  if (options.authorName) q.set("authorName", String(options.authorName));
+  if (options.platformUserId) q.set("platformUserId", String(options.platformUserId));
+  return `${API_BASE}${API_ENDPOINTS.SOCIAL_YOUTUBE_REPLY_STREAM}?${q.toString()}`;
 }
 
 // Legacy exports for backward compatibility
