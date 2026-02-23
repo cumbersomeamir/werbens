@@ -5,7 +5,7 @@ import { saveOnboarding } from "./routes/onboarding.js";
 import { getSocialAccounts, disconnectSocialAccount } from "./routes/social/accounts.js";
 import { getSocialAnalytics } from "./routes/social/analytics.js";
 import { getXAuthUrl, xCallback, syncX } from "./routes/social/x.js";
-import { getYoutubeAuthUrl, youtubeCallback, syncYoutube } from "./routes/social/youtube.js";
+import { getYoutubeAuthUrl, youtubeCallback, syncYoutube, replyToYoutubeComment, replyToYoutubeCommentStream } from "./routes/social/youtube.js";
 import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/social/linkedin.js";
 import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/social/pinterest.js";
 import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js";
@@ -60,6 +60,8 @@ app.post("/api/social/x/sync", syncX);
 app.get("/api/social/youtube/auth-url", getYoutubeAuthUrl);
 app.get("/api/social/youtube/callback", youtubeCallback);
 app.post("/api/social/youtube/sync", syncYoutube);
+app.post("/api/social/youtube/reply", replyToYoutubeComment);
+app.get("/api/social/youtube/reply/stream", replyToYoutubeCommentStream);
 
 // LinkedIn OAuth: get auth URL, callback (GET so LinkedIn can redirect)
 app.get("/api/social/linkedin/auth-url", getLinkedInAuthUrl);

@@ -15,3 +15,5 @@ export const getPinterestAuthUrl = socialService.getPinterestAuthUrl;
 export const getMetaAuthUrl = socialService.getMetaAuthUrl;
 export const getInstagramAuthUrl = socialService.getInstagramAuthUrl;
 export const syncSocialPlatform = socialService.syncSocialPlatform;
+export const runYoutubeCommentReplier = socialService.runYoutubeCommentReplier;
+export const getYoutubeCommentReplierStreamUrl = socialService.getYoutubeCommentReplierStreamUrl;

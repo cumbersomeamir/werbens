@@ -47,6 +47,8 @@ export const API_ENDPOINTS = {
   // Social Sync
   SOCIAL_X_SYNC: "/api/social/x/sync",
   SOCIAL_YOUTUBE_SYNC: "/api/social/youtube/sync",
+  SOCIAL_YOUTUBE_REPLY: "/api/social/youtube/reply",
+  SOCIAL_YOUTUBE_REPLY_STREAM: "/api/social/youtube/reply/stream",
   SOCIAL_LINKEDIN_SYNC: "/api/social/linkedin/sync",
   SOCIAL_PINTEREST_SYNC: "/api/social/pinterest/sync",
   SOCIAL_META_SYNC: "/api/social/meta/sync",
