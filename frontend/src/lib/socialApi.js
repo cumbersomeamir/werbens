@@ -17,3 +17,6 @@ export const getInstagramAuthUrl = socialService.getInstagramAuthUrl;
 export const syncSocialPlatform = socialService.syncSocialPlatform;
 export const runYoutubeCommentReplier = socialService.runYoutubeCommentReplier;
 export const getYoutubeCommentReplierStreamUrl = socialService.getYoutubeCommentReplierStreamUrl;
+export const generateYoutubeTimePostingReport = socialService.generateYoutubeTimePostingReport;
+export const getYoutubeTimePostingReport = socialService.getYoutubeTimePostingReport;
+export const getYoutubeTimePostingReportExcelUrl = socialService.getYoutubeTimePostingReportExcelUrl;

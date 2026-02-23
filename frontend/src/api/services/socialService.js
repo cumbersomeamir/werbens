@@ -151,6 +151,51 @@ export function getYoutubeCommentReplierStreamUrl(userId, options = {}) {
   return `${API_BASE}${API_ENDPOINTS.SOCIAL_YOUTUBE_REPLY_STREAM}?${q.toString()}`;
 }
 
+/**
+ * Generate and persist YouTube time-of-posting report.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<{ok: boolean, report: Object | null}>}
+ */
+export async function generateYoutubeTimePostingReport(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const payload = { userId };
+  if (options.channelId) payload.channelId = options.channelId;
+  return post(API_ENDPOINTS.SOCIAL_YOUTUBE_REPORT_TIME_POSTING, payload);
+}
+
+/**
+ * Load latest stored YouTube time-of-posting report.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<{ok: boolean, report: Object | null}>}
+ */
+export async function getYoutubeTimePostingReport(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return get(`${API_ENDPOINTS.SOCIAL_YOUTUBE_REPORT_TIME_POSTING}?${q.toString()}`);
+}
+
+/**
+ * Build download URL for latest YouTube time-of-posting Excel report.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {string}
+ */
+export function getYoutubeTimePostingReportExcelUrl(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return `${API_BASE}${API_ENDPOINTS.SOCIAL_YOUTUBE_REPORT_TIME_POSTING_EXCEL}?${q.toString()}`;
+}
+
 // Legacy exports for backward compatibility
 export const getXAuthUrl = (userId) => getAuthUrl("x", userId);
 export const getYoutubeAuthUrl = (userId) => getAuthUrl("youtube", userId);

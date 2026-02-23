@@ -19,7 +19,10 @@ const NAV_ITEMS = [
   { href: "/templates/admin", label: "Admin", muted: true },
 ];
 
-const APP_ITEMS = [{ href: "/youtube/comment-replier", label: "Youtube Comment Replier" }];
+const APP_ITEMS = [
+  { href: "/youtube/comment-replier", label: "Youtube Comment Replier" },
+  { href: "/reports", label: "Reports" },
+];
 
 function NavLink({ href, label, muted, isActive, onClick, isCta, isSplash }) {
   if (isSplash) {

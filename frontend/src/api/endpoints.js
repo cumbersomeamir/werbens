@@ -49,6 +49,8 @@ export const API_ENDPOINTS = {
   SOCIAL_YOUTUBE_SYNC: "/api/social/youtube/sync",
   SOCIAL_YOUTUBE_REPLY: "/api/social/youtube/reply",
   SOCIAL_YOUTUBE_REPLY_STREAM: "/api/social/youtube/reply/stream",
+  SOCIAL_YOUTUBE_REPORT_TIME_POSTING: "/api/social/youtube/reports/time-of-posting",
+  SOCIAL_YOUTUBE_REPORT_TIME_POSTING_EXCEL: "/api/social/youtube/reports/time-of-posting/excel",
   SOCIAL_LINKEDIN_SYNC: "/api/social/linkedin/sync",
   SOCIAL_PINTEREST_SYNC: "/api/social/pinterest/sync",
   SOCIAL_META_SYNC: "/api/social/meta/sync",
