@@ -11,6 +11,12 @@ import {
   getYoutubeTimePostingReport,
   downloadYoutubeTimePostingReportExcel,
 } from "./routes/social/reports.js";
+import {
+  getYoutubeIdeationDashboard,
+  searchYoutubeIdeationChannels,
+  addYoutubeIdeationTrackedChannel,
+  removeYoutubeIdeationTrackedChannel,
+} from "./routes/social/ideation.js";
 import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/social/linkedin.js";
 import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/social/pinterest.js";
 import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js";
@@ -70,6 +76,10 @@ app.get("/api/social/youtube/reply/stream", replyToYoutubeCommentStream);
 app.post("/api/social/youtube/reports/time-of-posting", generateYoutubeTimePostingReport);
 app.get("/api/social/youtube/reports/time-of-posting", getYoutubeTimePostingReport);
 app.get("/api/social/youtube/reports/time-of-posting/excel", downloadYoutubeTimePostingReportExcel);
+app.get("/api/social/youtube/ideation-engine", getYoutubeIdeationDashboard);
+app.get("/api/social/youtube/ideation-engine/search", searchYoutubeIdeationChannels);
+app.post("/api/social/youtube/ideation-engine/tracked", addYoutubeIdeationTrackedChannel);
+app.delete("/api/social/youtube/ideation-engine/tracked", removeYoutubeIdeationTrackedChannel);
 
 // LinkedIn OAuth: get auth URL, callback (GET so LinkedIn can redirect)
 app.get("/api/social/linkedin/auth-url", getLinkedInAuthUrl);

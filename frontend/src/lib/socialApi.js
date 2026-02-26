@@ -20,3 +20,7 @@ export const getYoutubeCommentReplierStreamUrl = socialService.getYoutubeComment
 export const generateYoutubeTimePostingReport = socialService.generateYoutubeTimePostingReport;
 export const getYoutubeTimePostingReport = socialService.getYoutubeTimePostingReport;
 export const getYoutubeTimePostingReportExcelUrl = socialService.getYoutubeTimePostingReportExcelUrl;
+export const getYoutubeIdeationDashboard = socialService.getYoutubeIdeationDashboard;
+export const searchYoutubeIdeationChannels = socialService.searchYoutubeIdeationChannels;
+export const addYoutubeIdeationTrackedChannel = socialService.addYoutubeIdeationTrackedChannel;
+export const removeYoutubeIdeationTrackedChannel = socialService.removeYoutubeIdeationTrackedChannel;

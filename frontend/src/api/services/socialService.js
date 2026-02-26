@@ -196,6 +196,78 @@ export function getYoutubeTimePostingReportExcelUrl(userId, options = {}) {
   return `${API_BASE}${API_ENDPOINTS.SOCIAL_YOUTUBE_REPORT_TIME_POSTING_EXCEL}?${q.toString()}`;
 }
 
+/**
+ * Load YouTube ideation-engine dashboard data.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<Object>}
+ */
+export async function getYoutubeIdeationDashboard(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return get(`${API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE}?${q.toString()}`);
+}
+
+/**
+ * Search YouTube channels for ideation-engine tracking/discovery.
+ *
+ * @param {string} userId
+ * @param {string} query
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<{ok: boolean, results: Array}>}
+ */
+export async function searchYoutubeIdeationChannels(userId, query, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId), q: String(query || "") });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return get(`${API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE_SEARCH}?${q.toString()}`);
+}
+
+/**
+ * Add a tracked YouTube channel in ideation-engine.
+ *
+ * @param {string} userId
+ * @param {Object} options
+ * @param {string} options.channelId
+ * @param {string} options.trackedChannelId
+ * @param {string} [options.addedBy]
+ * @returns {Promise<Object>}
+ */
+export async function addYoutubeIdeationTrackedChannel(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  if (!options.trackedChannelId) throw new Error("Missing trackedChannelId");
+  return post(API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE_TRACKED, {
+    userId,
+    channelId: options.channelId || "",
+    trackedChannelId: options.trackedChannelId,
+    addedBy: options.addedBy || "manual",
+  });
+}
+
+/**
+ * Remove a tracked YouTube channel in ideation-engine.
+ *
+ * @param {string} userId
+ * @param {Object} options
+ * @param {string} options.channelId
+ * @param {string} options.trackedChannelId
+ * @returns {Promise<Object>}
+ */
+export async function removeYoutubeIdeationTrackedChannel(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  if (!options.trackedChannelId) throw new Error("Missing trackedChannelId");
+  const q = new URLSearchParams({
+    userId: String(userId),
+    trackedChannelId: String(options.trackedChannelId),
+  });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return del(`${API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE_TRACKED}?${q.toString()}`);
+}
+
 // Legacy exports for backward compatibility
 export const getXAuthUrl = (userId) => getAuthUrl("x", userId);
 export const getYoutubeAuthUrl = (userId) => getAuthUrl("youtube", userId);
