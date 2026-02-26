@@ -6,6 +6,17 @@ import { getSocialAccounts, disconnectSocialAccount } from "./routes/social/acco
 import { getSocialAnalytics } from "./routes/social/analytics.js";
 import { getXAuthUrl, xCallback, syncX } from "./routes/social/x.js";
 import { getYoutubeAuthUrl, youtubeCallback, syncYoutube, replyToYoutubeComment, replyToYoutubeCommentStream } from "./routes/social/youtube.js";
+import {
+  generateYoutubeTimePostingReport,
+  getYoutubeTimePostingReport,
+  downloadYoutubeTimePostingReportExcel,
+} from "./routes/social/reports.js";
+import {
+  getYoutubeIdeationDashboard,
+  searchYoutubeIdeationChannels,
+  addYoutubeIdeationTrackedChannel,
+  removeYoutubeIdeationTrackedChannel,
+} from "./routes/social/ideation.js";
 import { getLinkedInAuthUrl, linkedinCallback, syncLinkedIn } from "./routes/social/linkedin.js";
 import { getPinterestAuthUrl, pinterestCallback, syncPinterest } from "./routes/social/pinterest.js";
 import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js";
@@ -14,6 +25,7 @@ import { createPostHandler, runSchedulerHandler } from "./routes/social/posting.
 import { createPostNowHandler } from "./routes/social/posting/now/index.js";
 import { createSchedulePostHandler, getScheduledPostsHandler, deleteScheduledPostHandler } from "./routes/social/posting/schedule/index.js";
 import { createAutomatePostHandler, getAutomatePostsHandler, deleteAutomatePostHandler } from "./routes/social/posting/automate/index.js";
+import { runDueScheduledPosts } from "./services/socialPostingService.js";
 import { chatHandler } from "./routes/chat/index.js";
 import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
@@ -37,6 +49,8 @@ import {
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const SCHEDULER_ENABLED = String(process.env.SOCIAL_SCHEDULER_ENABLED || "true").toLowerCase() !== "false";
+const SCHEDULER_INTERVAL_MS = Math.max(15000, Number(process.env.SOCIAL_SCHEDULER_INTERVAL_MS) || 30000);
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -62,6 +76,13 @@ app.get("/api/social/youtube/callback", youtubeCallback);
 app.post("/api/social/youtube/sync", syncYoutube);
 app.post("/api/social/youtube/reply", replyToYoutubeComment);
 app.get("/api/social/youtube/reply/stream", replyToYoutubeCommentStream);
+app.post("/api/social/youtube/reports/time-of-posting", generateYoutubeTimePostingReport);
+app.get("/api/social/youtube/reports/time-of-posting", getYoutubeTimePostingReport);
+app.get("/api/social/youtube/reports/time-of-posting/excel", downloadYoutubeTimePostingReportExcel);
+app.get("/api/social/youtube/ideation-engine", getYoutubeIdeationDashboard);
+app.get("/api/social/youtube/ideation-engine/search", searchYoutubeIdeationChannels);
+app.post("/api/social/youtube/ideation-engine/tracked", addYoutubeIdeationTrackedChannel);
+app.delete("/api/social/youtube/ideation-engine/tracked", removeYoutubeIdeationTrackedChannel);
 
 // LinkedIn OAuth: get auth URL, callback (GET so LinkedIn can redirect)
 app.get("/api/social/linkedin/auth-url", getLinkedInAuthUrl);
@@ -136,6 +157,35 @@ app.delete("/api/agents/:id", deleteAgentHandler);
 app.post("/api/agents/:id/generate-flow", generateFlowHandler);
 app.post("/api/agents/:id/run", runAgentHandler);
 
+function startSocialSchedulerLoop() {
+  if (!SCHEDULER_ENABLED) {
+    console.log("Social scheduler loop is disabled (SOCIAL_SCHEDULER_ENABLED=false).");
+    return;
+  }
+
+  let schedulerTickInFlight = false;
+  const timer = setInterval(async () => {
+    if (schedulerTickInFlight) return;
+    schedulerTickInFlight = true;
+    try {
+      const result = await runDueScheduledPosts(25);
+      if (Number(result?.processed) > 0) {
+        console.log(`[social-scheduler] processed ${result.processed} due job(s)`);
+      }
+    } catch (err) {
+      console.error("[social-scheduler] tick failed:", err);
+    } finally {
+      schedulerTickInFlight = false;
+    }
+  }, SCHEDULER_INTERVAL_MS);
+
+  if (typeof timer.unref === "function") {
+    timer.unref();
+  }
+  console.log(`[social-scheduler] running every ${SCHEDULER_INTERVAL_MS}ms`);
+}
+
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);
+  startSocialSchedulerLoop();
 });

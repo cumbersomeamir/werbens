@@ -151,6 +151,167 @@ export function getYoutubeCommentReplierStreamUrl(userId, options = {}) {
   return `${API_BASE}${API_ENDPOINTS.SOCIAL_YOUTUBE_REPLY_STREAM}?${q.toString()}`;
 }
 
+/**
+ * Generate and persist YouTube time-of-posting report.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<{ok: boolean, report: Object | null}>}
+ */
+export async function generateYoutubeTimePostingReport(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const payload = { userId };
+  if (options.channelId) payload.channelId = options.channelId;
+  return post(API_ENDPOINTS.SOCIAL_YOUTUBE_REPORT_TIME_POSTING, payload);
+}
+
+/**
+ * Load latest stored YouTube time-of-posting report.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<{ok: boolean, report: Object | null}>}
+ */
+export async function getYoutubeTimePostingReport(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return get(`${API_ENDPOINTS.SOCIAL_YOUTUBE_REPORT_TIME_POSTING}?${q.toString()}`);
+}
+
+/**
+ * Build download URL for latest YouTube time-of-posting Excel report.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {string}
+ */
+export function getYoutubeTimePostingReportExcelUrl(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return `${API_BASE}${API_ENDPOINTS.SOCIAL_YOUTUBE_REPORT_TIME_POSTING_EXCEL}?${q.toString()}`;
+}
+
+/**
+ * Load YouTube ideation-engine dashboard data.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<Object>}
+ */
+export async function getYoutubeIdeationDashboard(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return get(`${API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE}?${q.toString()}`);
+}
+
+/**
+ * Search YouTube channels for ideation-engine tracking/discovery.
+ *
+ * @param {string} userId
+ * @param {string} query
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<{ok: boolean, results: Array}>}
+ */
+export async function searchYoutubeIdeationChannels(userId, query, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId), q: String(query || "") });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return get(`${API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE_SEARCH}?${q.toString()}`);
+}
+
+/**
+ * Add a tracked YouTube channel in ideation-engine.
+ *
+ * @param {string} userId
+ * @param {Object} options
+ * @param {string} options.channelId
+ * @param {string} options.trackedChannelId
+ * @param {string} [options.addedBy]
+ * @returns {Promise<Object>}
+ */
+export async function addYoutubeIdeationTrackedChannel(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  if (!options.trackedChannelId) throw new Error("Missing trackedChannelId");
+  return post(API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE_TRACKED, {
+    userId,
+    channelId: options.channelId || "",
+    trackedChannelId: options.trackedChannelId,
+    addedBy: options.addedBy || "manual",
+  });
+}
+
+/**
+ * Remove a tracked YouTube channel in ideation-engine.
+ *
+ * @param {string} userId
+ * @param {Object} options
+ * @param {string} options.channelId
+ * @param {string} options.trackedChannelId
+ * @returns {Promise<Object>}
+ */
+export async function removeYoutubeIdeationTrackedChannel(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  if (!options.trackedChannelId) throw new Error("Missing trackedChannelId");
+  const q = new URLSearchParams({
+    userId: String(userId),
+    trackedChannelId: String(options.trackedChannelId),
+  });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return del(`${API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE_TRACKED}?${q.toString()}`);
+}
+
+/**
+ * Create scheduled social post(s).
+ *
+ * @param {Object} payload
+ * @returns {Promise<Object>}
+ */
+export async function createScheduledPost(payload) {
+  if (!payload?.userId) throw new Error("Missing userId");
+  return post(API_ENDPOINTS.SOCIAL_POST_SCHEDULE, payload);
+}
+
+/**
+ * Get scheduled posts for a user.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.start] ISO date
+ * @param {string} [options.end] ISO date
+ * @param {string} [options.status] comma-separated statuses
+ * @returns {Promise<Object>}
+ */
+export async function getScheduledPosts(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.start) q.set("start", String(options.start));
+  if (options.end) q.set("end", String(options.end));
+  if (options.status) q.set("status", String(options.status));
+  return get(`${API_ENDPOINTS.SOCIAL_POST_SCHEDULE}?${q.toString()}`);
+}
+
+/**
+ * Cancel a scheduled post by id.
+ *
+ * @param {string} userId
+ * @param {string} scheduledPostId
+ * @returns {Promise<Object>}
+ */
+export async function deleteScheduledPost(userId, scheduledPostId) {
+  if (!userId) throw new Error("Missing userId");
+  if (!scheduledPostId) throw new Error("Missing scheduledPostId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  return del(`${API_ENDPOINTS.SOCIAL_POST_SCHEDULE}/${encodeURIComponent(String(scheduledPostId))}?${q.toString()}`);
+}
+
 // Legacy exports for backward compatibility
 export const getXAuthUrl = (userId) => getAuthUrl("x", userId);
 export const getYoutubeAuthUrl = (userId) => getAuthUrl("youtube", userId);
