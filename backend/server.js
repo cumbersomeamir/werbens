@@ -25,6 +25,7 @@ import { createPostHandler, runSchedulerHandler } from "./routes/social/posting.
 import { createPostNowHandler } from "./routes/social/posting/now/index.js";
 import { createSchedulePostHandler, getScheduledPostsHandler, deleteScheduledPostHandler } from "./routes/social/posting/schedule/index.js";
 import { createAutomatePostHandler, getAutomatePostsHandler, deleteAutomatePostHandler } from "./routes/social/posting/automate/index.js";
+import { runDueScheduledPosts } from "./services/socialPostingService.js";
 import { chatHandler } from "./routes/chat/index.js";
 import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
@@ -48,6 +49,8 @@ import {
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const SCHEDULER_ENABLED = String(process.env.SOCIAL_SCHEDULER_ENABLED || "true").toLowerCase() !== "false";
+const SCHEDULER_INTERVAL_MS = Math.max(15000, Number(process.env.SOCIAL_SCHEDULER_INTERVAL_MS) || 30000);
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -154,6 +157,35 @@ app.delete("/api/agents/:id", deleteAgentHandler);
 app.post("/api/agents/:id/generate-flow", generateFlowHandler);
 app.post("/api/agents/:id/run", runAgentHandler);
 
+function startSocialSchedulerLoop() {
+  if (!SCHEDULER_ENABLED) {
+    console.log("Social scheduler loop is disabled (SOCIAL_SCHEDULER_ENABLED=false).");
+    return;
+  }
+
+  let schedulerTickInFlight = false;
+  const timer = setInterval(async () => {
+    if (schedulerTickInFlight) return;
+    schedulerTickInFlight = true;
+    try {
+      const result = await runDueScheduledPosts(25);
+      if (Number(result?.processed) > 0) {
+        console.log(`[social-scheduler] processed ${result.processed} due job(s)`);
+      }
+    } catch (err) {
+      console.error("[social-scheduler] tick failed:", err);
+    } finally {
+      schedulerTickInFlight = false;
+    }
+  }, SCHEDULER_INTERVAL_MS);
+
+  if (typeof timer.unref === "function") {
+    timer.unref();
+  }
+  console.log(`[social-scheduler] running every ${SCHEDULER_INTERVAL_MS}ms`);
+}
+
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);
+  startSocialSchedulerLoop();
 });

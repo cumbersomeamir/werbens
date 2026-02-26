@@ -268,6 +268,50 @@ export async function removeYoutubeIdeationTrackedChannel(userId, options = {}) 
   return del(`${API_ENDPOINTS.SOCIAL_YOUTUBE_IDEATION_ENGINE_TRACKED}?${q.toString()}`);
 }
 
+/**
+ * Create scheduled social post(s).
+ *
+ * @param {Object} payload
+ * @returns {Promise<Object>}
+ */
+export async function createScheduledPost(payload) {
+  if (!payload?.userId) throw new Error("Missing userId");
+  return post(API_ENDPOINTS.SOCIAL_POST_SCHEDULE, payload);
+}
+
+/**
+ * Get scheduled posts for a user.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.start] ISO date
+ * @param {string} [options.end] ISO date
+ * @param {string} [options.status] comma-separated statuses
+ * @returns {Promise<Object>}
+ */
+export async function getScheduledPosts(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.start) q.set("start", String(options.start));
+  if (options.end) q.set("end", String(options.end));
+  if (options.status) q.set("status", String(options.status));
+  return get(`${API_ENDPOINTS.SOCIAL_POST_SCHEDULE}?${q.toString()}`);
+}
+
+/**
+ * Cancel a scheduled post by id.
+ *
+ * @param {string} userId
+ * @param {string} scheduledPostId
+ * @returns {Promise<Object>}
+ */
+export async function deleteScheduledPost(userId, scheduledPostId) {
+  if (!userId) throw new Error("Missing userId");
+  if (!scheduledPostId) throw new Error("Missing scheduledPostId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  return del(`${API_ENDPOINTS.SOCIAL_POST_SCHEDULE}/${encodeURIComponent(String(scheduledPostId))}?${q.toString()}`);
+}
+
 // Legacy exports for backward compatibility
 export const getXAuthUrl = (userId) => getAuthUrl("x", userId);
 export const getYoutubeAuthUrl = (userId) => getAuthUrl("youtube", userId);

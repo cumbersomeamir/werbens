@@ -13,6 +13,8 @@
  */
 
 import { getDb } from "../db.js";
+import { publishToFacebookDirectly } from "../routes/social/posting/platforms/facebook.js";
+import { publishToInstagramDirectly } from "../routes/social/posting/platforms/instagram.js";
 
 // Conservative per-platform caps (can be tuned later)
 const PLATFORM_LIMITS = {
@@ -54,6 +56,8 @@ export async function createScheduledPostsFromRequest(userId, payload) {
     userId,
     platform: t.platform,
     channelId: t.channelId,
+    targetDisplayName: t?.displayName || "",
+    targetUsername: t?.username || "",
     mode: mode === "automatic" ? "automatic" : mode === "scheduled" ? "scheduled" : "immediate",
     status: "pending",
     content: {
@@ -74,6 +78,23 @@ export async function createScheduledPostsFromRequest(userId, payload) {
       x_quote_tweet_id: content?.x_quote_tweet_id ?? "",
       x_geo_place_id: content?.x_geo_place_id ?? "",
       x_for_super_followers_only: content?.x_for_super_followers_only ?? false,
+      // LinkedIn-specific fields
+      linkedin_text: content?.linkedin_text ?? "",
+      linkedin_media_urn: content?.linkedin_media_urn ?? "",
+      linkedin_media_title: content?.linkedin_media_title ?? "",
+      linkedin_media_alt_text: content?.linkedin_media_alt_text ?? "",
+      linkedin_visibility: content?.linkedin_visibility ?? "PUBLIC",
+      linkedin_disable_reshare: content?.linkedin_disable_reshare ?? false,
+      linkedin_feed_distribution: content?.linkedin_feed_distribution ?? "MAIN_FEED",
+      linkedin_article: content?.linkedin_article || null,
+      // Instagram-specific fields
+      instagram_image_url: content?.instagram_image_url ?? "",
+      instagram_caption: content?.instagram_caption ?? "",
+      instagram_alt_text: content?.instagram_alt_text ?? "",
+      // Facebook-specific fields
+      facebook_message: content?.facebook_message ?? "",
+      facebook_link: content?.facebook_link ?? "",
+      facebook_scheduled_publish_time: content?.facebook_scheduled_publish_time ?? null,
       metadata: content?.metadata ?? {},
     },
     scheduledAt: finalScheduledAt,
@@ -86,7 +107,10 @@ export async function createScheduledPostsFromRequest(userId, payload) {
   }));
 
   const result = await scheduledColl.insertMany(docs);
-  return { insertedCount: result.insertedCount };
+  return {
+    insertedCount: result.insertedCount,
+    insertedIds: Object.values(result.insertedIds || {}).map((id) => String(id)),
+  };
 }
 
 async function getRecentPostTimestamps(db, userId, platform, channelId) {
@@ -377,7 +401,19 @@ async function publishToX(db, job) {
 }
 
 async function publishToMeta(db, job) {
-  throw new Error("Facebook/Instagram posting is not yet implemented.");
+  const target = {
+    platform: job?.platform,
+    channelId: job?.channelId,
+  };
+  const content = job?.content || {};
+
+  if (job?.platform === "facebook") {
+    return publishToFacebookDirectly(job.userId, target, content);
+  }
+  if (job?.platform === "instagram") {
+    return publishToInstagramDirectly(job.userId, target, content);
+  }
+  throw new Error(`Unsupported Meta platform: ${job?.platform || "unknown"}`);
 }
 
 async function publishToLinkedIn(db, job) {
@@ -626,4 +662,3 @@ export async function runDueScheduledPosts(limit = 20) {
 
   return { processed: jobs.length };
 }
-

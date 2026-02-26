@@ -24,3 +24,6 @@ export const getYoutubeIdeationDashboard = socialService.getYoutubeIdeationDashb
 export const searchYoutubeIdeationChannels = socialService.searchYoutubeIdeationChannels;
 export const addYoutubeIdeationTrackedChannel = socialService.addYoutubeIdeationTrackedChannel;
 export const removeYoutubeIdeationTrackedChannel = socialService.removeYoutubeIdeationTrackedChannel;
+export const createScheduledPost = socialService.createScheduledPost;
+export const getScheduledPosts = socialService.getScheduledPosts;
+export const deleteScheduledPost = socialService.deleteScheduledPost;
