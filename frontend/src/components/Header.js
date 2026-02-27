@@ -21,6 +21,7 @@ const NAV_ITEMS = [
 
 const APP_ITEMS = [
   { href: "/youtube/comment-replier", label: "Youtube Comment Replier" },
+  { href: "/feedback-loop", label: "Feedback Loop" },
   { href: "/ideation-engine", label: "Ideation Engine" },
   { href: "/reports", label: "Reports" },
 ];
