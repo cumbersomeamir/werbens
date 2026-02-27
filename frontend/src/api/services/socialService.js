@@ -1,7 +1,7 @@
 /**
  * Social media API service
  */
-import { get, post, del } from "../client.js";
+import { get, post, patch, del } from "../client.js";
 import { API_BASE } from "../client.js";
 import { API_ENDPOINTS } from "../endpoints.js";
 
@@ -310,6 +310,172 @@ export async function deleteScheduledPost(userId, scheduledPostId) {
   if (!scheduledPostId) throw new Error("Missing scheduledPostId");
   const q = new URLSearchParams({ userId: String(userId) });
   return del(`${API_ENDPOINTS.SOCIAL_POST_SCHEDULE}/${encodeURIComponent(String(scheduledPostId))}?${q.toString()}`);
+}
+
+/**
+ * Get feedback-loop dashboard.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<Object>}
+ */
+export async function getFeedbackLoopDashboard(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return get(`${API_ENDPOINTS.FEEDBACK_LOOP_DASHBOARD}?${q.toString()}`);
+}
+
+/**
+ * Get feedback-loop config.
+ *
+ * @param {string} userId
+ * @param {Object} [options]
+ * @param {string} [options.channelId]
+ * @returns {Promise<{ok:boolean, config:Object}>}
+ */
+export async function getFeedbackLoopConfig(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  return get(`${API_ENDPOINTS.FEEDBACK_LOOP_CONFIG}?${q.toString()}`);
+}
+
+/**
+ * Update feedback-loop config.
+ *
+ * @param {string} userId
+ * @param {Object} options
+ * @param {string} [options.channelId]
+ * @param {Object} [options.patch]
+ * @returns {Promise<{ok:boolean, config:Object}>}
+ */
+export async function updateFeedbackLoopConfig(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  return patch(API_ENDPOINTS.FEEDBACK_LOOP_CONFIG, {
+    userId,
+    channelId: options.channelId || "",
+    patch: options.patch && typeof options.patch === "object" ? options.patch : {},
+  });
+}
+
+/**
+ * Start autonomous feedback loop.
+ */
+export async function startFeedbackLoop(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  return post(API_ENDPOINTS.FEEDBACK_LOOP_START, {
+    userId,
+    channelId: options.channelId || "",
+  });
+}
+
+/**
+ * Pause autonomous feedback loop.
+ */
+export async function pauseFeedbackLoop(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  return post(API_ENDPOINTS.FEEDBACK_LOOP_PAUSE, {
+    userId,
+    channelId: options.channelId || "",
+  });
+}
+
+/**
+ * Trigger full feedback cycle (generation -> scheduling).
+ */
+export async function triggerFeedbackLoop(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  return post(API_ENDPOINTS.FEEDBACK_LOOP_TRIGGER, {
+    userId,
+    channelId: options.channelId || "",
+    quickTest: Boolean(options.quickTest),
+    testTextOnly: options.testTextOnly === undefined ? true : Boolean(options.testTextOnly),
+    testSpacingMinutes:
+      options.testSpacingMinutes === undefined
+        ? 1
+        : Math.max(1, Math.min(60, Math.round(Number(options.testSpacingMinutes) || 1))),
+  });
+}
+
+/**
+ * Trigger generation preview (no publishing).
+ */
+export async function generateFeedbackLoopPreview(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  return post(API_ENDPOINTS.FEEDBACK_LOOP_GENERATE_PREVIEW, {
+    userId,
+    channelId: options.channelId || "",
+  });
+}
+
+/**
+ * List generation history.
+ */
+export async function getFeedbackLoopGenerationHistory(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  if (options.limit) q.set("limit", String(options.limit));
+  return get(`${API_ENDPOINTS.FEEDBACK_LOOP_GENERATION_HISTORY}?${q.toString()}`);
+}
+
+/**
+ * List feedback-loop runs.
+ */
+export async function getFeedbackLoopRuns(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  if (options.limit) q.set("limit", String(options.limit));
+  return get(`${API_ENDPOINTS.FEEDBACK_LOOP_RUNS}?${q.toString()}`);
+}
+
+/**
+ * List feedback-loop tasks.
+ */
+export async function getFeedbackLoopTasks(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  if (options.limit) q.set("limit", String(options.limit));
+  return get(`${API_ENDPOINTS.FEEDBACK_LOOP_TASKS}?${q.toString()}`);
+}
+
+/**
+ * List feedback-loop posts.
+ */
+export async function getFeedbackLoopPosts(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  const q = new URLSearchParams({ userId: String(userId) });
+  if (options.channelId) q.set("channelId", String(options.channelId));
+  if (options.limit) q.set("limit", String(options.limit));
+  return get(`${API_ENDPOINTS.FEEDBACK_LOOP_POSTS}?${q.toString()}`);
+}
+
+/**
+ * Manual task tick for delayed checkpoints.
+ */
+export async function runFeedbackLoopTasks(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  return post(API_ENDPOINTS.FEEDBACK_LOOP_TASKS_RUN, {
+    userId,
+    channelId: options.channelId || "",
+    limit: options.limit || 40,
+  });
+}
+
+/**
+ * Manual autonomous tick trigger.
+ */
+export async function runFeedbackLoopAutonomous(userId, options = {}) {
+  if (!userId) throw new Error("Missing userId");
+  return post(API_ENDPOINTS.FEEDBACK_LOOP_AUTONOMOUS_RUN, {
+    userId,
+    channelId: options.channelId || "",
+    limit: options.limit || 8,
+  });
 }
 
 // Legacy exports for backward compatibility

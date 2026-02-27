@@ -72,6 +72,20 @@ export const API_ENDPOINTS = {
   AUTOMATIC_DOWNLOAD: "/api/automatic/download",
   AUTOMATIC_DELETE_IMAGE: "/api/automatic/images/delete",
 
+  // Feedback Loop (X Phase-1)
+  FEEDBACK_LOOP_CONFIG: "/api/feedback-loop/config",
+  FEEDBACK_LOOP_START: "/api/feedback-loop/start",
+  FEEDBACK_LOOP_PAUSE: "/api/feedback-loop/pause",
+  FEEDBACK_LOOP_TRIGGER: "/api/feedback-loop/trigger",
+  FEEDBACK_LOOP_GENERATE_PREVIEW: "/api/feedback-loop/generate-preview",
+  FEEDBACK_LOOP_GENERATION_HISTORY: "/api/feedback-loop/generation-history",
+  FEEDBACK_LOOP_DASHBOARD: "/api/feedback-loop/dashboard",
+  FEEDBACK_LOOP_RUNS: "/api/feedback-loop/runs",
+  FEEDBACK_LOOP_TASKS: "/api/feedback-loop/tasks",
+  FEEDBACK_LOOP_POSTS: "/api/feedback-loop/posts",
+  FEEDBACK_LOOP_TASKS_RUN: "/api/feedback-loop/tasks/run",
+  FEEDBACK_LOOP_AUTONOMOUS_RUN: "/api/feedback-loop/autonomous/run",
+
   // Agents (human-in-the-loop flows)
   AGENTS: "/api/agents",
   AGENTS_CONSTANTS: "/api/agents/constants",

@@ -30,6 +30,24 @@ function getLimits(platform) {
   return PLATFORM_LIMITS[platform] || { maxPerDay: 10, minIntervalMinutes: 60 };
 }
 
+function getEffectiveLimitsForJob(job) {
+  const base = getLimits(job?.platform);
+  const metadata = job?.content?.metadata || {};
+
+  // Feedback-loop quick tests intentionally run at tight spacing for controlled validation.
+  if (
+    String(job?.platform || "").toLowerCase() === "x" &&
+    String(metadata?.source || "") === "feedback-loop" &&
+    metadata?.quickTest === true
+  ) {
+    const minIntervalMinutes = Math.max(1, Math.min(60, Math.round(Number(metadata?.testSpacingMinutes) || 1)));
+    const maxPerDay = Math.max(1, Math.min(20, Math.round(Number(metadata?.maxPostsPerDay) || 10)));
+    return { maxPerDay, minIntervalMinutes };
+  }
+
+  return base;
+}
+
 export async function createScheduledPostsFromRequest(userId, payload) {
   const db = await getDb();
   const scheduledColl = db.collection("ScheduledPosts");
@@ -131,7 +149,7 @@ async function getRecentPostTimestamps(db, userId, platform, channelId) {
 }
 
 async function canPostNow(db, job) {
-  const limits = getLimits(job.platform);
+  const limits = getEffectiveLimitsForJob(job);
   const recent = await getRecentPostTimestamps(db, job.userId, job.platform, job.channelId);
   const now = new Date();
 

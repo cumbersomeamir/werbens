@@ -31,6 +31,22 @@ import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
 import { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler, automaticDeleteImageHandler } from "./routes/automatic.js";
 import {
+  getFeedbackLoopConfigHandler,
+  updateFeedbackLoopConfigHandler,
+  startFeedbackLoopHandler,
+  pauseFeedbackLoopHandler,
+  triggerFeedbackLoopHandler,
+  generateFeedbackPreviewHandler,
+  getFeedbackGenerationHistoryHandler,
+  getFeedbackLoopDashboardHandler,
+  getFeedbackLoopRunsHandler,
+  getFeedbackLoopTasksHandler,
+  getFeedbackLoopPostsHandler,
+  runFeedbackDueTasksHandler,
+  runFeedbackAutonomousTickHandler,
+} from "./routes/feedback-loop.js";
+import { startFeedbackLoopWorkers } from "./feedback/engine/index.js";
+import {
   getOrCreateSessionHandler,
   clearSessionHandler,
   getSessionMessagesHandler,
@@ -137,6 +153,21 @@ app.get("/api/automatic/images", automaticGetImagesHandler);
 app.post("/api/automatic/images/delete", automaticDeleteImageHandler);
 app.get("/api/automatic/download", automaticDownloadHandler);
 
+// Feedback loop (X phase-1, generation-aware)
+app.get("/api/feedback-loop/config", getFeedbackLoopConfigHandler);
+app.patch("/api/feedback-loop/config", updateFeedbackLoopConfigHandler);
+app.post("/api/feedback-loop/start", startFeedbackLoopHandler);
+app.post("/api/feedback-loop/pause", pauseFeedbackLoopHandler);
+app.post("/api/feedback-loop/trigger", triggerFeedbackLoopHandler);
+app.post("/api/feedback-loop/generate-preview", generateFeedbackPreviewHandler);
+app.get("/api/feedback-loop/generation-history", getFeedbackGenerationHistoryHandler);
+app.get("/api/feedback-loop/dashboard", getFeedbackLoopDashboardHandler);
+app.get("/api/feedback-loop/runs", getFeedbackLoopRunsHandler);
+app.get("/api/feedback-loop/tasks", getFeedbackLoopTasksHandler);
+app.get("/api/feedback-loop/posts", getFeedbackLoopPostsHandler);
+app.post("/api/feedback-loop/tasks/run", runFeedbackDueTasksHandler);
+app.post("/api/feedback-loop/autonomous/run", runFeedbackAutonomousTickHandler);
+
 // Session management APIs
 app.post("/api/sessions/get-or-create", getOrCreateSessionHandler);
 app.post("/api/sessions/clear", clearSessionHandler);
@@ -188,4 +219,5 @@ function startSocialSchedulerLoop() {
 app.listen(PORT, () => {
   console.log(`Werbens backend running at http://localhost:${PORT}`);
   startSocialSchedulerLoop();
+  startFeedbackLoopWorkers();
 });
