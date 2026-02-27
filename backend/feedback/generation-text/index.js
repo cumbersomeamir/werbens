@@ -68,11 +68,19 @@ function buildPrompt({ accountHandle, feedbackSummary, recentPosts, variantCount
   ].join("\n");
 }
 
+function extractContextHint(accountContext) {
+  const cleaned = normalizeText(accountContext || "");
+  if (!cleaned) return "";
+  const words = cleaned.split(" ").filter(Boolean).slice(0, 10);
+  return words.join(" ");
+}
+
 export async function generateTextVariants({
   apiKey,
   accountHandle,
   feedbackSummary,
   recentPosts,
+  accountContext = "",
   variantCount = 4,
   allowTags = true,
   allowCta = true,
@@ -82,7 +90,9 @@ export async function generateTextVariants({
 
   const prompt = buildPrompt({
     accountHandle,
-    feedbackSummary,
+    feedbackSummary: [normalizeText(accountContext || ""), normalizeText(feedbackSummary || "")]
+      .filter(Boolean)
+      .join("\n\n"),
     recentPosts,
     variantCount,
     allowTags,
@@ -147,8 +157,11 @@ export async function generateTextVariants({
 
   while (variants.length < variantCount) {
     const idx = variants.length + 1;
+    const contextHint = extractContextHint(accountContext);
     const fallbackCaption = truncateText(
-      `Daily build insight ${idx}: we tested one growth hypothesis today and shared what actually moved engagement. Follow for tomorrow's experiment.`,
+      contextHint
+        ? `Daily build insight ${idx}: ${contextHint}. We tested one idea today and shared what moved engagement.`
+        : `Daily build insight ${idx}: we tested one growth hypothesis today and shared what actually moved engagement. Follow for tomorrow's experiment.`,
       280
     );
     const fingerprint = hashFingerprint(fallbackCaption.toLowerCase());

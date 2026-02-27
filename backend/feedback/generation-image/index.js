@@ -32,7 +32,7 @@ function bufferFromDataUrl(dataUrl) {
   return Buffer.from(base64, "base64");
 }
 
-function buildImagePromptRequest({ accountHandle, feedbackSummary, textVariants, variantCount = 2 }) {
+function buildImagePromptRequest({ accountHandle, feedbackSummary, textVariants, accountContext = "", variantCount = 2 }) {
   const variantText = (Array.isArray(textVariants) ? textVariants : [])
     .slice(0, 4)
     .map((item, idx) => `${idx + 1}. ${truncateText(item?.caption || "", 180)}`)
@@ -50,7 +50,9 @@ function buildImagePromptRequest({ accountHandle, feedbackSummary, textVariants,
     "- Avoid text-heavy designs",
     "- Keep prompts suitable for business/creator growth content",
     "Feedback summary:",
-    normalizeText(feedbackSummary || "No feedback summary."),
+    [normalizeText(accountContext || ""), normalizeText(feedbackSummary || "No feedback summary.")]
+      .filter(Boolean)
+      .join("\n\n"),
     "Text candidates:",
     variantText || "No text candidates provided.",
   ].join("\n");
@@ -63,6 +65,7 @@ export async function generateImageVariants({
   accountHandle,
   feedbackSummary,
   textVariants,
+  accountContext = "",
   variantCount = 2,
 }) {
   if (!apiKey) throw new Error("generateImageVariants: apiKey is required");
@@ -71,6 +74,7 @@ export async function generateImageVariants({
     accountHandle,
     feedbackSummary,
     textVariants,
+    accountContext,
     variantCount,
   });
 

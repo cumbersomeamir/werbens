@@ -418,6 +418,7 @@ export function FeedbackLoopFlow() {
   const taskCounts = dashboard?.taskCounts || {};
   const latestRunSummary = dashboard?.latestRun?.summary || null;
   const latestRunId = dashboard?.latestRun?.runId || generationRun?.runId || "";
+  const contextInfo = dashboard?.context || {};
 
   const latestPost = useMemo(() => {
     if (!generationRun?.runId) return posts[0] || null;
@@ -560,6 +561,10 @@ export function FeedbackLoopFlow() {
               <div className="mt-2 text-xs text-werbens-muted flex flex-wrap items-center gap-3">
                 <span>User: {userId || "Not signed in"}</span>
                 {selectedChannel?.handle ? <span>Handle: @{selectedChannel.handle}</span> : null}
+                <span>
+                  X context grounding: {contextInfo?.usedAccountContext ? "enabled" : "not found"}
+                  {Number(contextInfo?.xContextLength || 0) > 0 ? ` (${contextInfo.xContextLength} chars)` : ""}
+                </span>
                 <span>Live refresh: {pendingCountForPolling > 0 ? "every 4s" : "every 10s"}</span>
                 {lastUpdatedAt ? <span>Last sync: {formatDateTime(lastUpdatedAt)}</span> : null}
                 <Link href="/accounts" className="text-werbens-dark-cyan hover:underline">

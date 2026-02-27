@@ -97,6 +97,39 @@ async function resolveXAccount({ db, userId, channelId = "" }) {
   };
 }
 
+async function loadFeedbackGroundingContext({ db, userId }) {
+  const contextColl = db.collection("Context");
+  try {
+    const contextDoc = await contextColl.findOne(
+      { userId },
+      {
+        projection: {
+          x_context: 1,
+          general_context: 1,
+        },
+      }
+    );
+
+    const xContext = normalizeText(contextDoc?.x_context || "");
+    const generalContext = normalizeText(contextDoc?.general_context || "");
+    const merged = [xContext, generalContext].filter(Boolean).join("\n\n");
+
+    return {
+      xContext,
+      generalContext,
+      mergedContext: merged.slice(0, 3200),
+      usedAccountContext: Boolean(xContext),
+    };
+  } catch {
+    return {
+      xContext: "",
+      generalContext: "",
+      mergedContext: "",
+      usedAccountContext: false,
+    };
+  }
+}
+
 export async function getFeedbackLoopConfig({ userId, channelId = "" }) {
   const db = await getDb();
   const resolved = await resolveXAccount({ db, userId, channelId });
@@ -605,6 +638,7 @@ export async function triggerFeedbackLoopRun({
 
   const db = await getDb();
   const resolved = await resolveXAccount({ db, userId, channelId });
+  const groundingContext = await loadFeedbackGroundingContext({ db, userId });
   const lockKey = `${userId}:x:${resolved.channelId}`;
 
   if (runLocks.has(lockKey)) {
@@ -642,6 +676,11 @@ export async function triggerFeedbackLoopRun({
       quickTest,
       testTextOnly,
       testSpacingMinutes,
+    },
+    contextSignals: {
+      usedAccountContext: groundingContext.usedAccountContext,
+      xContextLength: groundingContext.xContext.length,
+      generalContextLength: groundingContext.generalContext.length,
     },
     startedAt: now,
     createdAt: now,
@@ -690,6 +729,7 @@ export async function triggerFeedbackLoopRun({
       accountHandle: resolved.accountHandle,
       feedbackSummary: JSON.stringify({ feedbackSummary, serviceOutputs }),
       recentPosts,
+      accountContext: groundingContext.mergedContext,
       variantCount: safeNumber(config?.textVariantsPerRun, DEFAULT_CONFIG.textVariantsPerRun),
       allowTags: quickTest ? false : Boolean(config?.allowTagsMutation),
       allowCta: quickTest ? false : Boolean(config?.allowCtaMutation),
@@ -704,6 +744,7 @@ export async function triggerFeedbackLoopRun({
           accountHandle: resolved.accountHandle,
           feedbackSummary: JSON.stringify(serviceOutputs?.platformSignal || {}),
           textVariants: textGeneration.variants,
+          accountContext: groundingContext.mergedContext,
           variantCount: safeNumber(config?.imageVariantsPerRun, DEFAULT_CONFIG.imageVariantsPerRun),
         })
       : {
@@ -764,6 +805,10 @@ export async function triggerFeedbackLoopRun({
         runId,
         previewOnly: true,
         accountHandle: resolved.accountHandle,
+        contextSignals: {
+          usedAccountContext: groundingContext.usedAccountContext,
+          xContextLength: groundingContext.xContext.length,
+        },
         textVariants: persisted.textDocs,
         imageVariants: persisted.imageDocs,
         selection: persisted.selectionDoc,
@@ -1017,6 +1062,10 @@ export async function triggerFeedbackLoopRun({
       scheduledPosts: scheduledEntries,
       accountHandle: resolved.accountHandle,
       quickTest,
+      contextSignals: {
+        usedAccountContext: groundingContext.usedAccountContext,
+        xContextLength: groundingContext.xContext.length,
+      },
       selection: persisted.selectionDoc,
       textVariants: persisted.textDocs,
       imageVariants: persisted.imageDocs,
@@ -1250,6 +1299,8 @@ export async function getFeedbackLoopDashboard({ userId, channelId = "" }) {
       channelId: resolved.channelId,
       channelLabel: resolved.accountLabel,
       channelHandle: resolved.accountHandle,
+      usedAccountContext: Boolean(latestRun?.contextSignals?.usedAccountContext),
+      xContextLength: safeNumber(latestRun?.contextSignals?.xContextLength),
     },
     config,
     latestRun,
