@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { getDb } from "../../db.js";
 import { getPresignedUrl } from "../../services/s3Service.js";
+import { isSmtpConfigured, sendEmail } from "../../lib/email/smtpClient.js";
 import { createScheduledPostsFromRequest } from "../../services/socialPostingService.js";
 import { generateTextVariants } from "../generation-text/index.js";
 import { generateImageVariants } from "../generation-image/index.js";
@@ -35,6 +36,8 @@ import {
 
 const runLocks = new Set();
 let workersStarted = false;
+const FEEDBACK_REPORT_DEFAULT_RECIPIENTS = "amir@tensorblue.com,yanivchishtycfa@gmail.com";
+const CHECKPOINT_ORDER = ["5m", "10m", "30m", "1h", "4h", "12h", "24h", "48h"];
 
 function buildConfigFilter({ userId, channelId }) {
   return {
@@ -67,6 +70,261 @@ function readGeminiApiKeyOrThrow() {
   err.statusCode = 503;
   err.code = "MISSING_GEMINI_API_KEY";
   throw err;
+}
+
+function readFeedbackReportRecipients() {
+  const raw = String(process.env.FEEDBACK_LOOP_REPORT_RECIPIENTS || FEEDBACK_REPORT_DEFAULT_RECIPIENTS || "");
+  return Array.from(
+    new Set(
+      raw
+        .split(/[,\s;]+/)
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean)
+    )
+  );
+}
+
+function formatUtc(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toISOString().replace("T", " ").replace(".000Z", " UTC");
+}
+
+function getUtcDayKey(date = new Date()) {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
+function shortId(value) {
+  const text = String(value || "");
+  if (!text) return "-";
+  if (text.length <= 12) return text;
+  return `${text.slice(0, 8)}...${text.slice(-4)}`;
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildCheckpointRows(tasks = []) {
+  const grouped = new Map();
+  for (const task of tasks) {
+    const checkpoint = String(task?.checkpoint || task?.payload?.checkpoint || "unknown");
+    if (!grouped.has(checkpoint)) {
+      grouped.set(checkpoint, { checkpoint, total: 0, completed: 0, pending: 0, processing: 0, failed: 0 });
+    }
+    const row = grouped.get(checkpoint);
+    const status = String(task?.status || "pending").toLowerCase();
+    row.total += 1;
+    if (status === "completed") row.completed += 1;
+    else if (status === "processing") row.processing += 1;
+    else if (status === "failed") row.failed += 1;
+    else row.pending += 1;
+  }
+
+  return Array.from(grouped.values()).sort((a, b) => {
+    const ai = CHECKPOINT_ORDER.indexOf(a.checkpoint);
+    const bi = CHECKPOINT_ORDER.indexOf(b.checkpoint);
+    if (ai === -1 && bi === -1) return a.checkpoint.localeCompare(b.checkpoint);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+}
+
+function summarizeQueueCounts(posts = []) {
+  const summary = { scheduled: 0, posted: 0, pending: 0, processing: 0, failed: 0, cancelled: 0 };
+  for (const row of posts) {
+    const status = String(row?.status || "pending").toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(summary, status)) summary[status] += 1;
+    else summary.pending += 1;
+  }
+  return summary;
+}
+
+async function maybeSendDailyFeedbackLoopReport({
+  db,
+  userId,
+  channelId,
+  accountLabel,
+  accountHandle,
+  runId,
+}) {
+  const enabled = String(process.env.FEEDBACK_LOOP_DAILY_REPORT_ENABLED || "true").toLowerCase() !== "false";
+  if (!enabled) return { ok: false, skipped: "disabled" };
+
+  const recipients = readFeedbackReportRecipients();
+  if (!recipients.length) return { ok: false, skipped: "missing_recipients" };
+  if (!isSmtpConfigured()) return { ok: false, skipped: "smtp_not_configured" };
+
+  const configColl = db.collection(FEEDBACK_COLLECTIONS.CONFIG);
+  const runsColl = db.collection(FEEDBACK_COLLECTIONS.RUNS);
+  const postsColl = db.collection(FEEDBACK_COLLECTIONS.POSTS);
+  const tasksColl = db.collection(FEEDBACK_COLLECTIONS.TASKS);
+  const selectionColl = db.collection(FEEDBACK_COLLECTIONS.GENERATION_SELECTION);
+  const textColl = db.collection(FEEDBACK_COLLECTIONS.GENERATION_TEXT);
+
+  const filter = buildConfigFilter({ userId, channelId });
+  const config = await configColl.findOne(filter);
+  const dayKey = getUtcDayKey();
+  if (String(config?.lastDailyReportDate || "") === dayKey) {
+    return { ok: false, skipped: "already_sent_today" };
+  }
+
+  const runDoc = await runsColl.findOne({ runId, userId, channelId });
+  if (!runDoc) return { ok: false, skipped: "run_not_found" };
+  if (Boolean(runDoc?.previewOnly)) return { ok: false, skipped: "preview_only" };
+
+  const [posts, tasks, selection, previousSelection] = await Promise.all([
+    postsColl.find({ runId, userId, channelId }).sort({ scheduledAt: 1 }).toArray(),
+    tasksColl.find({ runId, userId, channelId }).sort({ scheduledFor: 1 }).toArray(),
+    selectionColl.findOne({ runId }),
+    selectionColl.find({ userId, channelId, runId: { $ne: runId } }).sort({ createdAt: -1 }).limit(1).next(),
+  ]);
+
+  const selectedText = selection?.selectedTextVariantId
+    ? await textColl.findOne({ runId, variantId: selection.selectedTextVariantId })
+    : null;
+
+  const previousText = previousSelection?.selectedTextVariantId
+    ? await textColl.findOne({ runId: previousSelection.runId, variantId: previousSelection.selectedTextVariantId })
+    : null;
+
+  const queue = summarizeQueueCounts(posts);
+  const checkpoints = buildCheckpointRows(tasks);
+  const runStatus = String(runDoc?.status || "unknown").toLowerCase();
+  const policy = selection?.policy || {};
+
+  const strategyChanges = [];
+  if (previousSelection) {
+    const prevMode = String(previousSelection?.selectedMode || "");
+    const nextMode = String(selection?.selectedMode || "");
+    if (prevMode && nextMode && prevMode !== nextMode) strategyChanges.push(`Mode ${prevMode} -> ${nextMode}`);
+
+    const prevHook = String(previousText?.hookStyle || "");
+    const nextHook = String(selectedText?.hookStyle || "");
+    if (prevHook && nextHook && prevHook !== nextHook) strategyChanges.push(`Hook ${prevHook} -> ${nextHook}`);
+
+    const prevTone = String(previousText?.tone || "");
+    const nextTone = String(selectedText?.tone || "");
+    if (prevTone && nextTone && prevTone !== nextTone) strategyChanges.push(`Tone ${prevTone} -> ${nextTone}`);
+
+    const prevCta = String(previousText?.ctaType || "");
+    const nextCta = String(selectedText?.ctaType || "");
+    if (prevCta && nextCta && prevCta !== nextCta) strategyChanges.push(`CTA ${prevCta} -> ${nextCta}`);
+  }
+
+  const summary = runDoc?.summary || {};
+  const selectedCaption = normalizeText(
+    selectedText?.caption || summary?.selectedCaption || posts?.[0]?.content?.caption || ""
+  );
+  const subject = `[Werbens Feedback Loop] ${accountHandle || accountLabel || channelId} ${dayKey} ${runStatus.toUpperCase()}`;
+
+  const lines = [
+    "Werbens Feedback Loop - Daily Report",
+    "",
+    "Account",
+    `- Label: ${accountLabel || "-"}`,
+    `- Handle: @${accountHandle || "-"}`,
+    `- User: ${userId}`,
+    "",
+    "Run",
+    `- Run ID: ${runId}`,
+    `- Status: ${runStatus}`,
+    `- Trigger source: ${runDoc?.triggerSource || "-"}`,
+    `- Started: ${formatUtc(runDoc?.startedAt || runDoc?.createdAt)}`,
+    `- Finished: ${formatUtc(runDoc?.finishedAt)}`,
+    "",
+    "System",
+    `- Loop status: ${config?.status || "-"} (enabled=${Boolean(config?.enabled)}, autonomous=${Boolean(config?.autonomousMode)})`,
+    `- Last auto decision: ${config?.lastAutoDecision || "-"}`,
+    `- Last auto check: ${formatUtc(config?.lastAutoCheckAt)}`,
+    `- Last auto error: ${normalizeText(config?.lastAutoError || "-")}`,
+    "",
+    "Progress",
+    `- Queue totals: scheduled=${queue.scheduled}, posted=${queue.posted}, pending=${queue.pending}, processing=${queue.processing}, failed=${queue.failed}, cancelled=${queue.cancelled}`,
+    ...checkpoints.map(
+      (row) =>
+        `- Checkpoint ${row.checkpoint}: total=${row.total}, done=${row.completed}, pending=${row.pending}, processing=${row.processing}, failed=${row.failed}`
+    ),
+    "",
+    "Outcome",
+    `- Selected mode: ${selection?.selectedMode || summary?.selectedMode || "-"}`,
+    `- Selected score: ${safeNumber(selection?.selectedScore || summary?.selectedScore).toFixed(2)}`,
+    `- Scheduled count: ${safeNumber(summary?.scheduledCount || posts.length)}`,
+    `- First scheduled at: ${formatUtc(summary?.scheduledAt || posts?.[0]?.scheduledAt)}`,
+    `- Media attached: ${Boolean(summary?.mediaAttached) ? "yes" : "no"}`,
+    "",
+    "Insights",
+    `- Hook: ${selectedText?.hookStyle || "-"}`,
+    `- Tone: ${selectedText?.tone || "-"}`,
+    `- CTA: ${selectedText?.ctaType || "-"}`,
+    `- Policy: ${policy?.exploit ? "exploit best performer" : "explore alternative"} at ${Math.round(safeNumber(policy?.explorationRate) * 100)}% explore`,
+    `- Best hour UTC: ${Number.isInteger(policy?.bestHourUtc) ? `${policy.bestHourUtc}:00` : "-"}`,
+    "",
+    "Strategy changes vs previous run",
+    ...(strategyChanges.length ? strategyChanges.map((item) => `- ${item}`) : ["- No major strategy change detected."]),
+    "",
+    "Selected caption",
+    selectedCaption || "-",
+    "",
+    runDoc?.error?.message ? `Run error: ${normalizeText(runDoc.error.message)}` : "",
+    "Note: This report is sent once per UTC day per feedback-loop account.",
+  ].filter(Boolean);
+
+  const text = lines.join("\n");
+  const html = `<div style="font-family:Arial,Helvetica,sans-serif;white-space:pre-wrap;line-height:1.45">${escapeHtml(
+    text
+  )}</div>`;
+
+  try {
+    await sendEmail({
+      to: recipients.join(","),
+      subject,
+      text,
+      html,
+      headers: {
+        "X-Werbens-Feedback-Run-Id": String(runId),
+        "X-Werbens-Feedback-Day": dayKey,
+      },
+    });
+
+    await configColl.updateOne(
+      filter,
+      {
+        $set: {
+          lastDailyReportDate: dayKey,
+          lastDailyReportSentAt: new Date(),
+          lastDailyReportRunId: runId,
+          lastDailyReportStatus: runStatus,
+          lastDailyReportRecipients: recipients,
+          lastDailyReportError: null,
+        },
+      }
+    );
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await configColl.updateOne(
+      filter,
+      {
+        $set: {
+          lastDailyReportRunId: runId,
+          lastDailyReportStatus: runStatus,
+          lastDailyReportError: normalizeText(message),
+          lastDailyReportFailedAt: new Date(),
+        },
+      }
+    );
+    return { ok: false, skipped: "send_failed", error: message };
+  }
 }
 
 async function resolveXAccount({ db, userId, channelId = "" }) {
@@ -1070,6 +1328,15 @@ export async function triggerFeedbackLoopRun({
       }
     );
 
+    await maybeSendDailyFeedbackLoopReport({
+      db,
+      userId,
+      channelId: resolved.channelId,
+      accountLabel: resolved.accountLabel,
+      accountHandle: resolved.accountHandle,
+      runId,
+    });
+
     return {
       ok: true,
       runId,
@@ -1104,6 +1371,15 @@ export async function triggerFeedbackLoopRun({
         },
       }
     );
+
+    await maybeSendDailyFeedbackLoopReport({
+      db,
+      userId,
+      channelId: resolved.channelId,
+      accountLabel: resolved.accountLabel,
+      accountHandle: resolved.accountHandle,
+      runId,
+    });
     throw err;
   } finally {
     runLocks.delete(lockKey);
