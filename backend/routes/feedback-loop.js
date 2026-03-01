@@ -27,8 +27,24 @@ function readLimit(req, fallback, min = 1, max = 200) {
 }
 
 function errorResponse(res, err) {
+  const rawMessage = err instanceof Error ? err.message : String(err);
+  const lowerMessage = String(rawMessage || "").toLowerCase();
+
+  if (
+    lowerMessage.includes("gemini_api_key") ||
+    lowerMessage.includes("missing gemini") ||
+    lowerMessage.includes("api key not valid") ||
+    lowerMessage.includes("api key is invalid")
+  ) {
+    return res.status(503).json({
+      ok: false,
+      error:
+        "Gemini is not configured correctly on backend. Set a valid GEMINI_API_KEY in server environment and redeploy.",
+    });
+  }
+
   const status = Number(err?.statusCode) || 500;
-  return res.status(status).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+  return res.status(status).json({ ok: false, error: rawMessage });
 }
 
 export async function getFeedbackLoopConfigHandler(req, res) {

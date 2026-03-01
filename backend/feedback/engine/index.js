@@ -52,6 +52,18 @@ function toObjectId(value) {
   }
 }
 
+function readGeminiApiKeyOrThrow() {
+  const apiKey = normalizeText(process.env.GEMINI_API_KEY || "");
+  if (apiKey) return apiKey;
+
+  const err = new Error(
+    "Gemini is not configured on backend. Missing GEMINI_API_KEY in server environment."
+  );
+  err.statusCode = 503;
+  err.code = "MISSING_GEMINI_API_KEY";
+  throw err;
+}
+
 async function resolveXAccount({ db, userId, channelId = "" }) {
   const accountsColl = db.collection("SocialAccounts");
   const accounts = await accountsColl
@@ -213,11 +225,16 @@ export async function updateFeedbackLoopConfig({ userId, channelId = "", patch =
 
   const now = new Date();
   const filter = buildConfigFilter({ userId, channelId: resolved.channelId });
+  const insertDefaults = { ...DEFAULT_CONFIG };
+  for (const key of Object.keys(nextPatch)) {
+    delete insertDefaults[key];
+  }
+
   await configColl.updateOne(
     filter,
     {
       $setOnInsert: {
-        ...DEFAULT_CONFIG,
+        ...insertDefaults,
         createdAt: now,
       },
       $set: {
@@ -719,10 +736,7 @@ export async function triggerFeedbackLoopRun({
       channelId: resolved.channelId,
     });
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY not configured");
-    }
+    const apiKey = readGeminiApiKeyOrThrow();
 
     const textGeneration = await generateTextVariants({
       apiKey,
