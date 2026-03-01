@@ -311,15 +311,22 @@ export function FeedbackLoopFlow() {
     loadFeedbackData();
   }, [loadFeedbackData]);
 
+  const config = dashboard?.config || {};
+  const latestRun = dashboard?.latestRun || null;
   const pendingCountForPolling = Number(dashboard?.kpis?.pendingCount || 0);
+  const shouldFastPoll =
+    pendingCountForPolling > 0 ||
+    String(config?.status || "").toLowerCase() === "running" ||
+    String(latestRun?.status || "").toLowerCase() === "running";
+
   useEffect(() => {
     if (!userId || !selectedChannelId) return undefined;
-    const intervalMs = pendingCountForPolling > 0 ? 4000 : 10000;
+    const intervalMs = shouldFastPoll ? 4000 : 10000;
     const timer = setInterval(() => {
       void loadFeedbackData();
     }, intervalMs);
     return () => clearInterval(timer);
-  }, [userId, selectedChannelId, pendingCountForPolling, loadFeedbackData]);
+  }, [userId, selectedChannelId, shouldFastPoll, loadFeedbackData]);
 
   const runAction = async (key, operation, successMessage) => {
     setActionBusy(key);
@@ -342,11 +349,22 @@ export function FeedbackLoopFlow() {
   };
 
   const handleStart = () =>
-    runAction(
-      "start",
-      () => startFeedbackLoop(userId, { channelId: selectedChannelId }),
-      "Autonomous feedback loop started."
-    );
+    runAction("start", async () => {
+      const response = await startFeedbackLoop(userId, {
+        channelId: selectedChannelId,
+        runNow: true,
+        quickTest: quickTestMode,
+        testTextOnly: true,
+        testSpacingMinutes: quickTestSpacingMinutes,
+      });
+      const immediateRun = response?.immediateRun || {};
+      if (immediateRun?.queued) {
+        const modeLabel = immediateRun?.quickTest ? "quick-test" : "policy";
+        setNotice(`Autonomous loop is active. Immediate ${modeLabel} run queued.`);
+      } else {
+        setNotice("Autonomous feedback loop started.");
+      }
+    });
 
   const handlePause = () =>
     runAction(
@@ -416,8 +434,8 @@ export function FeedbackLoopFlow() {
 
   const posts = Array.isArray(dashboard?.posts) ? dashboard.posts : [];
   const taskCounts = dashboard?.taskCounts || {};
-  const latestRunSummary = dashboard?.latestRun?.summary || null;
-  const latestRunId = dashboard?.latestRun?.runId || generationRun?.runId || "";
+  const latestRunSummary = latestRun?.summary || null;
+  const latestRunId = latestRun?.runId || generationRun?.runId || "";
   const contextInfo = dashboard?.context || {};
 
   const latestPost = useMemo(() => {
@@ -453,7 +471,6 @@ export function FeedbackLoopFlow() {
   const measuredDone = Number(latestPost?.metrics?.impressions || 0) > 0 || Number(taskCounts?.completed || 0) > 0;
 
   const isRunning = Boolean(actionBusy);
-  const config = dashboard?.config || {};
 
   const selectedTextHook = String(generationRun?.selectedText?.hookStyle || "").toLowerCase();
   const similarHookRows = useMemo(() => {
@@ -478,10 +495,14 @@ export function FeedbackLoopFlow() {
 
   const chartRows = useMemo(() => history.slice(0, 8).reverse(), [history]);
   const measurementPlan = "5m, 10m, 30m, 1h, 4h, 12h, 24h, 48h";
+  const tasksForLatestRun = useMemo(() => {
+    if (!latestRunId) return [];
+    return tasks.filter((task) => String(task?.runId || "") === String(latestRunId));
+  }, [tasks, latestRunId]);
 
   const checkpointRows = useMemo(() => {
     const grouped = new Map();
-    for (const task of tasks) {
+    for (const task of tasksForLatestRun) {
       const checkpoint = String(task?.checkpoint || task?.payload?.checkpoint || "unknown");
       if (!grouped.has(checkpoint)) {
         grouped.set(checkpoint, {
@@ -518,7 +539,84 @@ export function FeedbackLoopFlow() {
       if (bi === -1) return -1;
       return ai - bi;
     });
-  }, [tasks]);
+  }, [tasksForLatestRun]);
+
+  const latestRunTaskCounts = useMemo(
+    () =>
+      tasksForLatestRun.reduce(
+        (acc, task) => {
+          const key = String(task?.status || "pending").toLowerCase();
+          if (!Object.prototype.hasOwnProperty.call(acc, key)) acc[key] = 0;
+          acc[key] += 1;
+          return acc;
+        },
+        { pending: 0, processing: 0, completed: 0, failed: 0, cancelled: 0 }
+      ),
+    [tasksForLatestRun]
+  );
+
+  const previousGenerationRun = useMemo(
+    () => history.find((row) => String(row?.runId || "") !== String(generationRun?.runId || "")) || null,
+    [history, generationRun]
+  );
+
+  const strategyChanges = useMemo(() => {
+    if (!generationRun || !previousGenerationRun) return [];
+    const changes = [];
+
+    const prevMode = String(previousGenerationRun?.selectedMode || "");
+    const nextMode = String(generationRun?.selectedMode || "");
+    if (prevMode && nextMode && prevMode !== nextMode) {
+      changes.push(`Mode ${prevMode} -> ${nextMode}`);
+    }
+
+    const prevHook = String(previousGenerationRun?.selectedText?.hookStyle || "");
+    const nextHook = String(generationRun?.selectedText?.hookStyle || "");
+    if (prevHook && nextHook && prevHook !== nextHook) {
+      changes.push(`Hook ${prevHook} -> ${nextHook}`);
+    }
+
+    const prevTone = String(previousGenerationRun?.selectedText?.tone || "");
+    const nextTone = String(generationRun?.selectedText?.tone || "");
+    if (prevTone && nextTone && prevTone !== nextTone) {
+      changes.push(`Tone ${prevTone} -> ${nextTone}`);
+    }
+
+    const prevCta = String(previousGenerationRun?.selectedText?.ctaType || "");
+    const nextCta = String(generationRun?.selectedText?.ctaType || "");
+    if (prevCta && nextCta && prevCta !== nextCta) {
+      changes.push(`CTA ${prevCta} -> ${nextCta}`);
+    }
+
+    const prevExplore = Number(previousGenerationRun?.policy?.explorationRate || 0);
+    const nextExplore = Number(generationRun?.policy?.explorationRate || 0);
+    if (Number.isFinite(prevExplore) && Number.isFinite(nextExplore) && Math.abs(prevExplore - nextExplore) > 0.0001) {
+      changes.push(`Explore rate ${Math.round(prevExplore * 100)}% -> ${Math.round(nextExplore * 100)}%`);
+    }
+
+    const prevHour = previousGenerationRun?.policy?.bestHourUtc;
+    const nextHour = generationRun?.policy?.bestHourUtc;
+    if (Number.isInteger(prevHour) && Number.isInteger(nextHour) && prevHour !== nextHour) {
+      changes.push(`Best posting hour (UTC) ${prevHour}:00 -> ${nextHour}:00`);
+    }
+
+    return changes;
+  }, [generationRun, previousGenerationRun]);
+
+  const lastAutoCheckAt = config?.lastAutoCheckAt ? new Date(config.lastAutoCheckAt) : null;
+  const lastAutoRunAt = config?.lastAutoRunAt ? new Date(config.lastAutoRunAt) : null;
+  const minGapMinutes = Math.max(1, Number(config?.minGapMinutes || 180));
+  const computedNextEligibleAt =
+    lastAutoRunAt && !Number.isNaN(lastAutoRunAt.getTime())
+      ? new Date(lastAutoRunAt.getTime() + minGapMinutes * 60 * 1000)
+      : null;
+  const nextAutoEligibleAt = config?.nextAutoEligibleAt || (computedNextEligibleAt ? computedNextEligibleAt.toISOString() : null);
+  const loopActive = Boolean(config?.enabled) && Boolean(config?.autonomousMode) && String(config?.status || "").toLowerCase() === "running";
+  const heartbeatFresh =
+    lastAutoCheckAt && !Number.isNaN(lastAutoCheckAt.getTime())
+      ? Date.now() - lastAutoCheckAt.getTime() <= 20 * 60 * 1000
+      : false;
+  const latestRunStatus = String(latestRun?.status || "idle").toLowerCase();
 
   const selectedChannel = channels.find((item) => item.channelId === selectedChannelId) || null;
 
@@ -565,7 +663,7 @@ export function FeedbackLoopFlow() {
                   X context grounding: {contextInfo?.usedAccountContext ? "enabled" : "not found"}
                   {Number(contextInfo?.xContextLength || 0) > 0 ? ` (${contextInfo.xContextLength} chars)` : ""}
                 </span>
-                <span>Live refresh: {pendingCountForPolling > 0 ? "every 4s" : "every 10s"}</span>
+                <span>Live refresh: {shouldFastPoll ? "every 4s" : "every 10s"}</span>
                 {lastUpdatedAt ? <span>Last sync: {formatDateTime(lastUpdatedAt)}</span> : null}
                 <Link href="/accounts" className="text-werbens-dark-cyan hover:underline">
                   Manage connected accounts
@@ -766,6 +864,93 @@ export function FeedbackLoopFlow() {
             </div>
           ) : null}
         </div>
+
+        <section className="mt-6 rounded-2xl border border-werbens-dark-cyan/10 bg-white p-4 sm:p-5 shadow-elevated">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base sm:text-lg font-semibold text-werbens-text">Loop activity and AI decisions</h2>
+              <p className="text-xs sm:text-sm text-werbens-muted mt-1">
+                What is happening, what changed, and what the loop is learning.
+              </p>
+            </div>
+            <div className="text-xs text-werbens-muted text-right">
+              <p>System: {loopActive ? "active" : "paused"}</p>
+              <p>Heartbeat: {heartbeatFresh ? "fresh" : "stale or waiting"}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="rounded-xl border border-werbens-dark-cyan/10 bg-werbens-mist/25 p-3">
+              <p className="text-xs uppercase tracking-[0.1em] text-werbens-muted">1) What is happening now</p>
+              <p className="mt-2 text-sm text-werbens-text">
+                Latest run: <span className="font-semibold">{latestRunStatus}</span> | Source:{" "}
+                <span className="font-semibold">{latestRun?.triggerSource || "-"}</span>
+              </p>
+              <p className="mt-1 text-xs text-werbens-muted">
+                Started {formatDateTime(latestRun?.startedAt)} | Last auto check {formatDateTime(lastAutoCheckAt)}
+              </p>
+              <p className="mt-1 text-xs text-werbens-muted">
+                Last auto decision: {config?.lastAutoDecision || "-"} | Next eligible auto run: {formatDateTime(nextAutoEligibleAt)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-3">
+              <p className="text-xs uppercase tracking-[0.1em] text-werbens-muted">2) What has happened</p>
+              <p className="mt-2 text-sm text-werbens-text">
+                Last completed auto run: {formatDateTime(lastAutoRunAt)} | Run ID: {shortId(latestRun?.runId)}
+              </p>
+              <p className="mt-1 text-xs text-werbens-muted">
+                Queue: {scheduledCountForRun} scheduled | {postedCountForRun} posted | {pendingCountForRun} pending | {failedCountForRun} failed
+              </p>
+              <p className="mt-1 text-xs text-werbens-muted">
+                Checkpoints for latest run: done {latestRunTaskCounts.completed} | pending {latestRunTaskCounts.pending} | processing{" "}
+                {latestRunTaskCounts.processing} | failed {latestRunTaskCounts.failed}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-3">
+              <p className="text-xs uppercase tracking-[0.1em] text-werbens-muted">3) Latest result</p>
+              <p className="mt-2 text-sm text-werbens-text">
+                Mode {generationRun?.selectedMode || "-"} | Score {Number(generationRun?.selectedScore || 0).toFixed(2)}
+              </p>
+              <p className="mt-1 text-xs text-werbens-muted">
+                Engagement {formatPercent(latestPost?.metrics?.engagementRate || 0)} | Impressions {formatNumber(latestPost?.metrics?.impressions || 0)}
+              </p>
+              <p className="mt-1 text-xs text-werbens-muted">
+                Posted at {formatDateTime(latestPost?.postedAt)} | Scheduled at {formatDateTime(latestPost?.scheduledAt)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-3">
+              <p className="text-xs uppercase tracking-[0.1em] text-werbens-muted">4) Insights</p>
+              <p className="mt-2 text-xs text-werbens-muted">
+                Selected hook: <span className="font-semibold text-werbens-text">{generationRun?.selectedText?.hookStyle || "-"}</span>
+              </p>
+              <p className="mt-1 text-xs text-werbens-muted">
+                Similar-hook engagement: {formatPercent(similarHookAvg)} | Overall: {formatPercent(overallAvg)}
+              </p>
+              <p className="mt-1 text-xs text-werbens-muted">
+                Policy: {generationRun?.policy?.exploit ? "exploit best performer" : "explore alternative"} at{" "}
+                {Math.round((Number(generationRun?.policy?.explorationRate || 0) || 0) * 100)}% explore rate
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 rounded-xl border border-werbens-dark-cyan/10 bg-white p-3">
+            <p className="text-xs uppercase tracking-[0.1em] text-werbens-muted">5) Strategy changes vs previous run</p>
+            {strategyChanges.length === 0 ? (
+              <p className="mt-2 text-xs text-werbens-muted">No major strategy change detected yet.</p>
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {strategyChanges.map((item) => (
+                  <span key={`strategy-change-${item}`} className="rounded-full border border-werbens-dark-cyan/15 bg-werbens-mist/40 px-2 py-1 text-xs text-werbens-text">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         <section className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard label="Posted" value={formatNumber(dashboard?.kpis?.postedCount || 0)} accent="text-emerald-600" />
@@ -1052,9 +1237,9 @@ export function FeedbackLoopFlow() {
 
             <div className="rounded-xl border border-werbens-dark-cyan/10 bg-white p-4">
               <p className="text-sm font-semibold text-werbens-text">Measurement checkpoints</p>
-              <p className="mt-1 text-xs text-werbens-muted">Tracks delayed snapshots; not instant by design.</p>
+              <p className="mt-1 text-xs text-werbens-muted">Tracks delayed snapshots for the latest run; not instant by design.</p>
               {checkpointRows.length === 0 ? (
-                <p className="mt-3 text-xs text-werbens-muted">No checkpoint tasks found yet.</p>
+                <p className="mt-3 text-xs text-werbens-muted">No checkpoint tasks found for the latest run yet.</p>
               ) : (
                 <div className="mt-3 space-y-2">
                   {checkpointRows.map((row) => (

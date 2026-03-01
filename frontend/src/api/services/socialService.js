@@ -368,6 +368,13 @@ export async function startFeedbackLoop(userId, options = {}) {
   return post(API_ENDPOINTS.FEEDBACK_LOOP_START, {
     userId,
     channelId: options.channelId || "",
+    runNow: options.runNow === undefined ? true : Boolean(options.runNow),
+    quickTest: Boolean(options.quickTest),
+    testTextOnly: options.testTextOnly === undefined ? true : Boolean(options.testTextOnly),
+    testSpacingMinutes:
+      options.testSpacingMinutes === undefined
+        ? 1
+        : Math.max(1, Math.min(60, Math.round(Number(options.testSpacingMinutes) || 1))),
   });
 }
 

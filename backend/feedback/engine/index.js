@@ -1658,8 +1658,19 @@ export async function runAutonomousFeedbackLoop(limit = 5) {
   let skipped = 0;
 
   for (const config of configs) {
+    const checkedAt = new Date();
     const lockKey = `${config.userId}:x:${config.channelId}`;
     if (runLocks.has(lockKey)) {
+      await configColl.updateOne(
+        { _id: config._id },
+        {
+          $set: {
+            lastAutoCheckAt: checkedAt,
+            lastAutoDecision: "skipped_in_progress",
+            lastAutoError: null,
+          },
+        }
+      );
       skipped += 1;
       continue;
     }
@@ -1671,6 +1682,17 @@ export async function runAutonomousFeedbackLoop(limit = 5) {
     });
 
     if (todayCount >= safeNumber(config?.maxPostsPerDay, DEFAULT_CONFIG.maxPostsPerDay)) {
+      await configColl.updateOne(
+        { _id: config._id },
+        {
+          $set: {
+            lastAutoCheckAt: checkedAt,
+            lastAutoDecision: "skipped_daily_cap",
+            lastAutoTodayCount: todayCount,
+            lastAutoError: null,
+          },
+        }
+      );
       skipped += 1;
       continue;
     }
@@ -1679,13 +1701,24 @@ export async function runAutonomousFeedbackLoop(limit = 5) {
     if (lastAutoRunAt && !Number.isNaN(lastAutoRunAt.getTime())) {
       const minGapMs = safeNumber(config?.minGapMinutes, DEFAULT_CONFIG.minGapMinutes) * 60 * 1000;
       if (Date.now() - lastAutoRunAt.getTime() < minGapMs) {
+        await configColl.updateOne(
+          { _id: config._id },
+          {
+            $set: {
+              lastAutoCheckAt: checkedAt,
+              lastAutoDecision: "skipped_min_gap",
+              nextAutoEligibleAt: new Date(lastAutoRunAt.getTime() + minGapMs),
+              lastAutoError: null,
+            },
+          }
+        );
         skipped += 1;
         continue;
       }
     }
 
     try {
-      await triggerFeedbackLoopRun({
+      const result = await triggerFeedbackLoopRun({
         userId: config.userId,
         channelId: config.channelId,
         previewOnly: false,
@@ -1696,13 +1729,27 @@ export async function runAutonomousFeedbackLoop(limit = 5) {
         { _id: config._id },
         {
           $set: {
+            lastAutoCheckAt: checkedAt,
             lastAutoRunAt: new Date(),
-            updatedAt: new Date(),
+            lastAutoDecision: "triggered",
+            lastAutoTriggeredRunId: String(result?.runId || ""),
+            lastAutoError: null,
           },
         }
       );
       triggered += 1;
-    } catch {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await configColl.updateOne(
+        { _id: config._id },
+        {
+          $set: {
+            lastAutoCheckAt: checkedAt,
+            lastAutoDecision: "failed",
+            lastAutoError: message,
+          },
+        }
+      );
       skipped += 1;
     }
   }

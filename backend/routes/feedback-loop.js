@@ -78,15 +78,48 @@ export async function startFeedbackLoopHandler(req, res) {
   try {
     const userId = readUserId(req);
     if (!userId) return res.status(400).json({ ok: false, error: "Missing userId" });
+    const channelId = readChannelId(req);
+    const runNow = req?.body?.runNow === undefined ? true : Boolean(req.body.runNow);
+    const quickTest = Boolean(req?.body?.quickTest);
+    const testTextOnly = req?.body?.testTextOnly === undefined ? true : Boolean(req.body.testTextOnly);
+    const spacingRaw = Number(req?.body?.testSpacingMinutes);
+    const testSpacingMinutes = Number.isFinite(spacingRaw)
+      ? Math.max(1, Math.min(60, Math.round(spacingRaw)))
+      : 1;
 
     const config = await setFeedbackLoopStatus({
       userId,
-      channelId: readChannelId(req),
+      channelId,
       enabled: true,
       status: "running",
     });
 
-    return res.json({ ok: true, config });
+    if (runNow) {
+      void triggerFeedbackLoopRun({
+        userId,
+        channelId,
+        previewOnly: false,
+        triggerSource: "start_auto_loop",
+        options: {
+          quickTest,
+          testTextOnly,
+          testSpacingMinutes,
+        },
+      }).catch((err) => {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("[feedback-loop] start auto loop immediate run failed:", message);
+      });
+    }
+
+    return res.json({
+      ok: true,
+      config,
+      immediateRun: {
+        queued: runNow,
+        quickTest,
+        testSpacingMinutes: quickTest ? testSpacingMinutes : null,
+      },
+    });
   } catch (err) {
     return errorResponse(res, err);
   }
