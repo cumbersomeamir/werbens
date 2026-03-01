@@ -3,6 +3,35 @@
  */
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
+function normalizeServerErrorMessage(message) {
+  const text = String(message || "");
+  const lower = text.toLowerCase();
+  if (
+    lower.includes("gemini_api_key") ||
+    lower.includes("missing gemini") ||
+    lower.includes("api key not valid") ||
+    lower.includes("api key is invalid")
+  ) {
+    return "Gemini is not configured correctly on backend. Set a valid GEMINI_API_KEY in server environment and redeploy.";
+  }
+  return text;
+}
+
+function buildClientNetworkErrorMessage(originalMessage) {
+  const text = String(originalMessage || "Network error");
+  if (typeof window === "undefined") return text;
+
+  const host = String(window.location?.hostname || "").toLowerCase();
+  const isLocalHost = host === "localhost" || host === "127.0.0.1";
+  const apiLooksLocal = String(API_BASE || "").includes("localhost");
+
+  if (!isLocalHost && apiLooksLocal) {
+    return "Client API URL is misconfigured. NEXT_PUBLIC_API_URL points to localhost; set it to your deployed backend URL and redeploy frontend.";
+  }
+
+  return text;
+}
+
 class ApiError extends Error {
   constructor(message, status, data) {
     super(message);
@@ -54,7 +83,7 @@ async function apiRequest(url, options = {}) {
 
     if (!response.ok) {
       throw new ApiError(
-        data.error || data.message || "Request failed",
+        normalizeServerErrorMessage(data.error || data.message || "Request failed"),
         response.status,
         data
       );
@@ -67,7 +96,7 @@ async function apiRequest(url, options = {}) {
     }
     // Network or other errors
     throw new ApiError(
-      error.message || "Network error",
+      buildClientNetworkErrorMessage(error.message || "Network error"),
       0,
       { originalError: error }
     );
