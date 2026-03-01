@@ -12,7 +12,7 @@ function normalizeServerErrorMessage(message) {
     lower.includes("api key not valid") ||
     lower.includes("api key is invalid")
   ) {
-    return "Gemini is not configured correctly on backend. Set a valid GEMINI_API_KEY in server environment and redeploy.";
+    return "Gemini is not configured correctly on backend. Set GEMINI_API_KEY (or GOOGLE_API_KEY / GOOGLE_GENAI_API_KEY) and redeploy.";
   }
   return text;
 }

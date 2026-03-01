@@ -53,11 +53,16 @@ function toObjectId(value) {
 }
 
 function readGeminiApiKeyOrThrow() {
-  const apiKey = normalizeText(process.env.GEMINI_API_KEY || "");
+  const apiKey = normalizeText(
+    process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.GOOGLE_GENAI_API_KEY ||
+      ""
+  );
   if (apiKey) return apiKey;
 
   const err = new Error(
-    "Gemini is not configured on backend. Missing GEMINI_API_KEY in server environment."
+    "Gemini is not configured on backend. Set GEMINI_API_KEY (or GOOGLE_API_KEY / GOOGLE_GENAI_API_KEY) in server environment."
   );
   err.statusCode = 503;
   err.code = "MISSING_GEMINI_API_KEY";

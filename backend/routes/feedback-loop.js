@@ -39,12 +39,20 @@ function errorResponse(res, err) {
     return res.status(503).json({
       ok: false,
       error:
-        "Gemini is not configured correctly on backend. Set a valid GEMINI_API_KEY in server environment and redeploy.",
+        "Gemini is not configured correctly on backend. Set GEMINI_API_KEY (or GOOGLE_API_KEY / GOOGLE_GENAI_API_KEY) and redeploy.",
     });
   }
 
   const status = Number(err?.statusCode) || 500;
   return res.status(status).json({ ok: false, error: rawMessage });
+}
+
+function hasGeminiApiKeyConfigured() {
+  return Boolean(
+    String(
+      process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENAI_API_KEY || ""
+    ).trim()
+  );
 }
 
 export async function getFeedbackLoopConfigHandler(req, res) {
@@ -78,6 +86,13 @@ export async function startFeedbackLoopHandler(req, res) {
   try {
     const userId = readUserId(req);
     if (!userId) return res.status(400).json({ ok: false, error: "Missing userId" });
+    if (!hasGeminiApiKeyConfigured()) {
+      return res.status(503).json({
+        ok: false,
+        error:
+          "Gemini is not configured on backend. Set GEMINI_API_KEY (or GOOGLE_API_KEY / GOOGLE_GENAI_API_KEY) and redeploy.",
+      });
+    }
     const channelId = readChannelId(req);
     const runNow = req?.body?.runNow === undefined ? true : Boolean(req.body.runNow);
     const quickTest = Boolean(req?.body?.quickTest);
