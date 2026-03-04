@@ -62,6 +62,9 @@ export const API_ENDPOINTS = {
   // Social Posting
   SOCIAL_POST: "/api/social/post", // Legacy endpoint (still works)
   SOCIAL_POST_NOW: "/api/social/post/now",
+  SOCIAL_POST_ALL_NOW: "/api/social/post/all/now",
+  SOCIAL_POST_ALL_MEDIA_UPLOAD: "/api/social/post/all/media/upload",
+  SOCIAL_POST_ALL_PREFERENCES: "/api/social/post/all/preferences",
   SOCIAL_POST_SCHEDULE: "/api/social/post/schedule",
   SOCIAL_POST_AUTOMATE: "/api/social/post/automate",
   SOCIAL_POSTING_RUN: "/api/social/posting/run",

@@ -107,11 +107,13 @@ export async function createScheduledPostsFromRequest(userId, payload) {
       linkedin_article: content?.linkedin_article || null,
       // Instagram-specific fields
       instagram_image_url: content?.instagram_image_url ?? "",
+      instagram_video_url: content?.instagram_video_url ?? "",
       instagram_caption: content?.instagram_caption ?? "",
       instagram_alt_text: content?.instagram_alt_text ?? "",
       // Facebook-specific fields
       facebook_message: content?.facebook_message ?? "",
       facebook_link: content?.facebook_link ?? "",
+      facebook_video_url: content?.facebook_video_url ?? "",
       facebook_scheduled_publish_time: content?.facebook_scheduled_publish_time ?? null,
       metadata: content?.metadata ?? {},
     },

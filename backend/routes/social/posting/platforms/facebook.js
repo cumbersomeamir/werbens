@@ -60,37 +60,43 @@ export async function publishToFacebookDirectly(userId, target, content) {
   const pageAccessToken = targetPage.access_token;
 
   // Step 2: Build post payload
-  const postParams = new URLSearchParams({
-    access_token: pageAccessToken,
-  });
+  const message =
+    (typeof content.facebook_message === "string" && content.facebook_message.trim()) ||
+    (typeof content.body === "string" && content.body.trim()) ||
+    (typeof content.title === "string" && content.title.trim()) ||
+    "";
+  const videoUrl =
+    (typeof content.facebook_video_url === "string" && content.facebook_video_url.trim()) ||
+    (typeof content.videoAssetId === "string" && content.videoAssetId.trim()) ||
+    "";
 
-  // Message is required for text posts
-  if (content.facebook_message) {
-    postParams.append("message", content.facebook_message);
-  } else if (content.body) {
-    postParams.append("message", content.body);
-  } else if (content.title) {
-    postParams.append("message", content.title);
-  } else {
-    throw new Error("Facebook post requires a message, body, or title");
+  if (!message && !videoUrl) {
+    throw new Error("Facebook post requires a message/body/title or a video URL");
   }
 
-  // Link (optional)
-  if (content.facebook_link) {
-    postParams.append("link", content.facebook_link);
-  }
-
-  // Published (true for immediate, false for scheduled)
-  postParams.append("published", "true");
-
-  // Scheduled publish time (optional, if provided)
+  const postParams = new URLSearchParams({ access_token: pageAccessToken });
   if (content.facebook_scheduled_publish_time) {
     postParams.append("scheduled_publish_time", String(content.facebook_scheduled_publish_time));
-    postParams.set("published", "false");
+    postParams.append("published", "false");
+  } else {
+    postParams.append("published", "true");
   }
 
-  // Step 3: Post to Facebook Page feed
-  const postUrl = `${FB_GRAPH_BASE}/${pageId}/feed`;
+  let postUrl = `${FB_GRAPH_BASE}/${pageId}/feed`;
+  if (videoUrl) {
+    postUrl = `${FB_GRAPH_BASE}/${pageId}/videos`;
+    postParams.append("file_url", videoUrl);
+    if (message) {
+      postParams.append("description", message);
+    }
+  } else {
+    postParams.append("message", message);
+    if (content.facebook_link) {
+      postParams.append("link", content.facebook_link);
+    }
+  }
+
+  // Step 3: Post to Facebook Page
   const postResponse = await fetch(postUrl, {
     method: "POST",
     headers: {

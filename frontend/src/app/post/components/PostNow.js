@@ -8,6 +8,7 @@ import { post } from "@/api/client.js";
 import { API_ENDPOINTS } from "@/api/endpoints.js";
 import { XContentForm, LinkedInContentForm, InstagramContentForm, FacebookContentForm, GenericContentForm } from "./platforms";
 import { PLATFORM_LABELS, FRONTEND_PLATFORM_MAP, BACKEND_PLATFORM_MAP } from "./utils";
+import { PostToAllPanel } from "./post-to-all";
 
 function PlatformSelector({ availableTargets, selectedTargets, onToggle }) {
   // For Post Now, only allow single selection
@@ -84,6 +85,7 @@ async function fetchTargets(userId) {
 
 export function PostNow() {
   const { userId } = useCurrentUser();
+  const [activeTab, setActiveTab] = useState("post_now");
   const [loadingTargets, setLoadingTargets] = useState(false);
   const [targets, setTargets] = useState([]);
   const [selectedTargets, setSelectedTargets] = useState([]);
@@ -390,99 +392,128 @@ export function PostNow() {
   return (
     <PostLayout>
       <div className="mb-8 sm:mb-10">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-werbens-text">
-          Post{" "}
-          <span className="gradient-text">now</span>
-        </h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-werbens-text">Post</h1>
         <p className="mt-3 text-sm sm:text-base text-werbens-muted max-w-2xl">
-          Create and publish content immediately across your connected social media platforms.
+          {activeTab === "post_now"
+            ? "Create and publish content immediately across your connected social media platforms."
+            : "Use one super-form and post automatically to your selected connected accounts."}
         </p>
-      </div>
-
-      {status && (
-        <div
-          className={`mb-4 rounded-xl px-4 py-3 text-sm ${
-            status.type === "error"
-              ? "bg-red-50 text-red-800 border border-red-100"
-              : "bg-emerald-50 text-emerald-800 border border-emerald-100"
-          }`}
-          role="alert"
-        >
-          {status.text}
-        </div>
-      )}
-
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 rounded-2xl bg-white/90 border border-werbens-steel/30 shadow-elevated p-4 sm:p-6 lg:p-7"
-        onFocus={(e) => {
-          // Only load if focus is on an input/textarea, not on buttons
-          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-            ensureTargetsLoaded();
-          }
-        }}
-      >
-        <div>
-          <h2 className="text-sm font-semibold text-werbens-text">Destinations</h2>
-          <p className="text-xs text-werbens-muted mt-0.5">
-            Pick the channels you want this content to go to.
-          </p>
-        </div>
-
-        {loadingTargets ? (
-          <p className="text-sm text-werbens-muted">Loading connected accounts…</p>
-        ) : targets.length === 0 ? (
-          <p className="text-sm text-werbens-muted">
-            Connect accounts on the <span className="font-semibold">Accounts</span> page
-            to start posting.
-          </p>
-        ) : (
-          <PlatformSelector
-            availableTargets={targets}
-            selectedTargets={selectedTargets}
-            onToggle={handleToggleTarget}
-          />
-        )}
-
-        <div className="border-t border-werbens-steel/20 pt-4 space-y-4">
-          <div>
-            <h2 className="text-sm font-semibold text-werbens-text">Content</h2>
-            <p className="text-xs text-werbens-muted mt-0.5">
-              {isXSelected
-                ? "X (Twitter) specific fields. All parameters supported by X API v2."
-                : isLinkedInSelected
-                ? "LinkedIn specific fields. All parameters supported by LinkedIn Posts API."
-                : isInstagramSelected
-                ? "Instagram specific fields. Image is required - text-only posts are not supported."
-                : isFacebookSelected
-                ? "Facebook specific fields. Post to your Facebook Page."
-                : "We'll adapt this content to each platform. YouTube will use the title + description; other platforms will use the body text."}
-            </p>
-          </div>
-          
-          {isXSelected ? (
-            <XContentForm content={content} setContent={setContent} />
-          ) : isLinkedInSelected ? (
-            <LinkedInContentForm content={content} setContent={setContent} />
-          ) : isInstagramSelected ? (
-            <InstagramContentForm content={content} setContent={setContent} />
-          ) : isFacebookSelected ? (
-            <FacebookContentForm content={content} setContent={setContent} />
-          ) : (
-            <GenericContentForm content={content} setContent={setContent} />
-          )}
-        </div>
-
-        <div className="pt-2 flex flex-wrap gap-3">
+        <div className="mt-4 inline-flex rounded-xl border border-werbens-steel/30 bg-white/80 p-1">
           <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md focus-ring disabled:opacity-60 disabled:cursor-not-allowed"
+            type="button"
+            onClick={() => setActiveTab("post_now")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              activeTab === "post_now"
+                ? "bg-werbens-dark-cyan text-white"
+                : "text-werbens-muted hover:text-werbens-text"
+            }`}
           >
-            {submitting ? "Publishing..." : "Post now"}
+            Post now
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("post_to_all")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              activeTab === "post_to_all"
+                ? "bg-werbens-dark-cyan text-white"
+                : "text-werbens-muted hover:text-werbens-text"
+            }`}
+          >
+            Post to all
           </button>
         </div>
-      </form>
+      </div>
+
+      {activeTab === "post_now" ? (
+        <>
+          {status && (
+            <div
+              className={`mb-4 rounded-xl px-4 py-3 text-sm ${
+                status.type === "error"
+                  ? "bg-red-50 text-red-800 border border-red-100"
+                  : "bg-emerald-50 text-emerald-800 border border-emerald-100"
+              }`}
+              role="alert"
+            >
+              {status.text}
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 rounded-2xl bg-white/90 border border-werbens-steel/30 shadow-elevated p-4 sm:p-6 lg:p-7"
+            onFocus={(e) => {
+              // Only load if focus is on an input/textarea, not on buttons
+              if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+                ensureTargetsLoaded();
+              }
+            }}
+          >
+            <div>
+              <h2 className="text-sm font-semibold text-werbens-text">Destinations</h2>
+              <p className="text-xs text-werbens-muted mt-0.5">
+                Pick the channels you want this content to go to.
+              </p>
+            </div>
+
+            {loadingTargets ? (
+              <p className="text-sm text-werbens-muted">Loading connected accounts…</p>
+            ) : targets.length === 0 ? (
+              <p className="text-sm text-werbens-muted">
+                Connect accounts on the <span className="font-semibold">Accounts</span> page
+                to start posting.
+              </p>
+            ) : (
+              <PlatformSelector
+                availableTargets={targets}
+                selectedTargets={selectedTargets}
+                onToggle={handleToggleTarget}
+              />
+            )}
+
+            <div className="border-t border-werbens-steel/20 pt-4 space-y-4">
+              <div>
+                <h2 className="text-sm font-semibold text-werbens-text">Content</h2>
+                <p className="text-xs text-werbens-muted mt-0.5">
+                  {isXSelected
+                    ? "X (Twitter) specific fields. All parameters supported by X API v2."
+                    : isLinkedInSelected
+                      ? "LinkedIn specific fields. All parameters supported by LinkedIn Posts API."
+                      : isInstagramSelected
+                        ? "Instagram specific fields. Image is required - text-only posts are not supported."
+                        : isFacebookSelected
+                          ? "Facebook specific fields. Post to your Facebook Page."
+                          : "We'll adapt this content to each platform. YouTube will use the title + description; other platforms will use the body text."}
+                </p>
+              </div>
+
+              {isXSelected ? (
+                <XContentForm content={content} setContent={setContent} />
+              ) : isLinkedInSelected ? (
+                <LinkedInContentForm content={content} setContent={setContent} />
+              ) : isInstagramSelected ? (
+                <InstagramContentForm content={content} setContent={setContent} />
+              ) : isFacebookSelected ? (
+                <FacebookContentForm content={content} setContent={setContent} />
+              ) : (
+                <GenericContentForm content={content} setContent={setContent} />
+              )}
+            </div>
+
+            <div className="pt-2 flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md focus-ring disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {submitting ? "Publishing..." : "Post now"}
+              </button>
+            </div>
+          </form>
+        </>
+      ) : (
+        <PostToAllPanel userId={userId} />
+      )}
     </PostLayout>
   );
 }

@@ -10,7 +10,7 @@ const IG_GRAPH_BASE = "https://graph.instagram.com/v21.0";
  * 1. Create a media container (image required)
  * 2. Publish the container
  * 
- * Instagram does not support text-only posts - an image is required.
+ * Instagram does not support text-only posts - image or video is required.
  */
 export async function publishToInstagramDirectly(userId, target, content) {
   const db = await getDb();
@@ -27,26 +27,34 @@ export async function publishToInstagramDirectly(userId, target, content) {
 
   const accessToken = account.accessToken;
   const igUserId = target.channelId;
+  const imageUrl = typeof content.instagram_image_url === "string" ? content.instagram_image_url.trim() : "";
+  const videoUrl = typeof content.instagram_video_url === "string" ? content.instagram_video_url.trim() : "";
+  const isVideo = Boolean(videoUrl);
 
-  // Instagram requires an image - text-only posts are not supported
-  if (!content.instagram_image_url) {
-    throw new Error("Instagram requires an image URL. Text-only posts are not supported.");
+  // Instagram requires media (image or video) - text-only posts are not supported.
+  if (!imageUrl && !videoUrl) {
+    throw new Error("Instagram requires an image URL or video URL. Text-only posts are not supported.");
   }
 
   // Step 1: Create media container
-  const containerParams = new URLSearchParams({
-    access_token: accessToken,
-    image_url: content.instagram_image_url,
-    media_type: "IMAGE", // Explicitly specify media type
-  });
+  const containerParams = new URLSearchParams({ access_token: accessToken });
+  if (isVideo) {
+    containerParams.append("video_url", videoUrl);
+    // Reels-compatible container for published videos.
+    containerParams.append("media_type", "REELS");
+    containerParams.append("share_to_feed", "true");
+  } else {
+    containerParams.append("image_url", imageUrl);
+    containerParams.append("media_type", "IMAGE");
+  }
 
   // Add caption if provided
   if (content.instagram_caption) {
     containerParams.append("caption", content.instagram_caption);
   }
 
-  // Add alt text if provided (supported as of March 2025)
-  if (content.instagram_alt_text) {
+  // Alt text only applies to image posts.
+  if (!isVideo && content.instagram_alt_text) {
     containerParams.append("alt_text", content.instagram_alt_text);
   }
 
@@ -97,8 +105,31 @@ export async function publishToInstagramDirectly(userId, target, content) {
   }
 
   // Step 2: Publish the container
-  // Wait a moment for the container to be ready (Instagram recommends a short delay)
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  // Video containers can take longer to process than image containers.
+  if (isVideo) {
+    const statusUrl = `${IG_GRAPH_BASE}/${containerId}?fields=status_code,status&access_token=${encodeURIComponent(accessToken)}`;
+    let ready = false;
+    for (let i = 0; i < 18; i += 1) {
+      const statusResponse = await fetch(statusUrl, { method: "GET" });
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        const statusCode = String(statusData?.status_code || statusData?.status || "").toUpperCase();
+        if (statusCode === "FINISHED") {
+          ready = true;
+          break;
+        }
+        if (statusCode === "ERROR" || statusCode === "EXPIRED") {
+          throw new Error(`Instagram video processing failed (${statusCode}).`);
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+    if (!ready) {
+      throw new Error("Instagram video is still processing. Try again in a few moments.");
+    }
+  } else {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
 
   const publishParams = new URLSearchParams({
     access_token: accessToken,

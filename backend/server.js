@@ -23,6 +23,12 @@ import { getMetaAuthUrl, metaCallback, syncMeta } from "./routes/social/meta.js"
 import { getInstagramAuthUrl, instagramCallback, syncInstagram } from "./routes/social/instagram.js";
 import { createPostHandler, runSchedulerHandler } from "./routes/social/posting.js";
 import { createPostNowHandler } from "./routes/social/posting/now/index.js";
+import {
+  createPostToAllNowHandler,
+  createPostToAllMediaUploadHandler,
+  getPostToAllPreferencesHandler,
+  updatePostToAllPreferencesHandler,
+} from "./routes/social/posting/all/index.js";
 import { createSchedulePostHandler, getScheduledPostsHandler, deleteScheduledPostHandler } from "./routes/social/posting/schedule/index.js";
 import { createAutomatePostHandler, getAutomatePostsHandler, deleteAutomatePostHandler } from "./routes/social/posting/automate/index.js";
 import { runDueScheduledPosts } from "./services/socialPostingService.js";
@@ -128,6 +134,10 @@ app.post("/api/social/post", createPostHandler);
 
 // Immediate posting (Post Now)
 app.post("/api/social/post/now", createPostNowHandler);
+app.post("/api/social/post/all/now", createPostToAllNowHandler);
+app.post("/api/social/post/all/media/upload", createPostToAllMediaUploadHandler);
+app.get("/api/social/post/all/preferences", getPostToAllPreferencesHandler);
+app.put("/api/social/post/all/preferences", updatePostToAllPreferencesHandler);
 
 // Scheduled posting
 app.post("/api/social/post/schedule", createSchedulePostHandler);
