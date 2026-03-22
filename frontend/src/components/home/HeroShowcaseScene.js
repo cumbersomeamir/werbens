@@ -261,7 +261,7 @@ export function HeroShowcaseScene() {
       />
 
       <div className="pointer-events-none absolute inset-0 z-[2] flex flex-col justify-between p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
           <div>
             <p className="text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-werbens-light-cyan/74 sm:text-[0.68rem]">
               Live showcase
@@ -269,9 +269,6 @@ export function HeroShowcaseScene() {
             <p className="font-display mt-2 text-[1.35rem] font-bold text-white sm:text-[1.7rem]">
               Brand engine in motion
             </p>
-          </div>
-          <div className="rounded-full border border-werbens-light-cyan/18 bg-werbens-light-cyan/10 px-2.5 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-werbens-light-cyan sm:text-[0.62rem]">
-            Three.js
           </div>
         </div>
 
