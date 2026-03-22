@@ -20,9 +20,10 @@ export function HeroSection() {
       <div className="absolute left-[10%] top-[12%] h-64 w-64 rounded-full bg-werbens-light-cyan/10 blur-[120px] animate-aurora" />
       <div className="absolute right-[8%] top-[28%] h-80 w-80 rounded-full bg-werbens-dark-cyan/26 blur-[140px] animate-aurora" />
       <div className="absolute bottom-[8%] left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-werbens-light-cyan/8 blur-[170px] animate-drift-x" />
+      <HeroShowcaseScene />
 
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pb-24 sm:pt-10 md:pb-28 md:pt-12">
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.98fr)_minmax(340px,1.02fr)] lg:gap-x-12 lg:gap-y-10">
+        <div className="max-w-3xl">
           <div className="max-w-3xl">
             <span className="section-kicker animate-fade-in-up stagger-1">
               AI-Powered Content Creation Platform
@@ -45,11 +46,7 @@ export function HeroSection() {
             </p>
           </div>
 
-          <div className="animate-fade-in-up stagger-4">
-            <HeroShowcaseScene />
-          </div>
-
-          <div className="animate-fade-in-up stagger-5 lg:max-w-3xl">
+          <div className="animate-fade-in-up stagger-5 mt-8 lg:max-w-3xl">
             <div className="flex flex-col gap-4 sm:flex-row">
               <Link
                 href="/onboarding"
@@ -79,11 +76,11 @@ export function HeroSection() {
               </Link>
             </div>
 
-            <div className="mt-10 hidden gap-4 sm:grid sm:grid-cols-3">
+            <div className="mt-10 grid max-w-[34rem] gap-4 sm:grid-cols-3">
               {HERO_METRICS.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-[1.35rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl"
+                  className="rounded-[1.35rem] border border-white/10 bg-[#08131f]/48 px-5 py-4 backdrop-blur-xl"
                 >
                   <div className="font-display text-2xl font-bold text-white sm:text-[2rem]">
                     {item.value}
