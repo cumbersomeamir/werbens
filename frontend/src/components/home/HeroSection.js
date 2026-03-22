@@ -1,58 +1,229 @@
 import Link from "next/link";
 
+const PLATFORM_PREVIEWS = [
+  { label: "Instagram", title: "Summer drop teaser", progress: "92%" },
+  { label: "LinkedIn", title: "Founder point of view", progress: "88%" },
+  { label: "Email", title: "Launch sequence draft", progress: "95%" },
+];
+
+const HERO_METRICS = [
+  { value: "97%", label: "brand voice match" },
+  { value: "24", label: "posts queued this week" },
+  { value: "< 8 min", label: "from brief to publish" },
+];
+
 export function HeroSection() {
   return (
     <section
-      className="noise relative min-h-[90vh] flex flex-col justify-center overflow-hidden bg-werbens-midnight"
+      className="noise relative isolate overflow-hidden bg-werbens-midnight text-werbens-alt-text"
       aria-labelledby="hero-heading"
     >
-      {/* Layered gradient overlays for depth */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(127,231,220,0.15),transparent)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_80%_50%,rgba(0,139,139,0.12),transparent)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_20%_80%,rgba(0,139,139,0.08),transparent)]" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-werbens-midnight/80" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(127,231,220,0.16),transparent_34%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_18%,rgba(92,224,210,0.12),transparent_28%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(7,16,28,0.96),rgba(6,21,35,0.85)_58%,rgba(8,14,24,0.97))]" />
+      <div className="hero-grid absolute inset-0 opacity-35" />
+      <div className="absolute left-[10%] top-[12%] h-64 w-64 rounded-full bg-werbens-light-cyan/12 blur-[120px] animate-aurora" />
+      <div className="absolute right-[8%] top-[28%] h-80 w-80 rounded-full bg-werbens-dark-cyan/30 blur-[140px] animate-aurora" />
+      <div className="absolute bottom-[4%] left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-werbens-light-cyan/10 blur-[160px] animate-drift-x" />
 
-      {/* Animated floating orbs */}
-      <div className="absolute top-[15%] right-[10%] w-72 h-72 rounded-full bg-werbens-light-cyan/8 blur-3xl animate-float" />
-      <div className="absolute bottom-[20%] left-[5%] w-96 h-96 rounded-full bg-werbens-dark-cyan/10 blur-3xl animate-float-slow" />
-      <div className="absolute top-[50%] left-[40%] w-56 h-56 rounded-full bg-werbens-light-cyan/5 blur-2xl animate-float-slow" />
-      <div className="absolute top-[10%] left-[20%] w-40 h-40 rounded-full bg-werbens-dark-cyan/8 blur-2xl animate-float" />
+      <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 sm:pb-24 sm:pt-10 md:pb-28 md:pt-12">
+        <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
+          <div className="max-w-3xl">
+            <span className="section-kicker animate-fade-in-up stagger-1">
+              AI-Powered Content Creation Platform
+            </span>
 
-      {/* Content */}
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-24 sm:py-32 md:py-40 text-center">
-        <p className="animate-fade-in-up stagger-1 text-werbens-light-cyan/70 font-medium uppercase tracking-[0.2em] sm:tracking-[0.25em] text-xs sm:text-sm mb-6 sm:mb-8">
-          AI-Powered Content Creation Platform
-        </p>
+            <h1
+              id="hero-heading"
+              className="font-display animate-fade-in-up stagger-2 mt-7 text-[3.35rem] font-bold leading-[0.94] text-balance sm:text-[4.6rem] lg:text-[5.7rem]"
+            >
+              <span className="gradient-text-light">Create content.</span>
+              <br />
+              <span className="text-white/78">Automatically.</span>
+            </h1>
 
-        <h1
-          id="hero-heading"
-          className="animate-fade-in-up stagger-2 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05]"
-        >
-          <span className="gradient-text-light">Create content.</span>
-          <br />
-          <span className="text-werbens-muted">Automatically.</span>
-        </h1>
+            <p className="animate-fade-in-up stagger-3 mt-7 max-w-2xl text-lg leading-relaxed text-werbens-cloud/72 sm:text-xl md:text-[1.42rem]">
+              Werbens is the autonomous content creation platform that
+              generates brand-consistent social media posts, ad copy, emails,
+              and marketing campaigns at scale. Save hours every week with AI
+              that understands your voice.
+            </p>
 
-        <p className="animate-fade-in-up stagger-3 mt-8 sm:mt-10 text-lg sm:text-xl md:text-2xl text-werbens-cloud/70 max-w-2xl mx-auto leading-relaxed px-1">
-          Werbens is the autonomous content creation platform that generates
-          brand-consistent social media posts, ad copy, emails, and marketing
-          campaigns at scale. Save hours every week with AI that understands
-          your voice.
-        </p>
+            <div className="animate-fade-in-up stagger-4 mt-9 flex flex-col gap-4 sm:flex-row">
+              <Link
+                href="/onboarding"
+                className="group inline-flex min-h-[56px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-werbens-light-cyan to-[#a3f3ea] px-8 py-4 text-base font-semibold text-werbens-midnight shadow-[0_20px_55px_rgba(127,231,220,0.2)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_26px_70px_rgba(127,231,220,0.28)]"
+              >
+                Start creating free
+                <svg
+                  className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex min-h-[56px] items-center justify-center rounded-2xl border border-white/12 bg-white/5 px-8 py-4 text-base font-semibold text-white/88 backdrop-blur-xl transition-all duration-300 hover:border-werbens-light-cyan/28 hover:bg-white/8"
+              >
+                Sign in
+              </Link>
+            </div>
 
-        <div className="animate-fade-in-up stagger-4 mt-10 sm:mt-14 flex flex-col sm:flex-row flex-wrap justify-center gap-4 sm:gap-5">
-          <Link
-            href="/onboarding"
-            className="group relative px-8 sm:px-10 py-4 sm:py-4.5 rounded-2xl bg-werbens-light-cyan text-werbens-midnight font-semibold text-base sm:text-lg transition-all duration-300 hover:scale-105 glow shadow-elevated min-h-[48px] flex items-center justify-center hover:animate-pulse-glow"
-          >
-            Start creating free
-          </Link>
-          <Link
-            href="/login"
-            className="glass-dark px-8 sm:px-10 py-4 sm:py-4.5 rounded-2xl border border-werbens-light-cyan/20 text-werbens-cloud font-semibold text-base sm:text-lg hover:border-werbens-light-cyan/40 hover:bg-werbens-light-cyan/5 transition-all duration-300 min-h-[48px] flex items-center justify-center"
-          >
-            Sign in
-          </Link>
+            <div className="animate-fade-in-up stagger-5 mt-10 grid gap-4 sm:grid-cols-3">
+              {HERO_METRICS.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[1.35rem] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl"
+                >
+                  <div className="font-display text-2xl font-bold text-white sm:text-[2rem]">
+                    {item.value}
+                  </div>
+                  <div className="mt-1 text-sm uppercase tracking-[0.18em] text-werbens-cloud/54">
+                    {item.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-[35rem] animate-fade-in-up stagger-3">
+            <div className="absolute inset-0 rounded-[2.2rem] bg-gradient-to-br from-werbens-light-cyan/28 via-transparent to-werbens-dark-cyan/26 blur-3xl" />
+            <div className="absolute -left-3 bottom-12 hidden rounded-2xl border border-white/12 bg-[#071524]/88 px-4 py-3 text-sm font-semibold text-white/86 shadow-[0_24px_60px_rgba(3,8,20,0.28)] backdrop-blur-xl sm:flex animate-float-card">
+              Voice locked in
+            </div>
+            <div className="absolute -right-3 top-10 hidden rounded-2xl border border-werbens-light-cyan/20 bg-werbens-light-cyan/12 px-4 py-3 text-sm font-semibold text-werbens-light-cyan shadow-[0_24px_60px_rgba(3,8,20,0.28)] backdrop-blur-xl sm:flex animate-float-card">
+              24 approvals waiting
+            </div>
+
+            <div className="panel-surface-dark relative rounded-[2.2rem] p-4 sm:p-5">
+              <div className="grid-fade soft-outline relative overflow-hidden rounded-[1.65rem] bg-[#06111d] p-4 sm:p-6">
+                <div className="flex items-center justify-between gap-4 border-b border-white/8 pb-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-werbens-light-cyan/72">
+                      Campaign cockpit
+                    </p>
+                    <p className="mt-2 font-display text-2xl font-bold text-white sm:text-[2rem]">
+                      Output ready to ship
+                    </p>
+                  </div>
+                  <div className="rounded-full border border-werbens-light-cyan/18 bg-werbens-light-cyan/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-werbens-light-cyan">
+                    Live
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-4 lg:grid-cols-[1.18fr_0.82fr]">
+                  <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.04] p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/42">
+                          Brand profile
+                        </p>
+                        <p className="mt-2 font-display text-3xl font-bold text-white">
+                          97% match
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-werbens-light-cyan/10 px-3 py-2 text-right">
+                        <p className="text-xs uppercase tracking-[0.18em] text-werbens-light-cyan/70">
+                          Status
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-werbens-light-cyan">
+                          Locked
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 overflow-hidden rounded-full bg-white/6">
+                      <span className="animate-signal block h-3 rounded-full bg-gradient-to-r from-werbens-light-cyan via-[#9ff4e8] to-white" />
+                    </div>
+
+                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-2xl bg-white/[0.03] px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.18em] text-white/42">
+                          Tone stack
+                        </p>
+                        <p className="mt-2 text-sm font-medium text-white/76">
+                          Crisp, credible, conversion-ready
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-white/[0.03] px-4 py-3">
+                        <p className="text-xs uppercase tracking-[0.18em] text-white/42">
+                          Autonomy
+                        </p>
+                        <p className="mt-2 text-sm font-medium text-white/76">
+                          Drafts, sequences, approvals
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.04] p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/42">
+                        Queue health
+                      </p>
+                      <p className="mt-3 font-display text-4xl font-bold text-white">
+                        18
+                      </p>
+                      <p className="mt-2 text-sm text-white/62">
+                        assets scheduled across this week
+                      </p>
+                    </div>
+                    <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.04] p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/42">
+                        Approval speed
+                      </p>
+                      <div className="mt-3 flex items-end gap-2">
+                        <span className="font-display text-4xl font-bold text-white">
+                          3.1x
+                        </span>
+                        <span className="pb-1 text-sm font-semibold text-werbens-light-cyan">
+                          faster
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm text-white/62">
+                        from brief to campaign-ready output
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  {PLATFORM_PREVIEWS.map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-[1.35rem] border border-white/8 bg-white/[0.04] p-4"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xs font-semibold uppercase tracking-[0.22em] text-white/44">
+                          {item.label}
+                        </span>
+                        <span className="rounded-full bg-werbens-light-cyan/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-werbens-light-cyan">
+                          {item.progress}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-base font-semibold text-white/88">
+                        {item.title}
+                      </p>
+                      <div className="mt-4 space-y-2">
+                        <span className="block h-2.5 rounded-full bg-white/10" />
+                        <span className="block h-2.5 w-4/5 rounded-full bg-white/8" />
+                        <span className="block h-2.5 w-3/5 rounded-full bg-gradient-to-r from-werbens-light-cyan/80 to-white/60" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

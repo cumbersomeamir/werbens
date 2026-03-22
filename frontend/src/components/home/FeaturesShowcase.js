@@ -1,76 +1,111 @@
+const FEATURES = [
+  {
+    icon: "01",
+    title: "Brand voice cloning",
+    desc: "AI learns your tone, vocabulary, and cadence so every draft sounds like your team wrote it.",
+  },
+  {
+    icon: "02",
+    title: "Multi-platform publishing",
+    desc: "Turn one brief into content for Instagram, LinkedIn, X, email, and more without rebuilding it channel by channel.",
+  },
+  {
+    icon: "03",
+    title: "Performance insights",
+    desc: "See what resonates and feed those learnings back into the next round of content automatically.",
+  },
+  {
+    icon: "04",
+    title: "Automated workflows",
+    desc: "Queue drafts, approvals, and scheduling in one place so content moves forward without manual chasing.",
+  },
+  {
+    icon: "05",
+    title: "Audience segmentation",
+    desc: "Generate variants for different audiences while keeping one consistent brand system underneath.",
+  },
+  {
+    icon: "06",
+    title: "Enterprise security",
+    desc: "Protect brand assets with role-based access, secure infrastructure, and team-friendly governance controls.",
+  },
+];
+
 export function FeaturesShowcase() {
-  const features = [
-    {
-      icon: "\u2728",
-      title: "Brand voice cloning",
-      desc: "AI learns your unique tone, vocabulary, and style. Every piece of content sounds like you wrote it\u2014because the AI was trained on your best work.",
-    },
-    {
-      icon: "\uD83D\uDE80",
-      title: "Multi-platform publishing",
-      desc: "Create once, publish everywhere. Instagram captions, LinkedIn posts, Twitter threads, email subject lines\u2014all optimized per platform from a single input.",
-    },
-    {
-      icon: "\uD83D\uDCCA",
-      title: "Performance insights",
-      desc: "Track what works. Werbens analyzes engagement, suggests improvements, and automatically optimizes future content based on your audience data.",
-    },
-    {
-      icon: "\uD83D\uDD04",
-      title: "Automated workflows",
-      desc: "Set schedules, triggers, and approval flows. Content goes from draft to published without manual handoffs. Perfect for teams and agencies.",
-    },
-    {
-      icon: "\uD83C\uDFAF",
-      title: "Audience segmentation",
-      desc: "Tailor messages to different customer segments. B2B vs B2C, new vs returning\u2014Werbens generates variants that resonate with each group.",
-    },
-    {
-      icon: "\uD83D\uDD12",
-      title: "Enterprise security",
-      desc: "SOC 2 compliant, GDPR ready. Your brand assets and customer data stay protected with role-based access and audit logs.",
-    },
-  ];
-
-  const staggerClass = [
-    "stagger-1",
-    "stagger-2",
-    "stagger-3",
-    "stagger-4",
-    "stagger-5",
-    "stagger-6",
-  ];
-
   return (
-    <section className="py-16 sm:py-20 md:py-28 bg-gradient-to-b from-werbens-mist to-werbens-surface">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-20">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-werbens-dark-cyan mb-4 sm:mb-5 tracking-tight">
-            Everything you need for{" "}
-            <span className="gradient-text">content at scale</span>
-          </h2>
-          <p className="text-base sm:text-lg text-werbens-text/70 leading-relaxed">
-            Werbens combines AI writing, brand management, and cross-channel
-            publishing in one platform. No more juggling tools or losing your
-            voice.
-          </p>
+    <section className="relative overflow-hidden bg-white py-16 sm:py-20 md:py-28">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(127,231,220,0.12),transparent_24%)]" />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+          <div className="max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-werbens-dark-cyan/54">
+              Platform capabilities
+            </p>
+            <h2 className="font-display mt-4 text-4xl font-bold text-werbens-text sm:text-[3.15rem]">
+              Everything needed to run content as a system.
+            </h2>
+            <p className="mt-5 text-lg leading-relaxed text-werbens-text/68">
+              Werbens combines AI writing, brand management, analytics, and
+              publishing into one refined workflow instead of a stack of
+              disconnected tools.
+            </p>
+          </div>
+
+          <div className="panel-surface rounded-[2rem] px-5 py-5 sm:px-6">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-[1.4rem] bg-werbens-midnight px-4 py-5 text-white">
+                <p className="text-xs uppercase tracking-[0.24em] text-white/44">
+                  Channels
+                </p>
+                <p className="font-display mt-3 text-3xl font-bold">12+</p>
+                <p className="mt-2 text-sm text-white/60">
+                  connected publishing surfaces
+                </p>
+              </div>
+              <div className="rounded-[1.4rem] bg-white px-4 py-5 shadow-[0_18px_35px_rgba(7,16,32,0.06)]">
+                <p className="text-xs uppercase tracking-[0.24em] text-werbens-muted">
+                  Workflows
+                </p>
+                <p className="font-display mt-3 text-3xl font-bold text-werbens-dark-cyan">
+                  1 hub
+                </p>
+                <p className="mt-2 text-sm text-werbens-text/62">
+                  for briefs, drafts, and approvals
+                </p>
+              </div>
+              <div className="rounded-[1.4rem] bg-gradient-to-br from-werbens-dark-cyan to-werbens-light-cyan px-4 py-5 text-white shadow-[0_22px_40px_rgba(49,104,121,0.2)]">
+                <p className="text-xs uppercase tracking-[0.24em] text-white/62">
+                  Lift
+                </p>
+                <p className="font-display mt-3 text-3xl font-bold">10x</p>
+                <p className="mt-2 text-sm text-white/76">
+                  faster content production
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
-          {features.map((f, i) => (
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {FEATURES.map((feature, index) => (
             <article
-              key={i}
-              className={`group glass bg-white/80 rounded-2xl p-7 sm:p-8 border border-werbens-steel/20 shadow-elevated hover-lift hover:glow-sm hover:border-werbens-light-cyan/40 transition-all duration-500 animate-fade-in-up ${staggerClass[i]}`}
+              key={feature.title}
+              className={`group panel-surface rounded-[1.8rem] p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_50px_rgba(7,16,32,0.09)] animate-fade-in-up stagger-${(index % 6) + 1}`}
             >
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-werbens-dark-cyan to-werbens-light-cyan flex items-center justify-center mb-5 shadow-lg shadow-werbens-dark-cyan/20 group-hover:shadow-werbens-light-cyan/30 transition-shadow duration-500">
-                <span className="text-2xl leading-none filter brightness-0 invert">
-                  {f.icon}
+              <div className="flex items-start justify-between gap-4">
+                <span className="font-display text-[2.4rem] font-bold text-werbens-dark-cyan/88">
+                  {feature.icon}
+                </span>
+                <span className="rounded-full border border-werbens-light-cyan/30 bg-werbens-light-cyan/12 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-werbens-dark-cyan">
+                  Active
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-werbens-dark-cyan mb-2.5 group-hover:text-werbens-dark-cyan/90 transition-colors duration-300">
-                {f.title}
+
+              <h3 className="font-display mt-8 text-2xl font-bold text-werbens-text">
+                {feature.title}
               </h3>
-              <p className="text-werbens-text/70 leading-relaxed text-[0.938rem]">
-                {f.desc}
+              <p className="mt-4 text-base leading-relaxed text-werbens-text/70">
+                {feature.desc}
               </p>
             </article>
           ))}

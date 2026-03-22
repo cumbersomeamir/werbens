@@ -450,66 +450,77 @@ export function Header() {
 
   return (
     <header
-      className={`
-        fixed top-0 left-0 right-0 z-50
-        glass shadow-elevated border-b border-white/10
-        transition-all duration-500 ease-out
-      `}
+      className="fixed inset-x-0 top-0 z-50 px-3 sm:px-6"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <div className="mx-auto max-w-7xl">
         <div
           className={`
-            flex items-center justify-between
+            panel-surface overflow-hidden rounded-[1.75rem] sm:rounded-[2rem]
             transition-all duration-500 ease-out
-            ${scrolled ? "py-3" : "py-5"}
+            ${scrolled ? "shadow-[0_18px_45px_rgba(7,16,32,0.12)]" : "shadow-[0_24px_60px_rgba(7,16,32,0.14)]"}
           `}
         >
-          {/* Logo */}
-          <Link
-            href="/"
-            className="
-              group relative flex items-center gap-2
-              transition-transform duration-300 ease-out
-              hover:scale-[1.02] active:scale-[0.98]
-            "
-          >
-            <span className="gradient-text text-xl font-bold tracking-tight">
-              Werbens
-            </span>
-          </Link>
+          <div className="flex items-center justify-between px-5 sm:px-7">
+            <div
+              className={`
+                flex w-full items-center justify-between
+                transition-all duration-500 ease-out
+                ${scrolled ? "min-h-[68px]" : "min-h-[78px]"}
+              `}
+            >
+              <Link
+                href="/"
+                className="
+                  group relative inline-flex items-center gap-3 rounded-2xl py-1 pr-3
+                  transition-transform duration-300 ease-out
+                  hover:scale-[1.02] active:scale-[0.98]
+                "
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-werbens-dark-cyan to-werbens-light-cyan text-sm font-black text-white shadow-lg shadow-werbens-dark-cyan/15">
+                  W
+                </span>
+                <span className="min-w-0">
+                  <span className="font-display gradient-text block text-[1.65rem] font-bold leading-none sm:text-[1.9rem]">
+                    Werbens
+                  </span>
+                  <span className="block pt-1 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-werbens-dark-cyan/52">
+                    AI content system
+                  </span>
+                </span>
+              </Link>
 
-          {/* Desktop navigation */}
-          <DesktopNav pathname={pathname} />
+              <DesktopNav pathname={pathname} />
 
-          {/* Mobile menu toggle */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            className="
-              md:hidden relative p-2.5 -mr-2 rounded-xl
-              text-werbens-text
-              transition-all duration-300 ease-out
-              hover:text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5
-              active:scale-95
-              min-h-[44px] min-w-[44px]
-              flex items-center justify-center
-              focus-ring
-            "
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav"
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-          >
-            <HamburgerIcon isOpen={menuOpen} />
-          </button>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((prev) => !prev)}
+                className="
+                  md:hidden relative rounded-2xl border border-werbens-dark-cyan/10 bg-white/65 p-2.5
+                  text-werbens-text
+                  transition-all duration-300 ease-out
+                  hover:text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5
+                  active:scale-95
+                  min-h-[46px] min-w-[46px]
+                  flex items-center justify-center
+                  focus-ring
+                "
+                aria-expanded={menuOpen}
+                aria-controls="mobile-nav"
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
+              >
+                <HamburgerIcon isOpen={menuOpen} />
+              </button>
+            </div>
+          </div>
+
+          <MobileNav
+            pathname={pathname}
+            isOpen={menuOpen}
+            onClose={() => setMenuOpen(false)}
+          />
         </div>
       </div>
-
-      {/* Mobile navigation */}
-      <MobileNav
-        pathname={pathname}
-        isOpen={menuOpen}
-        onClose={() => setMenuOpen(false)}
-      />
     </header>
   );
 }

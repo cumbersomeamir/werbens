@@ -2,6 +2,19 @@ import "./globals.css";
 import { AuthSessionProvider } from "@/components/SessionProvider";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Header } from "@/components/Header";
+import { Manrope, Space_Grotesk } from "next/font/google";
+
+const bodyFont = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const displayFont = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const viewport = {
   width: "device-width",
@@ -36,11 +49,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${bodyFont.variable} ${displayFont.variable}`}>
         <AuthSessionProvider>
           <AuthGuard>
             <Header />
-            <div className="pt-20">
+            <div className="pt-28 sm:pt-32">
               {children}
             </div>
           </AuthGuard>

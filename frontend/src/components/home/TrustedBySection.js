@@ -1,36 +1,42 @@
+const TRAITS = [
+  { stat: "10,000+", label: "creators trust us" },
+  { stat: "50M+", label: "content pieces generated" },
+  { stat: "99.9%", label: "uptime guaranteed" },
+  { stat: "Enterprise", label: "grade security" },
+];
+
 export function TrustedBySection() {
-  const traits = [
-    { stat: "10,000+", label: "creators trust us" },
-    { stat: "50M+", label: "content pieces generated" },
-    { stat: "99.9%", label: "uptime guaranteed" },
-    { stat: "Enterprise", label: "grade security" },
-  ];
-
   return (
-    <section className="py-14 sm:py-18 md:py-24 bg-gradient-to-b from-werbens-surface to-werbens-mist/30 border-y border-werbens-dark-cyan/8">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <p className="animate-fade-in-up stagger-1 text-center text-xs sm:text-sm font-semibold text-werbens-muted uppercase tracking-[0.2em] mb-10 sm:mb-14">
-          Trusted by marketing teams worldwide
-        </p>
-
-        <div className="flex flex-wrap justify-center items-center gap-y-8">
-          {traits.map((trait, i) => (
-            <div key={i} className="flex items-center">
-              <div
-                className={`animate-fade-in-up stagger-${i + 2} text-center px-6 sm:px-8 md:px-12`}
-              >
-                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-werbens-dark-cyan tracking-tight">
-                  {trait.stat}
-                </p>
-                <p className="mt-1.5 text-sm sm:text-base text-werbens-text/60 font-medium">
-                  {trait.label}
-                </p>
-              </div>
-              {i < traits.length - 1 && (
-                <span className="hidden md:block w-1 h-1 rounded-full bg-werbens-dark-cyan/30 flex-shrink-0" />
-              )}
+    <section className="relative -mt-12 pb-10 sm:-mt-16 sm:pb-14">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="panel-surface relative overflow-hidden rounded-[2rem] px-5 py-6 sm:px-8 sm:py-8">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-werbens-light-cyan/70 to-transparent" />
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-werbens-dark-cyan/56">
+                Trusted by marketing teams worldwide
+              </p>
+              <p className="mt-3 font-display text-2xl font-bold text-werbens-text sm:text-[2.2rem]">
+                Built to scale output without losing your brand.
+              </p>
             </div>
-          ))}
+
+            <div className="grid flex-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {TRAITS.map((trait, index) => (
+                <div
+                  key={trait.label}
+                  className={`rounded-[1.4rem] border border-werbens-dark-cyan/8 bg-white/72 px-4 py-4 shadow-[0_16px_40px_rgba(7,16,32,0.06)] animate-fade-in-up stagger-${index + 1}`}
+                >
+                  <p className="font-display text-[1.8rem] font-bold text-werbens-dark-cyan sm:text-[2.1rem]">
+                    {trait.stat}
+                  </p>
+                  <p className="mt-2 text-sm uppercase tracking-[0.16em] text-werbens-muted">
+                    {trait.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
