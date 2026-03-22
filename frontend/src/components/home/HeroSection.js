@@ -26,7 +26,7 @@ export function HeroSection() {
       <div className="absolute right-[8%] top-[28%] h-80 w-80 rounded-full bg-werbens-dark-cyan/30 blur-[140px] animate-aurora" />
       <div className="absolute bottom-[4%] left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-werbens-light-cyan/10 blur-[160px] animate-drift-x" />
 
-      <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 sm:pb-24 sm:pt-10 md:pb-28 md:pt-12">
+      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pb-24 sm:pt-10 md:pb-28 md:pt-12">
         <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
           <div className="max-w-3xl">
             <span className="section-kicker animate-fade-in-up stagger-1">
@@ -35,14 +35,14 @@ export function HeroSection() {
 
             <h1
               id="hero-heading"
-              className="font-display animate-fade-in-up stagger-2 mt-7 text-[3.35rem] font-bold leading-[0.94] text-balance sm:text-[4.6rem] lg:text-[5.7rem]"
+              className="font-display animate-fade-in-up stagger-2 mt-7 text-[3rem] font-bold leading-[0.94] text-balance sm:text-[4.6rem] lg:text-[5.7rem]"
             >
               <span className="gradient-text-light">Create content.</span>
               <br />
               <span className="text-white/78">Automatically.</span>
             </h1>
 
-            <p className="animate-fade-in-up stagger-3 mt-7 max-w-2xl text-lg leading-relaxed text-werbens-cloud/72 sm:text-xl md:text-[1.42rem]">
+            <p className="animate-fade-in-up stagger-3 mt-6 max-w-2xl text-[1.02rem] leading-relaxed text-werbens-cloud/72 sm:mt-7 sm:text-xl md:text-[1.42rem]">
               Werbens is the autonomous content creation platform that
               generates brand-consistent social media posts, ad copy, emails,
               and marketing campaigns at scale. Save hours every week with AI
@@ -78,7 +78,58 @@ export function HeroSection() {
               </Link>
             </div>
 
-            <div className="animate-fade-in-up stagger-5 mt-10 grid gap-4 sm:grid-cols-3">
+            <div className="panel-surface-dark animate-fade-in-up stagger-5 mt-7 rounded-[1.8rem] p-4 sm:hidden">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-werbens-light-cyan/72">
+                    Campaign cockpit
+                  </p>
+                  <p className="font-display mt-2 text-[1.45rem] font-bold text-white">
+                    Output ready to ship
+                  </p>
+                </div>
+                <div className="rounded-full border border-werbens-light-cyan/18 bg-werbens-light-cyan/12 px-2.5 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-werbens-light-cyan">
+                  Live
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-[1.15rem] border border-white/8 bg-white/[0.04] px-3 py-3">
+                  <p className="text-[0.62rem] uppercase tracking-[0.16em] text-white/42">
+                    Brand profile
+                  </p>
+                  <p className="font-display mt-2 text-2xl font-bold text-white">
+                    97% match
+                  </p>
+                </div>
+                <div className="rounded-[1.15rem] border border-white/8 bg-white/[0.04] px-3 py-3">
+                  <p className="text-[0.62rem] uppercase tracking-[0.16em] text-white/42">
+                    Queue health
+                  </p>
+                  <p className="font-display mt-2 text-2xl font-bold text-white">
+                    24
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {PLATFORM_PREVIEWS.map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3"
+                  >
+                    <p className="text-[0.54rem] font-semibold uppercase tracking-[0.16em] text-white/44">
+                      {item.label}
+                    </p>
+                    <p className="mt-2 text-[0.76rem] font-medium leading-snug text-white/84">
+                      {item.title}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="animate-fade-in-up stagger-5 mt-10 hidden gap-4 sm:grid sm:grid-cols-3">
               {HERO_METRICS.map((item) => (
                 <div
                   key={item.label}
@@ -95,7 +146,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[35rem] animate-fade-in-up stagger-3">
+          <div className="relative mx-auto hidden w-full max-w-[35rem] animate-fade-in-up stagger-3 sm:block">
             <div className="absolute inset-0 rounded-[2.2rem] bg-gradient-to-br from-werbens-light-cyan/28 via-transparent to-werbens-dark-cyan/26 blur-3xl" />
             <div className="absolute -left-3 bottom-12 hidden rounded-2xl border border-white/12 bg-[#071524]/88 px-4 py-3 text-sm font-semibold text-white/86 shadow-[0_24px_60px_rgba(3,8,20,0.28)] backdrop-blur-xl sm:flex animate-float-card">
               Voice locked in
