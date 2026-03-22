@@ -599,7 +599,7 @@ export function HeroShowcaseScene() {
   }, []);
 
   return (
-    <div className="panel-surface-dark relative h-[15.5rem] overflow-hidden rounded-[2rem] border border-white/8 bg-[#06111d]/84 sm:h-[18rem] lg:h-[28rem]">
+    <div className="relative h-[15.5rem] overflow-hidden rounded-[2rem] bg-[linear-gradient(180deg,rgba(9,16,30,0.94),rgba(8,20,34,0.78))] shadow-[0_30px_80px_rgba(3,8,20,0.45),inset_0_1px_0_rgba(255,255,255,0.06)] [backdrop-filter:blur(24px)_saturate(180%)] sm:h-[18rem] lg:h-[28rem]">
       <div
         ref={containerRef}
         className="absolute inset-0"
