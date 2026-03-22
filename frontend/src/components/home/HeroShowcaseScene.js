@@ -241,20 +241,20 @@ export function HeroShowcaseScene() {
       className="pointer-events-none absolute inset-0 overflow-hidden"
       aria-hidden="true"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_42%,rgba(127,231,220,0.18),transparent_22%)]" />
-      <div className="absolute right-[-16%] top-[14%] h-[18rem] w-[18rem] rounded-full bg-gradient-to-br from-[#aaf9f0]/82 via-[#7fe7dc]/72 to-[#46aebd]/58 opacity-75 blur-[2px] sm:right-[-6%] sm:top-[12%] sm:h-[24rem] sm:w-[24rem] lg:right-[8%] lg:top-[14%] lg:h-[31rem] lg:w-[31rem]" />
-      <div className="absolute right-[-8%] top-[8%] h-[26rem] w-[26rem] rounded-full border border-white/10 opacity-45 sm:right-[2%] sm:h-[34rem] sm:w-[34rem] lg:right-[12%] lg:h-[42rem] lg:w-[42rem]" />
-      <div className="absolute right-[8%] top-[16%] h-[22rem] w-[22rem] rounded-full border border-werbens-light-cyan/14 opacity-55 sm:right-[14%] sm:h-[28rem] sm:w-[28rem] lg:right-[18%] lg:h-[36rem] lg:w-[36rem]" />
-      <div className="absolute right-[-2%] top-[18%] h-[18rem] w-[26rem] rotate-[36deg] rounded-full border-[10px] border-white/20 opacity-65 sm:right-[4%] sm:h-[24rem] sm:w-[34rem] lg:right-[14%] lg:h-[30rem] lg:w-[45rem]" />
-      <div className="absolute right-[14%] top-[8%] h-[22rem] w-[3.8rem] rotate-[33deg] rounded-full bg-werbens-dark-cyan/28 opacity-75 blur-[1px] sm:right-[22%] sm:h-[28rem] sm:w-[4.6rem] lg:right-[28%] lg:h-[38rem] lg:w-[5.4rem]" />
-      <div className="absolute -right-[18%] top-1/2 h-[36rem] w-[36rem] -translate-y-1/2 rounded-full bg-werbens-light-cyan/8 blur-[110px] sm:-right-[8%] sm:h-[44rem] sm:w-[44rem] lg:right-[-2%] lg:h-[58rem] lg:w-[58rem]" />
-      <div className="absolute right-[6%] top-[14%] h-[24rem] w-[24rem] rounded-full border border-white/6 sm:right-[10%] sm:h-[32rem] sm:w-[32rem] lg:right-[16%] lg:h-[48rem] lg:w-[48rem]" />
-      <div className="absolute right-[14%] top-[22%] h-[18rem] w-[18rem] rounded-full border border-werbens-light-cyan/10 sm:right-[18%] sm:h-[24rem] sm:w-[24rem] lg:right-[24%] lg:h-[36rem] lg:w-[36rem]" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#07111d] via-[#07111d]/78 to-transparent lg:from-[#07111d] lg:via-[#07111d]/58 lg:to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#07111d]/14 via-transparent to-[#07111d]/64" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_42%,rgba(127,231,220,0.08),transparent_22%)] sm:bg-[radial-gradient(circle_at_72%_42%,rgba(127,231,220,0.18),transparent_22%)]" />
+      <div className="absolute right-[-30%] top-[28%] h-[15rem] w-[15rem] rounded-full bg-gradient-to-br from-[#aaf9f0]/18 via-[#7fe7dc]/14 to-[#46aebd]/12 opacity-45 blur-[12px] sm:right-[-6%] sm:top-[12%] sm:h-[24rem] sm:w-[24rem] sm:opacity-75 sm:blur-[2px] lg:right-[8%] lg:top-[14%] lg:h-[31rem] lg:w-[31rem]" />
+      <div className="absolute -right-[24%] top-1/2 h-[22rem] w-[22rem] -translate-y-1/2 rounded-full bg-werbens-light-cyan/6 blur-[100px] sm:-right-[8%] sm:h-[44rem] sm:w-[44rem] sm:bg-werbens-light-cyan/8 lg:right-[-2%] lg:h-[58rem] lg:w-[58rem]" />
+      <div className="hidden sm:block absolute right-[-8%] top-[8%] h-[26rem] w-[26rem] rounded-full border border-white/10 opacity-45 lg:right-[12%] lg:h-[42rem] lg:w-[42rem]" />
+      <div className="hidden sm:block absolute right-[14%] top-[16%] h-[28rem] w-[28rem] rounded-full border border-werbens-light-cyan/14 opacity-55 lg:right-[18%] lg:h-[36rem] lg:w-[36rem]" />
+      <div className="hidden sm:block absolute right-[4%] top-[18%] h-[24rem] w-[34rem] rotate-[36deg] rounded-full border-[10px] border-white/20 opacity-65 lg:right-[14%] lg:h-[30rem] lg:w-[45rem]" />
+      <div className="hidden sm:block absolute right-[22%] top-[8%] h-[28rem] w-[4.6rem] rotate-[33deg] rounded-full bg-werbens-dark-cyan/28 opacity-75 blur-[1px] lg:right-[28%] lg:h-[38rem] lg:w-[5.4rem]" />
+      <div className="hidden sm:block absolute right-[10%] top-[14%] h-[32rem] w-[32rem] rounded-full border border-white/6 lg:right-[16%] lg:h-[48rem] lg:w-[48rem]" />
+      <div className="hidden sm:block absolute right-[18%] top-[22%] h-[24rem] w-[24rem] rounded-full border border-werbens-light-cyan/10 lg:right-[24%] lg:h-[36rem] lg:w-[36rem]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#07111d] via-[#07111d]/90 to-[#07111d]/68 sm:via-[#07111d]/78 sm:to-transparent lg:from-[#07111d] lg:via-[#07111d]/58 lg:to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#07111d]/20 via-[#07111d]/12 to-[#07111d]/76 sm:from-[#07111d]/14 sm:via-transparent sm:to-[#07111d]/64" />
       <canvas
         ref={canvasRef}
-        className="absolute right-[-14%] top-1/2 z-[1] h-[120%] w-[145%] -translate-y-1/2 opacity-82 sm:right-[-8%] sm:w-[118%] lg:right-[-2%] lg:w-[82%]"
+        className="absolute right-[-52%] top-[56%] z-[1] h-[108%] w-[170%] -translate-y-1/2 opacity-16 sm:right-[-8%] sm:top-1/2 sm:h-[120%] sm:w-[118%] sm:opacity-82 lg:right-[-2%] lg:w-[82%]"
       />
     </div>
   );
