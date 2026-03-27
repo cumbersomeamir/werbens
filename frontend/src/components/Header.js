@@ -8,13 +8,13 @@ const NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/accounts", label: "Accounts" },
   { href: "/analytics", label: "Analytics" },
-  { href: "/post", label: "Post" },
+  { label: "Post", postMenu: true },
   { href: "/onboarding", label: "Onboarding" },
   { href: "/automatic", label: "Automatic" },
-  { href: "/agents", label: "Agents" },
   { label: "Apps", apps: true },
   { href: "/pricing", label: "Pricing" },
   { href: "/create", label: "Create" },
+  { href: "/login", label: "Login" },
   { href: "/splash", label: "Splash", splash: true },
   { href: "/templates/admin", label: "Admin", muted: true },
 ];
@@ -24,6 +24,11 @@ const APP_ITEMS = [
   { href: "/feedback-loop", label: "Feedback Loop" },
   { href: "/ideation-engine", label: "Ideation Engine" },
   { href: "/reports", label: "Reports" },
+];
+
+const POST_ITEMS = [
+  { href: "/post", label: "Post Now" },
+  { href: "/post/schedule", label: "Schedule" },
 ];
 
 function NavLink({ href, label, muted, isActive, onClick, isCta, isSplash }) {
@@ -146,6 +151,10 @@ function DesktopNav({ pathname }) {
       aria-label="Main"
     >
       {NAV_ITEMS.map((item) => {
+        if (item?.postMenu) {
+          return <DesktopPostMenu key="post-nav" pathname={pathname} />;
+        }
+
         if (item?.apps) {
           return <DesktopAppsMenu key="apps-nav" pathname={pathname} />;
         }
@@ -155,7 +164,7 @@ function DesktopNav({ pathname }) {
           href === "/"
             ? pathname === "/"
             : pathname === href || pathname.startsWith(href + "/");
-        const isCta = href === "/create";
+        const isCta = href === "/create" || href === "/login";
 
         return (
           <NavLink
@@ -170,6 +179,100 @@ function DesktopNav({ pathname }) {
         );
       })}
     </nav>
+  );
+}
+
+function DesktopPostMenu({ pathname }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+  const isPostActive = pathname === "/post" || pathname.startsWith("/post/");
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`
+          relative inline-flex items-center gap-1 text-sm transition-colors duration-300 ease-out
+          py-3 px-4 rounded-lg min-h-[44px] md:py-1 md:px-1 md:min-h-0 md:rounded-none group
+          ${isPostActive ? "text-werbens-dark-cyan font-medium" : "text-werbens-text hover:text-werbens-dark-cyan"}
+        `}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Open post menu"
+      >
+        Post
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
+          aria-hidden="true"
+        >
+          <path d="M5 7.5L10 12.5L15 7.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span
+          className={`
+            hidden md:block absolute -bottom-0.5 left-1/2 h-[2px] rounded-full
+            bg-werbens-dark-cyan transition-all duration-300 ease-out
+            ${
+              isPostActive
+                ? "w-full -translate-x-1/2 opacity-100"
+                : "w-0 -translate-x-1/2 opacity-0 group-hover:w-full group-hover:opacity-60"
+            }
+          `}
+          aria-hidden="true"
+        />
+      </button>
+      <div
+        className={`
+          absolute left-0 top-full mt-2 w-56 rounded-xl border border-werbens-dark-cyan/10
+          bg-white shadow-xl shadow-werbens-dark-cyan/10 p-2
+          transition-all duration-180 ease-out
+          ${open ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-1 pointer-events-none"}
+        `}
+        role="menu"
+        aria-label="Post menu"
+      >
+        {POST_ITEMS.map(({ href, label }) => {
+          const isActive = pathname === href || pathname.startsWith(`${href}/`);
+          return (
+            <Link
+              key={href}
+              href={href}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className={`
+                block rounded-lg px-3 py-2 text-sm transition-colors
+                ${
+                  isActive
+                    ? "bg-werbens-dark-cyan/10 text-werbens-dark-cyan font-medium"
+                    : "text-werbens-text hover:bg-werbens-dark-cyan/5 hover:text-werbens-dark-cyan"
+                }
+              `}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -334,6 +437,69 @@ function MobileAppsMenu({ pathname, onClose }) {
   );
 }
 
+function MobilePostMenu({ pathname, onClose }) {
+  const [open, setOpen] = useState(false);
+  const isPostActive = pathname === "/post" || pathname.startsWith("/post/");
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  return (
+    <div className="animate-fade-in-down">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`
+          w-full flex items-center justify-between text-left text-sm py-3 px-4 rounded-lg min-h-[44px]
+          transition-colors duration-300 ease-out
+          ${isPostActive ? "text-werbens-dark-cyan font-medium" : "text-werbens-text hover:text-werbens-dark-cyan"}
+        `}
+        aria-expanded={open}
+        aria-label="Toggle post menu"
+      >
+        <span>Post</span>
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
+          aria-hidden="true"
+        >
+          <path d="M5 7.5L10 12.5L15 7.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-250 ease-out ${open ? "max-h-32 opacity-100" : "max-h-0 opacity-0"}`}
+      >
+        <div className="pl-4 space-y-1 pb-1">
+          {POST_ITEMS.map(({ href, label }) => {
+            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className={`
+                  block py-2 px-4 rounded-lg text-sm transition-colors
+                  ${
+                    isActive
+                      ? "bg-werbens-dark-cyan/10 text-werbens-dark-cyan font-medium"
+                      : "text-werbens-steel hover:text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5"
+                  }
+                `}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MobileNav({ pathname, isOpen, onClose }) {
   return (
     <div
@@ -352,6 +518,21 @@ function MobileNav({ pathname, isOpen, onClose }) {
         aria-label="Main"
       >
         {NAV_ITEMS.map((item, index) => {
+          if (item?.postMenu) {
+            return (
+              <div
+                key="post-nav-mobile"
+                className="animate-fade-in-down"
+                style={{
+                  animationDelay: isOpen ? `${index * 50}ms` : "0ms",
+                  animationFillMode: "backwards",
+                }}
+              >
+                <MobilePostMenu pathname={pathname} onClose={onClose} />
+              </div>
+            );
+          }
+
           if (item?.apps) {
             return (
               <div
@@ -372,7 +553,7 @@ function MobileNav({ pathname, isOpen, onClose }) {
             href === "/"
               ? pathname === "/"
               : pathname === href || pathname.startsWith(href + "/");
-          const isCta = href === "/create";
+          const isCta = href === "/create" || href === "/login";
 
           return (
             <div
@@ -456,7 +637,7 @@ export function Header() {
       <div className="mx-auto max-w-7xl">
         <div
           className={`
-            panel-surface overflow-hidden rounded-[1.75rem] sm:rounded-[2rem]
+            panel-surface overflow-visible rounded-[1.75rem] sm:rounded-[2rem]
             transition-all duration-500 ease-out
             ${scrolled ? "shadow-[0_18px_45px_rgba(7,16,32,0.12)]" : "shadow-[0_24px_60px_rgba(7,16,32,0.14)]"}
           `}
