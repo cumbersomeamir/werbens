@@ -1,6 +1,15 @@
 "use client";
 
-export function GenericContentForm({ content, setContent }) {
+import { MediaUrlUploadField } from "./MediaUrlUploadField";
+
+export function GenericContentForm({
+  content,
+  setContent,
+  enableMediaUpload = false,
+  userId,
+  setStatus,
+  setUploadBusy,
+}) {
   return (
     <div className="space-y-3">
       <div>
@@ -39,6 +48,35 @@ export function GenericContentForm({ content, setContent }) {
           placeholder="#marketing, #ai, #startup"
         />
       </div>
+      {enableMediaUpload ? (
+        <div className="space-y-3 rounded-xl border border-werbens-steel/30 bg-werbens-mist/20 p-3">
+          <p className="text-xs font-medium text-werbens-text">
+            Optional media
+          </p>
+          <MediaUrlUploadField
+            userId={userId}
+            kind="image"
+            label="Image URL"
+            value={content.thumbnailAssetId || ""}
+            onChange={(value) => setContent((c) => ({ ...c, thumbnailAssetId: value }))}
+            placeholder="https://example.com/image.jpg"
+            helperText="Upload an image from your device or paste a URL."
+            setStatus={setStatus}
+            setUploadBusy={setUploadBusy}
+          />
+          <MediaUrlUploadField
+            userId={userId}
+            kind="video"
+            label="Video URL"
+            value={content.videoAssetId || ""}
+            onChange={(value) => setContent((c) => ({ ...c, videoAssetId: value }))}
+            placeholder="https://example.com/video.mp4"
+            helperText="Upload a video from your device or paste a URL."
+            setStatus={setStatus}
+            setUploadBusy={setUploadBusy}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

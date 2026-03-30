@@ -1,24 +1,40 @@
 "use client";
 
-export function InstagramContentForm({ content, setContent }) {
+import { MediaUrlUploadField } from "./MediaUrlUploadField";
+
+export function InstagramContentForm({
+  content,
+  setContent,
+  userId,
+  setStatus,
+  setUploadBusy,
+}) {
   return (
     <div className="space-y-3">
-      <div>
-        <label className="block text-xs font-medium text-werbens-muted mb-1">
-          Image URL <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="url"
-          value={content.instagram_image_url || ""}
-          onChange={(e) => setContent((c) => ({ ...c, instagram_image_url: e.target.value }))}
-          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
-          placeholder="https://example.com/image.jpg"
-          required
-        />
-        <p className="mt-1 text-xs text-werbens-muted">
-          Instagram requires an image. Text-only posts are not supported.
-        </p>
-      </div>
+      <MediaUrlUploadField
+        userId={userId}
+        kind="image"
+        label="Image URL"
+        required={!content.instagram_video_url}
+        value={content.instagram_image_url || ""}
+        onChange={(value) => setContent((c) => ({ ...c, instagram_image_url: value }))}
+        placeholder="https://example.com/image.jpg"
+        helperText="Instagram supports image posts. Uploading from device fills this field automatically."
+        setStatus={setStatus}
+        setUploadBusy={setUploadBusy}
+      />
+      <MediaUrlUploadField
+        userId={userId}
+        kind="video"
+        label="Video URL"
+        required={!content.instagram_image_url}
+        value={content.instagram_video_url || ""}
+        onChange={(value) => setContent((c) => ({ ...c, instagram_video_url: value }))}
+        placeholder="https://example.com/video.mp4"
+        helperText="Instagram also supports video posts in this flow. If both image and video are filled, video is used."
+        setStatus={setStatus}
+        setUploadBusy={setUploadBusy}
+      />
       <div>
         <label className="block text-xs font-medium text-werbens-muted mb-1">
           Caption
@@ -48,7 +64,7 @@ export function InstagramContentForm({ content, setContent }) {
           maxLength={1000}
         />
         <p className="mt-1 text-xs text-werbens-muted">
-          Alt text helps make your content more accessible.
+          Alt text helps make image posts more accessible.
         </p>
       </div>
     </div>

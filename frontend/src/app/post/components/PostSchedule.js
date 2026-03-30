@@ -377,11 +377,14 @@ export function PostSchedule() {
   const [loadingTargets, setLoadingTargets] = useState(false);
   const [targets, setTargets] = useState([]);
   const [selectedTarget, setSelectedTarget] = useState(null);
+  const [mediaUploadBusy, setMediaUploadBusy] = useState(false);
 
   const [content, setContent] = useState({
     title: "",
     body: "",
     hashtags: "",
+    videoAssetId: "",
+    thumbnailAssetId: "",
     x_text: "",
     x_media_ids: [],
     x_poll_options: [],
@@ -397,10 +400,13 @@ export function PostSchedule() {
     linkedin_visibility: "PUBLIC",
     linkedin_disable_reshare: false,
     instagram_image_url: "",
+    instagram_video_url: "",
     instagram_caption: "",
     instagram_alt_text: "",
     facebook_message: "",
     facebook_link: "",
+    facebook_image_url: "",
+    facebook_video_url: "",
   });
 
   const [scheduledAt, setScheduledAt] = useState(defaultScheduleInputValue);
@@ -539,13 +545,24 @@ export function PostSchedule() {
       return "";
     }
     if (isInstagramSelected) {
-      if (!content.instagram_image_url || content.instagram_image_url.trim().length === 0) {
-        return "Image URL is required for Instagram.";
+      const imageUrl = content.instagram_image_url?.trim() || "";
+      const videoUrl = content.instagram_video_url?.trim() || "";
+      if (!imageUrl && !videoUrl) {
+        return "Image URL or video URL is required for Instagram.";
       }
-      try {
-        new URL(content.instagram_image_url.trim());
-      } catch {
-        return "Please provide a valid Instagram image URL.";
+      if (imageUrl) {
+        try {
+          new URL(imageUrl);
+        } catch {
+          return "Please provide a valid Instagram image URL.";
+        }
+      }
+      if (videoUrl) {
+        try {
+          new URL(videoUrl);
+        } catch {
+          return "Please provide a valid Instagram video URL.";
+        }
       }
       if (content.instagram_caption && content.instagram_caption.length > 2200) {
         return "Instagram caption exceeds 2200 characters.";
@@ -553,8 +570,10 @@ export function PostSchedule() {
       return "";
     }
     if (isFacebookSelected) {
-      if (!content.facebook_message || content.facebook_message.trim().length === 0) {
-        return "Facebook message is required.";
+      const imageUrl = content.facebook_image_url?.trim() || "";
+      const videoUrl = content.facebook_video_url?.trim() || "";
+      if (!content.facebook_message?.trim() && !imageUrl && !videoUrl) {
+        return "Facebook requires a message, image, or video.";
       }
       if (content.facebook_link) {
         try {
@@ -563,10 +582,38 @@ export function PostSchedule() {
           return "Please provide a valid Facebook link URL.";
         }
       }
+      if (imageUrl) {
+        try {
+          new URL(imageUrl);
+        } catch {
+          return "Please provide a valid Facebook image URL.";
+        }
+      }
+      if (videoUrl) {
+        try {
+          new URL(videoUrl);
+        } catch {
+          return "Please provide a valid Facebook video URL.";
+        }
+      }
       return "";
     }
     if (!content.title && !content.body) {
       return "Add a title or description.";
+    }
+    if (content.thumbnailAssetId) {
+      try {
+        new URL(content.thumbnailAssetId.trim());
+      } catch {
+        return "Please provide a valid image URL.";
+      }
+    }
+    if (content.videoAssetId) {
+      try {
+        new URL(content.videoAssetId.trim());
+      } catch {
+        return "Please provide a valid video URL.";
+      }
     }
     return "";
   }
@@ -598,14 +645,17 @@ export function PostSchedule() {
       return payload;
     }
     if (isInstagramSelected) {
-      payload.instagram_image_url = content.instagram_image_url.trim();
+      if (content.instagram_video_url) payload.instagram_video_url = content.instagram_video_url.trim();
+      else payload.instagram_image_url = content.instagram_image_url.trim();
       if (content.instagram_caption) payload.instagram_caption = content.instagram_caption.trim();
-      if (content.instagram_alt_text) payload.instagram_alt_text = content.instagram_alt_text.trim();
+      if (content.instagram_alt_text && !content.instagram_video_url) payload.instagram_alt_text = content.instagram_alt_text.trim();
       return payload;
     }
     if (isFacebookSelected) {
-      payload.facebook_message = content.facebook_message.trim();
+      if (content.facebook_message) payload.facebook_message = content.facebook_message.trim();
       if (content.facebook_link) payload.facebook_link = content.facebook_link.trim();
+      if (content.facebook_image_url) payload.facebook_image_url = content.facebook_image_url.trim();
+      if (content.facebook_video_url) payload.facebook_video_url = content.facebook_video_url.trim();
       return payload;
     }
     payload.title = content.title;
@@ -616,6 +666,8 @@ export function PostSchedule() {
           .map((tag) => tag.trim())
           .filter(Boolean)
       : [];
+    if (content.videoAssetId) payload.videoAssetId = content.videoAssetId.trim();
+    if (content.thumbnailAssetId) payload.thumbnailAssetId = content.thumbnailAssetId.trim();
     return payload;
   }
 
@@ -691,13 +743,18 @@ export function PostSchedule() {
         title: "",
         body: "",
         hashtags: "",
+        videoAssetId: "",
+        thumbnailAssetId: "",
         x_text: "",
         linkedin_text: "",
         instagram_image_url: "",
+        instagram_video_url: "",
         instagram_caption: "",
         instagram_alt_text: "",
         facebook_message: "",
         facebook_link: "",
+        facebook_image_url: "",
+        facebook_video_url: "",
       }));
 
       await loadScheduled();
@@ -787,10 +844,10 @@ export function PostSchedule() {
                   : isLinkedInSelected
                   ? "LinkedIn-specific fields."
                   : isInstagramSelected
-                  ? "Instagram requires an image URL."
+                  ? "Instagram requires an image URL or video URL."
                   : isFacebookSelected
-                  ? "Facebook Page post fields."
-                  : "Generic title/body content."}
+                  ? "Facebook Page post fields, including image and video URLs."
+                  : "Generic title/body content with optional image/video URLs."}
               </p>
             </div>
 
@@ -799,11 +856,30 @@ export function PostSchedule() {
             ) : isLinkedInSelected ? (
               <LinkedInContentForm content={content} setContent={setContent} />
             ) : isInstagramSelected ? (
-              <InstagramContentForm content={content} setContent={setContent} />
+              <InstagramContentForm
+                content={content}
+                setContent={setContent}
+                userId={userId}
+                setStatus={setStatus}
+                setUploadBusy={setMediaUploadBusy}
+              />
             ) : isFacebookSelected ? (
-              <FacebookContentForm content={content} setContent={setContent} />
+              <FacebookContentForm
+                content={content}
+                setContent={setContent}
+                userId={userId}
+                setStatus={setStatus}
+                setUploadBusy={setMediaUploadBusy}
+              />
             ) : (
-              <GenericContentForm content={content} setContent={setContent} />
+              <GenericContentForm
+                content={content}
+                setContent={setContent}
+                enableMediaUpload
+                userId={userId}
+                setStatus={setStatus}
+                setUploadBusy={setMediaUploadBusy}
+              />
             )}
           </div>
 
@@ -827,10 +903,10 @@ export function PostSchedule() {
           <div className="pt-1">
             <button
               type="submit"
-              disabled={submitting || !selectedTarget}
+              disabled={submitting || mediaUploadBusy || !selectedTarget}
               className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-werbens-dark-cyan to-werbens-light-cyan px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md focus-ring disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {submitting ? "Scheduling..." : "Schedule post"}
+              {mediaUploadBusy ? "Uploading media..." : submitting ? "Scheduling..." : "Schedule post"}
             </button>
           </div>
         </form>

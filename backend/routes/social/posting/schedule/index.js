@@ -45,7 +45,10 @@ function mapScheduledPostForResponse(doc) {
       linkedin_text: normalizeText(doc?.content?.linkedin_text),
       instagram_caption: normalizeText(doc?.content?.instagram_caption),
       instagram_image_url: normalizeText(doc?.content?.instagram_image_url),
+      instagram_video_url: normalizeText(doc?.content?.instagram_video_url),
       facebook_message: normalizeText(doc?.content?.facebook_message),
+      facebook_image_url: normalizeText(doc?.content?.facebook_image_url),
+      facebook_video_url: normalizeText(doc?.content?.facebook_video_url),
       metadata: doc?.content?.metadata || {},
     },
   };
