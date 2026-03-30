@@ -6,7 +6,7 @@ import { API_ENDPOINTS } from "@/api/endpoints.js";
 import { PLATFORM_LABELS } from "../utils";
 
 const IMAGE_MAX_BYTES = 12 * 1024 * 1024;
-const VIDEO_MAX_BYTES = 35 * 1024 * 1024;
+const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 
 function targetKey(target) {
   return `${String(target?.platform || "").toLowerCase()}::${String(target?.channelId || "")}`;

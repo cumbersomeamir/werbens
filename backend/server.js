@@ -73,9 +73,15 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const SCHEDULER_ENABLED = String(process.env.SOCIAL_SCHEDULER_ENABLED || "true").toLowerCase() !== "false";
 const SCHEDULER_INTERVAL_MS = Math.max(15000, Number(process.env.SOCIAL_SCHEDULER_INTERVAL_MS) || 30000);
+const MEDIA_UPLOAD_PATH = "/api/social/post/all/media/upload";
+const defaultJsonParser = express.json({ limit: "50mb" });
+const mediaUploadJsonParser = express.json({ limit: "150mb" });
 
 app.use(cors());
-app.use(express.json({ limit: "50mb" }));
+app.use((req, res, next) => {
+  const parser = req.path === MEDIA_UPLOAD_PATH ? mediaUploadJsonParser : defaultJsonParser;
+  return parser(req, res, next);
+});
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", service: "werbens-backend" });
@@ -135,7 +141,7 @@ app.post("/api/social/post", createPostHandler);
 // Immediate posting (Post Now)
 app.post("/api/social/post/now", createPostNowHandler);
 app.post("/api/social/post/all/now", createPostToAllNowHandler);
-app.post("/api/social/post/all/media/upload", createPostToAllMediaUploadHandler);
+app.post(MEDIA_UPLOAD_PATH, createPostToAllMediaUploadHandler);
 app.get("/api/social/post/all/preferences", getPostToAllPreferencesHandler);
 app.put("/api/social/post/all/preferences", updatePostToAllPreferencesHandler);
 

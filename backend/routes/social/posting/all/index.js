@@ -21,7 +21,7 @@ import { uploadImageToS3, getPresignedUrl } from "../../../../services/s3Service
 const PREFERENCES_COLLECTION = "PostToAllPreferences";
 const MEDIA_UPLOAD_PREFIX = "social-post-to-all";
 const IMAGE_UPLOAD_MAX_BYTES = 12 * 1024 * 1024;
-const VIDEO_UPLOAD_MAX_BYTES = 35 * 1024 * 1024;
+const VIDEO_UPLOAD_MAX_BYTES = 100 * 1024 * 1024;
 const PRESIGNED_READ_EXPIRES_SECONDS = 60 * 60 * 24 * 7;
 
 function readUserId(req) {

@@ -5,7 +5,7 @@ import { post } from "@/api/client.js";
 import { API_ENDPOINTS } from "@/api/endpoints.js";
 
 const IMAGE_MAX_BYTES = 12 * 1024 * 1024;
-const VIDEO_MAX_BYTES = 35 * 1024 * 1024;
+const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 
 function formatLimitLabel(kind) {
   const maxBytes = kind === "video" ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
