@@ -7,6 +7,11 @@ import { API_ENDPOINTS } from "@/api/endpoints.js";
 const IMAGE_MAX_BYTES = 12 * 1024 * 1024;
 const VIDEO_MAX_BYTES = 35 * 1024 * 1024;
 
+function formatLimitLabel(kind) {
+  const maxBytes = kind === "video" ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
+  return `${Math.round(maxBytes / (1024 * 1024))}MB max`;
+}
+
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -98,21 +103,55 @@ export function MediaUrlUploadField({
       <label className="block text-xs font-medium text-werbens-muted mb-1">
         {label} {required ? <span className="text-red-500">*</span> : null}
       </label>
-      <input
-        type="url"
-        value={value || ""}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
-        placeholder={placeholder}
-      />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={disabled || uploading}
-        className="inline-flex items-center justify-center rounded-lg border border-werbens-dark-cyan/25 bg-white px-3 py-2 text-xs font-semibold text-werbens-dark-cyan disabled:opacity-60"
-      >
-        {uploading ? `Uploading ${kind}...` : `Upload ${kind} from device`}
-      </button>
+      <div className="rounded-xl border border-werbens-dark-cyan/20 bg-werbens-light-cyan/5 p-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-werbens-dark-cyan">
+              From Device
+            </p>
+            <p className="mt-1 text-xs font-medium text-werbens-text">
+              Choose a {kind} file from your computer
+            </p>
+            <p className="mt-1 text-[11px] text-werbens-muted">
+              Accepted: {kind === "image" ? "JPG, PNG, WEBP, GIF" : "MP4, MOV, WEBM"} · {formatLimitLabel(kind)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={disabled || uploading}
+            className="inline-flex min-w-[168px] items-center justify-center gap-2 rounded-xl border border-werbens-dark-cyan bg-werbens-dark-cyan px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              className="h-4 w-4 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M10 13V4" />
+              <path d="m6.5 7.5 3.5-3.5 3.5 3.5" />
+              <path d="M4 13.5v1.25A1.25 1.25 0 0 0 5.25 16h9.5A1.25 1.25 0 0 0 16 14.75V13.5" />
+            </svg>
+            {uploading ? `Uploading ${kind}...` : `Upload ${kind}`}
+          </button>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-werbens-muted">
+          Or Paste URL
+        </p>
+        <input
+          type="url"
+          value={value || ""}
+          onChange={(event) => onChange(event.target.value)}
+          className="w-full rounded-lg border border-werbens-steel/40 bg-white px-3 py-2 text-sm text-werbens-text shadow-sm focus-ring"
+          placeholder={placeholder}
+        />
+      </div>
       <input
         ref={inputRef}
         type="file"
