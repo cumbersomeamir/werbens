@@ -180,6 +180,38 @@ function HourlyBarChart({ hourlyBuckets }) {
   );
 }
 
+function HourlyTotalViewsChart({ hourlyBuckets }) {
+  const rows = Array.isArray(hourlyBuckets) ? hourlyBuckets : [];
+  const maxTotal = Math.max(1, ...rows.map((bucket) => Number(bucket?.totalViews) || 0));
+
+  return (
+    <div className="rounded-2xl border border-werbens-dark-cyan/10 bg-white p-4 shadow-elevated">
+      <h3 className="text-sm font-semibold text-werbens-dark-cyan uppercase tracking-wider mb-3">
+        Total Views By Posting Hour (UTC)
+      </h3>
+      <p className="text-xs text-werbens-muted mb-3">
+        Sum of views for all videos posted in each UTC hour bucket.
+      </p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+        {rows.map((bucket) => {
+          const totalViews = Number(bucket?.totalViews) || 0;
+          const heightPct = Math.max(0, Math.min(100, (totalViews / maxTotal) * 100));
+          return (
+            <div key={`hour-total-${bucket?.hour}`} className="rounded-xl border border-werbens-dark-cyan/10 bg-werbens-mist/30 p-2">
+              <div className="h-20 flex items-end">
+                <div className="w-full rounded-md bg-werbens-dark-cyan/80" style={{ height: `${heightPct}%` }} />
+              </div>
+              <p className="mt-2 text-xs text-werbens-muted">{String(bucket?.hour).padStart(2, "0")}:00</p>
+              <p className="text-sm font-semibold text-werbens-text">{formatNumber(totalViews)}</p>
+              <p className="text-[11px] text-werbens-muted">{formatNumber(bucket?.posts || 0)} posts</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function WeekdayBarChart({ weekdayBuckets }) {
   const rows = Array.isArray(weekdayBuckets) ? weekdayBuckets : [];
   const maxAvg = Math.max(1, ...rows.map((bucket) => Number(bucket?.avgEngagement) || 0));
@@ -474,6 +506,12 @@ export function ReportsFlow() {
               {renderScatter ? <ScatterChart rows={rows} /> : null}
               {renderHourly ? <HourlyBarChart hourlyBuckets={hourlyBuckets} /> : null}
             </div>
+
+            {renderHourly ? (
+              <div className="mt-4">
+                <HourlyTotalViewsChart hourlyBuckets={hourlyBuckets} />
+              </div>
+            ) : null}
 
             {renderWeekday ? (
               <div className="mt-4">
