@@ -37,6 +37,19 @@ import { imageGenerationHandler } from "./routes/image-generation/index.js";
 import { classifyPromptHandler } from "./routes/model-switcher/index.js";
 import { automaticGenerateHandler, automaticGetImagesHandler, automaticDownloadHandler, automaticDeleteImageHandler } from "./routes/automatic.js";
 import {
+  createPortfolioAdminTokenHandler,
+  createPortfolioCategoryHandler,
+  deletePortfolioMediaHandler,
+  getPortfolioCatalogHandler,
+  portfolioAdminAuth,
+  replacePortfolioMediaHandler,
+  replacePortfolioMediaMiddleware,
+  streamPortfolioMediaHandler,
+  updatePortfolioMediaHandler,
+  uploadPortfolioMediaHandler,
+  uploadPortfolioMediaMiddleware,
+} from "./routes/portfolio.js";
+import {
   getFeedbackLoopConfigHandler,
   updateFeedbackLoopConfigHandler,
   startFeedbackLoopHandler,
@@ -86,6 +99,20 @@ app.use((req, res, next) => {
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", service: "werbens-backend" });
 });
+
+app.get("/api/portfolio", getPortfolioCatalogHandler);
+app.get("/api/portfolio/media/:category/:file", streamPortfolioMediaHandler);
+app.post("/api/portfolio/admin/login", createPortfolioAdminTokenHandler);
+app.post("/api/portfolio/admin/categories", portfolioAdminAuth, createPortfolioCategoryHandler);
+app.post("/api/portfolio/admin/media", portfolioAdminAuth, uploadPortfolioMediaMiddleware, uploadPortfolioMediaHandler);
+app.patch("/api/portfolio/admin/media/:category/:file", portfolioAdminAuth, updatePortfolioMediaHandler);
+app.post(
+  "/api/portfolio/admin/media/:category/:file/replace",
+  portfolioAdminAuth,
+  replacePortfolioMediaMiddleware,
+  replacePortfolioMediaHandler
+);
+app.delete("/api/portfolio/admin/media/:category/:file", portfolioAdminAuth, deletePortfolioMediaHandler);
 
 app.post("/api/onboarding", saveOnboarding);
 

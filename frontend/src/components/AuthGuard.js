@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 
 /**
  * AuthGuard - Protects routes by redirecting to login if user is not authenticated
- * Exclude root (/) and login (/login) pages
+ * Exclude public marketing pages
  */
 export function AuthGuard({ children }) {
   const router = useRouter();
@@ -15,7 +15,7 @@ export function AuthGuard({ children }) {
 
   // Public routes that don't require authentication
   // Note: basePath is "/app", but usePathname() returns pathname WITHOUT basePath
-  const publicRoutes = ["/", "/login", "/terms", "/privacy"];
+  const publicRoutes = ["/", "/portfolio", "/login", "/terms", "/privacy"];
 
   useEffect(() => {
     // Don't redirect if still loading or on public route
