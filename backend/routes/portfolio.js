@@ -12,6 +12,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
 
 const CATALOG_TTL_MS = Math.max(1000, Number(process.env.PORTFOLIO_CATALOG_TTL_MS) || 15000);
@@ -21,6 +22,10 @@ const ADMIN_TOKEN_TTL_MS = Math.max(60_000, Number(process.env.PORTFOLIO_ADMIN_T
 const MAX_UPLOAD_BYTES = Math.max(1024 * 1024, Number(process.env.PORTFOLIO_MAX_UPLOAD_MB || 750) * 1024 * 1024);
 const PORTFOLIO_PREFIX = String(process.env.PORTFOLIO_S3_PREFIX || "portfolio")
   .replace(/^\/+|\/+$/g, "");
+const MEDIA_URL_EXPIRES_SECONDS = Math.max(
+  300,
+  Number(process.env.PORTFOLIO_MEDIA_URL_EXPIRES_SECONDS) || 12 * 60 * 60
+);
 const CATEGORY_MARKER_PREFIX = `${PORTFOLIO_PREFIX}/.categories`;
 const UPLOAD_TMP_DIR = path.join(os.tmpdir(), "werbens-portfolio-uploads");
 
@@ -242,6 +247,18 @@ function buildMediaPath(categoryName, fileName, modifiedMs) {
   return `/api/portfolio/media/${encodeURIComponent(categoryName)}/${encodeURIComponent(fileName)}?v=${modifiedMs}`;
 }
 
+async function buildSignedMediaUrl(fileName, key) {
+  return getSignedUrl(
+    s3Client,
+    new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      ResponseContentType: getContentType(fileName),
+    }),
+    { expiresIn: MEDIA_URL_EXPIRES_SECONDS }
+  );
+}
+
 async function listS3Objects(prefix) {
   const objects = [];
   let ContinuationToken;
@@ -319,11 +336,11 @@ async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
     });
   }
 
-  const categories = Array.from(categoryMap.entries())
-    .map(([name, files]) => {
-      const items = files
+  const categories = (await Promise.all(Array.from(categoryMap.entries())
+    .map(async ([name, files]) => {
+      const items = await Promise.all(files
         .sort((a, b) => collator.compare(a.fileName, b.fileName))
-        .map((file) => {
+        .map(async (file) => {
           const extension = getExtension(file.fileName);
           const modifiedMs = file.lastModified ? new Date(file.lastModified).getTime() : Date.now();
           return {
@@ -332,6 +349,7 @@ async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
             extension: extension.replace(".", ""),
             fileName: file.fileName,
             formattedSize: formatBytes(file.sizeBytes),
+            mediaUrl: await buildSignedMediaUrl(file.fileName, file.key),
             mediaPath: buildMediaPath(file.category, file.fileName, modifiedMs),
             mimeType: getContentType(file.fileName),
             modifiedAt: file.lastModified ? new Date(file.lastModified).toISOString() : null,
@@ -339,7 +357,7 @@ async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
             title: formatTitle(file.fileName),
             type: getMediaType(file.fileName),
           };
-        });
+        }));
 
       const videoCount = items.filter((item) => item.type === "video").length;
       const imageCount = items.filter((item) => item.type === "image").length;
@@ -352,7 +370,7 @@ async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
         name,
         videoCount,
       };
-    })
+    })))
     .filter((category) => includeEmpty || category.itemCount > 0)
     .sort((a, b) => collator.compare(a.name, b.name));
 
