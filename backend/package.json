@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
-    "ensure-indexes": "node scripts/ensure-mongo-indexes.js"
+    "ensure-indexes": "node scripts/ensure-mongo-indexes.js",
+    "portfolio:upload-s3": "node scripts/upload-portfolio-to-s3.js --skip-existing"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.985.0",
