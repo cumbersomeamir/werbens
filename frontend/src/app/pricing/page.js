@@ -1,4 +1,5 @@
 import { PricingFlow } from "./components/PricingFlow";
+import { getRequestCountry } from "@/lib/requestCountry";
 
 export const metadata = {
   title: "Pricing | Werbens — AI Content Creation Plans",
@@ -8,6 +9,7 @@ export const metadata = {
     "Werbens pricing, content creation plans, AI content pricing, social media automation plans",
 };
 
-export default function PricingPage() {
-  return <PricingFlow />;
+export default async function PricingPage() {
+  const initialCountry = await getRequestCountry();
+  return <PricingFlow initialCountry={initialCountry} />;
 }

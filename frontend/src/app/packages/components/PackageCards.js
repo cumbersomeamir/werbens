@@ -1,22 +1,23 @@
 import Link from "next/link";
+import { formatPrice } from "@/components/CurrencySelector";
 
 const packages = [
   {
     name: "Basic",
-    price: "$50",
+    price: { US: 50, GB: 50, IN: 5000 },
     staggerClass: "stagger-4",
     summary: "3 reels per week, 12 reels per month. Ready to post, no editing needed.",
     features: [
       "Full brand imaging and visual direction",
       "10 revisions per month",
       "100% of ad budget goes to campaign promotion",
-      "$20 upfront add-on for social ad management",
+      (country) => `${formatPrice({ US: 20, GB: 20, IN: 2000 }, country)} upfront add-on for social ad management`,
     ],
     cta: "Choose Basic",
   },
   {
     name: "Pro",
-    price: "$200",
+    price: { US: 200, GB: 200, IN: 20000 },
     staggerClass: "stagger-5",
     summary: "6 reels per week, 24 reels per month. Built for consistent growth.",
     featured: true,
@@ -32,7 +33,7 @@ const packages = [
   },
   {
     name: "Scaler",
-    price: "$500",
+    price: { US: 500, GB: 500, IN: 50000 },
     staggerClass: "stagger-6",
     summary: "12 reels per week, 48 reels per month. For brands publishing daily.",
     features: [
@@ -70,7 +71,7 @@ function FeatureItem({ children, light }) {
   );
 }
 
-function PackageCard({ item }) {
+function PackageCard({ item, country }) {
   const light = Boolean(item.featured);
 
   return (
@@ -110,7 +111,7 @@ function PackageCard({ item }) {
               : "text-5xl font-bold tracking-tight text-werbens-text"
           }
         >
-          {item.price}
+          {formatPrice(item.price, country)}
         </span>
         <span
           className={
@@ -140,9 +141,9 @@ function PackageCard({ item }) {
       />
 
       <ul className="mt-8 space-y-3">
-        {item.features.map((feature) => (
-          <FeatureItem key={feature} light={light}>
-            {feature}
+        {item.features.map((feature, index) => (
+          <FeatureItem key={`${item.name}-${index}`} light={light}>
+            {typeof feature === "function" ? feature(country) : feature}
           </FeatureItem>
         ))}
       </ul>
@@ -161,13 +162,13 @@ function PackageCard({ item }) {
   );
 }
 
-export function PackageCards() {
+export function PackageCards({ country }) {
   return (
     <section className="px-4 pb-16 sm:px-6 sm:pb-24" aria-label="Packages">
       <div className="mx-auto max-w-6xl">
         <div className="grid items-start gap-8 md:grid-cols-3 md:gap-6">
           {packages.map((item) => (
-            <PackageCard key={item.name} item={item} />
+            <PackageCard key={item.name} item={item} country={country} />
           ))}
         </div>
       </div>

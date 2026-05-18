@@ -1,4 +1,5 @@
 import { PackagesFlow } from "./components/PackagesFlow";
+import { getRequestCountry } from "@/lib/requestCountry";
 
 export const metadata = {
   title: "Packages | Werbens",
@@ -6,6 +7,7 @@ export const metadata = {
     "Website content packages for ready-to-post reels, brand visuals, revisions, and social ad management.",
 };
 
-export default function PackagesPage() {
-  return <PackagesFlow />;
+export default async function PackagesPage() {
+  const initialCountry = await getRequestCountry();
+  return <PackagesFlow initialCountry={initialCountry} />;
 }

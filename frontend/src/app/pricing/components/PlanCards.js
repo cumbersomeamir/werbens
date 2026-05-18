@@ -1,6 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { formatPrice } from "@/components/CurrencySelector";
+
+const PLAN_PRICES = {
+  basic: { US: 20, GB: 20, IN: 2000 },
+  pro: { US: 50, GB: 50, IN: 5000 },
+  scaler: { US: 200, GB: 200, IN: 20000 },
+  enterprise: { US: 70, GB: 70, IN: 7000 },
+};
 
 function CheckIcon({ light }) {
   return (
@@ -31,7 +39,20 @@ function FeatureItem({ children, light }) {
   );
 }
 
-export function PlanCards() {
+function PriceLabel({ price, country, unit = "/mo", light = false }) {
+  return (
+    <div className="mt-4 flex items-baseline gap-1">
+      <span className={light ? "text-5xl font-bold tracking-tight text-white" : "text-5xl font-bold tracking-tight text-werbens-text"}>
+        {formatPrice(price, country)}
+      </span>
+      <span className={light ? "text-base font-medium text-white/50" : "text-base font-medium text-werbens-muted"}>
+        {unit}
+      </span>
+    </div>
+  );
+}
+
+export function PlanCards({ country }) {
   return (
     <section className="px-4 sm:px-6 pb-16 sm:pb-24" aria-label="Plans">
       <div className="mx-auto max-w-6xl">
@@ -43,14 +64,7 @@ export function PlanCards() {
                 Basic
               </h2>
             </div>
-            <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-5xl font-bold tracking-tight text-werbens-text">
-                $20
-              </span>
-              <span className="text-base font-medium text-werbens-muted">
-                /mo
-              </span>
-            </div>
+            <PriceLabel price={PLAN_PRICES.basic} country={country} />
             <p className="mt-3 text-sm text-werbens-muted leading-relaxed">
               1 image per platform delivered per day.
             </p>
@@ -85,12 +99,7 @@ export function PlanCards() {
                 Pro
               </h2>
             </div>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="text-5xl font-bold tracking-tight text-white">
-                $50
-              </span>
-              <span className="text-base font-medium text-white/50">/mo</span>
-            </div>
+            <PriceLabel price={PLAN_PRICES.pro} country={country} light />
             <p className="mt-3 text-sm text-white/60 leading-relaxed">
               1 image and 1 video per platform delivered per day.
             </p>
@@ -120,14 +129,7 @@ export function PlanCards() {
                 Scaler
               </h2>
             </div>
-            <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-5xl font-bold tracking-tight text-werbens-text">
-                $200
-              </span>
-              <span className="text-base font-medium text-werbens-muted">
-                /mo
-              </span>
-            </div>
+            <PriceLabel price={PLAN_PRICES.scaler} country={country} />
             <p className="mt-3 text-sm text-werbens-muted leading-relaxed">
               3 images and 3 videos per account delivered per day.
             </p>
@@ -155,14 +157,7 @@ export function PlanCards() {
                 Enterprise
               </h2>
             </div>
-            <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-5xl font-bold tracking-tight text-werbens-text">
-                $70
-              </span>
-              <span className="text-base font-medium text-werbens-muted">
-                /seat
-              </span>
-            </div>
+            <PriceLabel price={PLAN_PRICES.enterprise} country={country} unit="/seat" />
             <p className="mt-3 text-sm text-werbens-muted leading-relaxed">
               Everything in Pro plus advanced business tools and reporting.
             </p>
