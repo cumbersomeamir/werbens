@@ -665,9 +665,6 @@ export function Header() {
                   <span className="font-display gradient-text block text-[1.65rem] font-bold leading-none sm:text-[1.9rem]">
                     Werbens
                   </span>
-                  <span className="block pt-1 text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-werbens-dark-cyan/52">
-                    AI content system
-                  </span>
                 </span>
               </Link>
 
