@@ -38,7 +38,7 @@ const packages = [
     features: [
       "Full brand imaging and visual direction",
       "1 free logo generation",
-      "15 revisions per month",
+      "50 revisions per month",
       "1 high-quality personal image clone seat",
       "Instagram, Facebook, LinkedIn, and YouTube ad management included",
       "No ad management fee. 100% of ad budget goes to campaigns",
