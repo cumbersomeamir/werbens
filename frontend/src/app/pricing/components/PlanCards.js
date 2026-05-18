@@ -39,7 +39,7 @@ export function PlanCards() {
           {/* Basic Plan */}
           <div className="animate-fade-in-up stagger-4 hover-lift rounded-2xl border border-werbens-steel/30 bg-white p-8 sm:p-10 shadow-elevated transition-all duration-300">
             <div className="mb-1">
-              <h2 className="text-lg font-semibold uppercase tracking-wide text-werbens-alt-text">
+              <h2 className="text-lg font-semibold uppercase tracking-wide text-werbens-dark-cyan">
                 Basic
               </h2>
             </div>
@@ -116,7 +116,7 @@ export function PlanCards() {
           {/* Scaler Plan */}
           <div className="animate-fade-in-up stagger-6 hover-lift rounded-2xl border border-werbens-steel/30 bg-white p-8 sm:p-10 shadow-elevated transition-all duration-300">
             <div className="mb-1">
-              <h2 className="text-lg font-semibold uppercase tracking-wide text-werbens-alt-text">
+              <h2 className="text-lg font-semibold uppercase tracking-wide text-werbens-dark-cyan">
                 Scaler
               </h2>
             </div>
@@ -151,7 +151,7 @@ export function PlanCards() {
           {/* Enterprise Plan */}
           <div className="animate-fade-in-up stagger-7 hover-lift rounded-2xl border border-werbens-steel/30 bg-white p-8 sm:p-10 shadow-elevated transition-all duration-300">
             <div className="mb-1">
-              <h2 className="text-lg font-semibold uppercase tracking-wide text-werbens-alt-text">
+              <h2 className="text-lg font-semibold uppercase tracking-wide text-werbens-dark-cyan">
                 Enterprise
               </h2>
             </div>
