@@ -4,7 +4,7 @@ import { formatPrice } from "@/components/CurrencySelector";
 const packages = [
   {
     name: "Basic",
-    price: { US: 50, GB: 50, IN: 5000 },
+    price: { US: 100, GB: 100, IN: 10000 },
     staggerClass: "stagger-4",
     summary: "3 reels per week, 12 reels per month. Ready to post, no editing needed.",
     features: [
