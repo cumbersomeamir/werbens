@@ -12,6 +12,26 @@ function pluralize(value, singular, plural = `${singular}s`) {
   return `${value} ${value === 1 ? singular : plural}`;
 }
 
+function toCategorySlug(value) {
+  return String(value || "")
+    .trim()
+    .replace(/&/g, "and")
+    .replace(/[^A-Za-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function normalizeSlug(value) {
+  return toCategorySlug(value).toLowerCase();
+}
+
+function getPortfolioUrl(categoryName) {
+  if (typeof window === "undefined") return "/portfolio";
+  const match = window.location.pathname.match(/^(.*)\/portfolio(?:\/.*)?$/);
+  const basePath = match?.[1] || "";
+  const baseUrl = `${basePath}/portfolio`;
+  return categoryName ? `${baseUrl}/${toCategorySlug(categoryName)}` : baseUrl;
+}
+
 function attachMediaUrls(catalog, apiBase) {
   const categories = Array.isArray(catalog?.categories) ? catalog.categories : [];
 
@@ -192,9 +212,69 @@ function AdminPanel({
     }
   }
 
+  async function moveCategory(category, direction) {
+    setBusyAction(`move-${category.name}`);
+    setNotice("");
+    try {
+      const data = await requestJson(`${apiBase}/api/portfolio/admin/categories/order`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAdminHeaders(token),
+        },
+        body: JSON.stringify({ category: category.name, direction }),
+      });
+      onCatalogUpdate(data.catalog);
+      setNotice(`Moved "${category.name}" ${direction}.`);
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setBusyAction("");
+    }
+  }
+
   return (
     <section className="border-b border-werbens-dark-cyan/10 bg-werbens-surface">
-      <div className="mx-auto grid max-w-7xl gap-4 px-5 py-5 sm:px-6 lg:grid-cols-[1fr_1.4fr_auto] lg:items-end lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-5 px-5 py-5 sm:px-6 lg:px-8">
+        <div className="rounded-lg border border-werbens-dark-cyan/10 bg-white p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-werbens-text">Section order</h2>
+            <span className="text-xs font-medium text-werbens-muted">Changes affect public order</span>
+          </div>
+          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            {categories.map((category, index) => (
+              <div
+                key={category.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-werbens-dark-cyan/10 bg-werbens-mist px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-werbens-text">{category.name}</p>
+                  <p className="text-xs text-werbens-muted">{pluralize(category.itemCount || 0, "asset")}</p>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <AdminButton
+                    variant="secondary"
+                    className="min-h-8 px-2 py-1 text-xs"
+                    disabled={index === 0 || busyAction === `move-${category.name}`}
+                    onClick={() => moveCategory(category, "up")}
+                  >
+                    Up
+                  </AdminButton>
+                  <AdminButton
+                    variant="secondary"
+                    className="min-h-8 px-2 py-1 text-xs"
+                    disabled={index === categories.length - 1 || busyAction === `move-${category.name}`}
+                    onClick={() => moveCategory(category, "down")}
+                  >
+                    Down
+                  </AdminButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr_auto] lg:items-end">
         <div>
           <label className="block text-sm font-semibold text-werbens-text" htmlFor="new-portfolio-category">
             New category
@@ -250,6 +330,7 @@ function AdminPanel({
         <AdminButton variant="secondary" onClick={onExit}>
           Exit admin
         </AdminButton>
+        </div>
       </div>
     </section>
   );
@@ -509,9 +590,15 @@ function CategoryButton({ category, active, onClick }) {
   );
 }
 
-export function PortfolioGallery({ apiBase, catalog, error }) {
+export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug = "" }) {
   const [catalogState, setCatalogState] = useState(() => attachMediaUrls(catalog, apiBase));
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const categories = Array.isArray(catalog?.categories) ? catalog.categories : [];
+    const matchedCategory = categories.find(
+      (category) => normalizeSlug(category.name) === normalizeSlug(initialCategorySlug)
+    );
+    return matchedCategory?.id || "all";
+  });
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [adminToken, setAdminToken] = useState("");
   const [authError, setAuthError] = useState("");
@@ -538,6 +625,7 @@ export function PortfolioGallery({ apiBase, catalog, error }) {
     const nextCategories = Array.isArray(hydratedCatalog.categories) ? hydratedCatalog.categories : [];
     if (activeCategory !== "all" && !nextCategories.some((category) => category.id === activeCategory)) {
       setActiveCategory("all");
+      window.history.replaceState(null, "", getPortfolioUrl(""));
     }
   }
 
@@ -566,8 +654,19 @@ export function PortfolioGallery({ apiBase, catalog, error }) {
     }
   }
 
-  const handleCategoryChange = (categoryId) => {
+  useEffect(() => {
+    if (!initialCategorySlug || activeCategory !== "all") return;
+    const matchedCategory = categories.find(
+      (category) => normalizeSlug(category.name) === normalizeSlug(initialCategorySlug)
+    );
+    if (matchedCategory) {
+      setActiveCategory(matchedCategory.id);
+    }
+  }, [activeCategory, categories, initialCategorySlug]);
+
+  const handleCategoryChange = (categoryId, categoryName = "") => {
     setActiveCategory(categoryId);
+    window.history.pushState(null, "", getPortfolioUrl(categoryId === "all" ? "" : categoryName));
     window.requestAnimationFrame(() => {
       if (categoryId === "all") {
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -634,7 +733,7 @@ export function PortfolioGallery({ apiBase, catalog, error }) {
                 key={category.id}
                 category={category}
                 active={activeCategory === category.id}
-                onClick={() => handleCategoryChange(category.id)}
+                onClick={() => handleCategoryChange(category.id, category.name)}
               />
             ))}
           </nav>

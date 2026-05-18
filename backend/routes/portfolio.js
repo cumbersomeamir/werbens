@@ -27,6 +27,7 @@ const MEDIA_URL_EXPIRES_SECONDS = Math.max(
   Number(process.env.PORTFOLIO_MEDIA_URL_EXPIRES_SECONDS) || 12 * 60 * 60
 );
 const CATEGORY_MARKER_PREFIX = `${PORTFOLIO_PREFIX}/.categories`;
+const CATEGORY_ORDER_KEY = `${PORTFOLIO_PREFIX}/.category-order.json`;
 const UPLOAD_TMP_DIR = path.join(os.tmpdir(), "werbens-portfolio-uploads");
 
 const s3Client = new S3Client({
@@ -314,8 +315,58 @@ async function putCategoryMarker(category) {
   );
 }
 
+async function streamToString(stream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+async function getCategoryOrder() {
+  try {
+    const response = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: BUCKET,
+        Key: CATEGORY_ORDER_KEY,
+      })
+    );
+    const body = JSON.parse(await streamToString(response.Body));
+    return Array.isArray(body?.order) ? body.order.filter(Boolean).map(String) : [];
+  } catch (error) {
+    if (error?.$metadata?.httpStatusCode === 404 || error?.name === "NoSuchKey") {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function putCategoryOrder(order) {
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: CATEGORY_ORDER_KEY,
+      Body: JSON.stringify({ order, updatedAt: new Date().toISOString() }),
+      ContentType: "application/json",
+    })
+  );
+}
+
+function applyCategoryOrder(categories, order) {
+  const orderIndex = new Map(order.map((name, index) => [name, index]));
+  return categories.sort((a, b) => {
+    const aIndex = orderIndex.has(a.name) ? orderIndex.get(a.name) : Number.MAX_SAFE_INTEGER;
+    const bIndex = orderIndex.has(b.name) ? orderIndex.get(b.name) : Number.MAX_SAFE_INTEGER;
+    if (aIndex !== bIndex) return aIndex - bIndex;
+    return collator.compare(a.name, b.name);
+  });
+}
+
 async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
-  const objects = await listS3Objects(`${PORTFOLIO_PREFIX}/`);
+  const [objects, categoryOrder] = await Promise.all([
+    listS3Objects(`${PORTFOLIO_PREFIX}/`),
+    getCategoryOrder(),
+  ]);
   const categoryMap = new Map();
 
   for (const object of objects) {
@@ -371,8 +422,9 @@ async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
         videoCount,
       };
     })))
-    .filter((category) => includeEmpty || category.itemCount > 0)
-    .sort((a, b) => collator.compare(a.name, b.name));
+    .filter((category) => includeEmpty || category.itemCount > 0);
+
+  applyCategoryOrder(categories, categoryOrder);
 
   return {
     categories,
@@ -486,10 +538,47 @@ export async function createPortfolioCategoryHandler(req, res) {
   try {
     const category = ensureSafeCategoryName(req.body?.name);
     await putCategoryMarker(category);
+    const currentOrder = await getCategoryOrder();
+    if (!currentOrder.includes(category)) {
+      await putCategoryOrder([...currentOrder, category]);
+    }
     clearCatalogCache();
     await sendAdminCatalog(res, 201);
   } catch (error) {
     res.status(error.status || 500).json({ error: error.message || "Unable to create category." });
+  }
+}
+
+export async function updatePortfolioCategoryOrderHandler(req, res) {
+  try {
+    const category = ensureSafeCategoryName(req.body?.category);
+    const direction = String(req.body?.direction || "");
+    if (!["up", "down"].includes(direction)) {
+      res.status(400).json({ error: "Choose up or down." });
+      return;
+    }
+
+    const catalog = await getPortfolioCatalog({ includeEmpty: true });
+    const existingNames = catalog.categories.map((item) => item.name);
+    const order = [...existingNames];
+    const index = order.indexOf(category);
+    if (index === -1) {
+      res.status(404).json({ error: "Category was not found." });
+      return;
+    }
+
+    const nextIndex = direction === "up" ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= order.length) {
+      res.json({ catalog });
+      return;
+    }
+
+    [order[index], order[nextIndex]] = [order[nextIndex], order[index]];
+    await putCategoryOrder(order);
+    clearCatalogCache();
+    await sendAdminCatalog(res);
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message || "Unable to reorder categories." });
   }
 }
 

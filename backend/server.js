@@ -45,6 +45,7 @@ import {
   replacePortfolioMediaHandler,
   replacePortfolioMediaMiddleware,
   streamPortfolioMediaHandler,
+  updatePortfolioCategoryOrderHandler,
   updatePortfolioMediaHandler,
   uploadPortfolioMediaHandler,
   uploadPortfolioMediaMiddleware,
@@ -104,6 +105,7 @@ app.get("/api/portfolio", getPortfolioCatalogHandler);
 app.get("/api/portfolio/media/:category/:file", streamPortfolioMediaHandler);
 app.post("/api/portfolio/admin/login", createPortfolioAdminTokenHandler);
 app.post("/api/portfolio/admin/categories", portfolioAdminAuth, createPortfolioCategoryHandler);
+app.patch("/api/portfolio/admin/categories/order", portfolioAdminAuth, updatePortfolioCategoryOrderHandler);
 app.post("/api/portfolio/admin/media", portfolioAdminAuth, uploadPortfolioMediaMiddleware, uploadPortfolioMediaHandler);
 app.patch("/api/portfolio/admin/media/:category/:file", portfolioAdminAuth, updatePortfolioMediaHandler);
 app.post(
