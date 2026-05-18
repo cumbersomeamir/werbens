@@ -15,7 +15,7 @@ export function AuthGuard({ children }) {
 
   // Public routes that don't require authentication
   // Note: basePath is "/app", but usePathname() returns pathname WITHOUT basePath
-  const publicRoutes = ["/", "/portfolio", "/login", "/terms", "/privacy"];
+  const publicRoutes = ["/", "/portfolio", "/packages", "/login", "/terms", "/privacy"];
   const isPublicRoute =
     publicRoutes.includes(pathname) || pathname.startsWith("/portfolio/");
 
