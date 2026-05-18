@@ -16,20 +16,22 @@ export function AuthGuard({ children }) {
   // Public routes that don't require authentication
   // Note: basePath is "/app", but usePathname() returns pathname WITHOUT basePath
   const publicRoutes = ["/", "/portfolio", "/login", "/terms", "/privacy"];
+  const isPublicRoute =
+    publicRoutes.includes(pathname) || pathname.startsWith("/portfolio/");
 
   useEffect(() => {
     // Don't redirect if still loading or on public route
     if (loading) return;
-    if (publicRoutes.includes(pathname)) return;
+    if (isPublicRoute) return;
 
     // Redirect to login if not authenticated
     if (!userId) {
       router.push("/login");
     }
-  }, [userId, loading, pathname, router]);
+  }, [userId, loading, isPublicRoute, router]);
 
   // Show nothing while checking auth (prevents flash)
-  if (loading && !publicRoutes.includes(pathname)) {
+  if (loading && !isPublicRoute) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-werbens-mist to-werbens-surface flex items-center justify-center">
         <div className="text-werbens-muted">Loading...</div>
@@ -38,7 +40,7 @@ export function AuthGuard({ children }) {
   }
 
   // Allow access to public routes or if authenticated
-  if (publicRoutes.includes(pathname) || userId) {
+  if (isPublicRoute || userId) {
     return <>{children}</>;
   }
 

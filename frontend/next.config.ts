@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/", destination: "/app", permanent: false, basePath: false },
       { source: "/portfolio", destination: "/app/portfolio", permanent: false, basePath: false },
+      { source: "/portfolio/:category", destination: "/app/portfolio/:category", permanent: false, basePath: false },
       { source: "/api/auth/:path*", destination: "/app/api/auth/:path*", permanent: false, basePath: false },
     ];
   },
