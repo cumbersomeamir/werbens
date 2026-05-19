@@ -551,15 +551,36 @@ export async function createPortfolioCategoryHandler(req, res) {
 
 export async function updatePortfolioCategoryOrderHandler(req, res) {
   try {
-    const category = ensureSafeCategoryName(req.body?.category);
-    const direction = String(req.body?.direction || "");
-    if (!["up", "down"].includes(direction)) {
-      res.status(400).json({ error: "Choose up or down." });
+    const catalog = await getPortfolioCatalog({ includeEmpty: true });
+    const existingNames = catalog.categories.map((item) => item.name);
+    const requestedOrder = Array.isArray(req.body?.order) ? req.body.order : null;
+
+    if (requestedOrder) {
+      const safeOrder = requestedOrder.map((name) => ensureSafeCategoryName(name));
+      const existingSet = new Set(existingNames);
+      const safeSet = new Set(safeOrder);
+      if (safeOrder.length !== existingNames.length || safeSet.size !== existingNames.length) {
+        res.status(400).json({ error: "Category order does not match existing categories." });
+        return;
+      }
+      if (safeOrder.some((name) => !existingSet.has(name))) {
+        res.status(400).json({ error: "Category order contains an unknown category." });
+        return;
+      }
+
+      await putCategoryOrder(safeOrder);
+      clearCatalogCache();
+      await sendAdminCatalog(res);
       return;
     }
 
-    const catalog = await getPortfolioCatalog({ includeEmpty: true });
-    const existingNames = catalog.categories.map((item) => item.name);
+    const category = ensureSafeCategoryName(req.body?.category);
+    const direction = String(req.body?.direction || "");
+    if (!["up", "down"].includes(direction)) {
+      res.status(400).json({ error: "Choose up/down or provide a category order." });
+      return;
+    }
+
     const order = [...existingNames];
     const index = order.indexOf(category);
     if (index === -1) {

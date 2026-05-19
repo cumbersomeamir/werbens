@@ -155,6 +155,7 @@ function AdminPanel({
   const [uploadFiles, setUploadFiles] = useState([]);
   const [uploadInputKey, setUploadInputKey] = useState(0);
   const [busyAction, setBusyAction] = useState("");
+  const [draggedCategoryId, setDraggedCategoryId] = useState("");
 
   useEffect(() => {
     if (!uploadCategory && categories[0]?.name) {
@@ -235,6 +236,40 @@ function AdminPanel({
     }
   }
 
+  async function saveCategoryOrder(orderedCategories) {
+    setBusyAction("order");
+    setNotice("");
+    try {
+      const data = await requestJson(`${apiBase}/api/portfolio/admin/categories/order`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAdminHeaders(token),
+        },
+        body: JSON.stringify({ order: orderedCategories.map((category) => category.name) }),
+      });
+      onCatalogUpdate(data.catalog);
+      setNotice("Section order updated.");
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setBusyAction("");
+    }
+  }
+
+  function handleCategoryDrop(targetCategory) {
+    const draggedIndex = categories.findIndex((category) => category.id === draggedCategoryId);
+    const targetIndex = categories.findIndex((category) => category.id === targetCategory.id);
+    setDraggedCategoryId("");
+
+    if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) return;
+
+    const nextCategories = [...categories];
+    const [draggedCategory] = nextCategories.splice(draggedIndex, 1);
+    nextCategories.splice(targetIndex, 0, draggedCategory);
+    saveCategoryOrder(nextCategories);
+  }
+
   return (
     <section className="border-b border-werbens-dark-cyan/10 bg-werbens-surface">
       <div className="mx-auto grid max-w-7xl gap-5 px-5 py-5 sm:px-6 lg:px-8">
@@ -247,17 +282,41 @@ function AdminPanel({
             {categories.map((category, index) => (
               <div
                 key={category.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-werbens-dark-cyan/10 bg-werbens-mist px-3 py-2"
+                draggable={busyAction !== "order"}
+                onDragStart={(event) => {
+                  setDraggedCategoryId(category.id);
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("text/plain", category.id);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                }}
+                onDragEnd={() => setDraggedCategoryId("")}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  handleCategoryDrop(category);
+                }}
+                className={cx(
+                  "flex cursor-grab items-center justify-between gap-3 rounded-lg border border-werbens-dark-cyan/10 bg-werbens-mist px-3 py-2 transition active:cursor-grabbing",
+                  draggedCategoryId === category.id && "opacity-45",
+                  busyAction === "order" && "cursor-wait opacity-70"
+                )}
               >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-werbens-text">{category.name}</p>
-                  <p className="text-xs text-werbens-muted">{pluralize(category.itemCount || 0, "asset")}</p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="text-lg leading-none text-werbens-dark-cyan/45" aria-hidden="true">
+                    ::
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-werbens-text">{category.name}</p>
+                    <p className="text-xs text-werbens-muted">{pluralize(category.itemCount || 0, "asset")}</p>
+                  </div>
                 </div>
                 <div className="flex shrink-0 gap-1">
                   <AdminButton
                     variant="secondary"
                     className="min-h-8 px-2 py-1 text-xs"
-                    disabled={index === 0 || busyAction === `move-${category.name}`}
+                    disabled={index === 0 || busyAction === "order" || busyAction === `move-${category.name}`}
                     onClick={() => moveCategory(category, "up")}
                   >
                     Up
@@ -265,7 +324,7 @@ function AdminPanel({
                   <AdminButton
                     variant="secondary"
                     className="min-h-8 px-2 py-1 text-xs"
-                    disabled={index === categories.length - 1 || busyAction === `move-${category.name}`}
+                    disabled={index === categories.length - 1 || busyAction === "order" || busyAction === `move-${category.name}`}
                     onClick={() => moveCategory(category, "down")}
                   >
                     Down
