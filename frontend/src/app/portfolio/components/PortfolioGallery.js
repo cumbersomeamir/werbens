@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 
 const MEDIA_ACCEPT = ".mp4,.webm,.mov,.m4v,.jpg,.jpeg,.png,.webp,.gif";
-const INITIAL_ITEMS_PER_CATEGORY = 8;
-const ITEMS_PER_BATCH = 8;
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -408,8 +406,6 @@ function PortfolioItemCard({
   token,
 }) {
   const [hasError, setHasError] = useState(false);
-  const [isVideoActive, setIsVideoActive] = useState(false);
-  const [loadPercent, setLoadPercent] = useState(0);
   const [editing, setEditing] = useState(false);
   const [fileName, setFileName] = useState(item.fileName);
   const [targetCategory, setTargetCategory] = useState(item.category);
@@ -419,20 +415,12 @@ function PortfolioItemCard({
     setFileName(item.fileName);
     setTargetCategory(item.category);
     setHasError(false);
-    setIsVideoActive(false);
-    setLoadPercent(0);
   }, [item.fileName, item.category, item.mediaUrl]);
 
   const extension = String(item.extension || item.type || "media").toUpperCase();
   const isVideo = item.type === "video";
   const encodedCategory = encodeURIComponent(item.category);
   const encodedFile = encodeURIComponent(item.fileName);
-
-  function updateVideoProgress(video) {
-    if (!video?.duration || !Number.isFinite(video.duration) || video.buffered.length === 0) return;
-    const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-    setLoadPercent(Math.min(100, Math.round((bufferedEnd / video.duration) * 100)));
-  }
 
   async function deleteItem() {
     const confirmed = window.confirm(`Delete "${item.fileName}" from ${item.category}? This removes it from disk.`);
@@ -514,35 +502,14 @@ function PortfolioItemCard({
   return (
     <article className="group overflow-hidden rounded-lg border border-werbens-dark-cyan/10 bg-white shadow-sm shadow-werbens-dark-cyan/5 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-werbens-dark-cyan/10">
       <div className="relative aspect-[9/16] overflow-hidden bg-werbens-midnight">
-        {isVideo && !isVideoActive && !hasError && (
-          <button
-            type="button"
-            className="absolute inset-0 flex h-full w-full flex-col items-center justify-center bg-werbens-midnight text-center text-white transition-colors hover:bg-werbens-deep focus-ring"
-            onClick={() => setIsVideoActive(true)}
-            aria-label={`Load ${item.title}`}
-          >
-            <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-sm font-bold text-werbens-midnight shadow-lg">
-              Play
-            </span>
-            <span className="px-5 text-sm font-semibold">Tap to load video</span>
-            <span className="mt-2 px-5 text-xs text-white/55">Loads only when opened</span>
-          </button>
-        )}
-
-        {isVideo && isVideoActive && (
+        {isVideo && (
           <video
             aria-label={item.title}
             className="h-full w-full bg-werbens-midnight object-contain"
             controls
             playsInline
-            preload="none"
+            preload="metadata"
             src={item.mediaUrl}
-            onLoadedMetadata={(event) => updateVideoProgress(event.currentTarget)}
-            onProgress={(event) => updateVideoProgress(event.currentTarget)}
-            onCanPlay={(event) => {
-              updateVideoProgress(event.currentTarget);
-              setLoadPercent(100);
-            }}
             onPlay={(event) => {
               document.querySelectorAll("video").forEach((video) => {
                 if (video !== event.currentTarget) {
@@ -552,12 +519,6 @@ function PortfolioItemCard({
             }}
             onError={() => setHasError(true)}
           />
-        )}
-
-        {isVideo && isVideoActive && loadPercent < 100 && !hasError && (
-          <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-werbens-midnight/75 px-2.5 py-1 text-xs font-semibold text-white">
-            {loadPercent || 1}%
-          </div>
         )}
 
         {!isVideo && (
@@ -702,7 +663,6 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
   const [authError, setAuthError] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [notice, setNotice] = useState("");
-  const [visibleLimits, setVisibleLimits] = useState({});
 
   const categories = useMemo(
     () => (Array.isArray(catalogState?.categories) ? catalogState.categories : []),
@@ -716,17 +676,6 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
 
   const totalItems = Number(catalogState?.totalItems || 0);
   const isAdmin = Boolean(adminToken);
-
-  function getVisibleLimit(category) {
-    return visibleLimits[category.id] || INITIAL_ITEMS_PER_CATEGORY;
-  }
-
-  function showMoreItems(category) {
-    setVisibleLimits((limits) => ({
-      ...limits,
-      [category.id]: (limits[category.id] || INITIAL_ITEMS_PER_CATEGORY) + ITEMS_PER_BATCH,
-    }));
-  }
 
   function updateCatalog(nextCatalog) {
     const hydratedCatalog = attachMediaUrls(nextCatalog, apiBase);
@@ -911,35 +860,21 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
                 This category is empty. Upload media from admin mode.
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {(category.items || []).slice(0, getVisibleLimit(category)).map((item, itemIndex) => (
-                    <PortfolioItemCard
-                      key={item.id}
-                      admin={isAdmin}
-                      apiBase={apiBase}
-                      categories={categories}
-                      item={item}
-                      onCatalogUpdate={updateCatalog}
-                      priority={categoryIndex === 0 && itemIndex < 6}
-                      setNotice={setNotice}
-                      token={adminToken}
-                    />
-                  ))}
-                </div>
-
-                {getVisibleLimit(category) < (category.items || []).length && (
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => showMoreItems(category)}
-                      className="min-h-11 rounded-lg border border-werbens-dark-cyan/20 bg-white px-5 text-sm font-semibold text-werbens-dark-cyan transition-colors hover:border-werbens-dark-cyan hover:bg-werbens-cloud focus-ring"
-                    >
-                      Show more {Math.min(ITEMS_PER_BATCH, (category.items || []).length - getVisibleLimit(category))} assets
-                    </button>
-                  </div>
-                )}
-              </>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {(category.items || []).map((item, itemIndex) => (
+                  <PortfolioItemCard
+                    key={item.id}
+                    admin={isAdmin}
+                    apiBase={apiBase}
+                    categories={categories}
+                    item={item}
+                    onCatalogUpdate={updateCatalog}
+                    priority={categoryIndex === 0 && itemIndex < 6}
+                    setNotice={setNotice}
+                    token={adminToken}
+                  />
+                ))}
+              </div>
             )}
           </section>
         ))}
