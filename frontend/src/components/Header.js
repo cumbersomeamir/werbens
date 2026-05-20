@@ -17,8 +17,6 @@ const NAV_ITEMS = [
   { href: "/pricing", label: "Pricing" },
   { href: "/create", label: "Create" },
   { href: "/login", label: "Login" },
-  { href: "/splash", label: "Splash", splash: true },
-  { href: "/templates/admin", label: "Admin", muted: true },
 ];
 
 const APP_ITEMS = [
