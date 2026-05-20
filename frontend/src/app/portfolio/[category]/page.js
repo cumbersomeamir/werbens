@@ -1,7 +1,7 @@
 import { PortfolioGallery } from "../components/PortfolioGallery";
 import { getApiBase, getPortfolioCatalog } from "../portfolioData";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata = {
   title: "Portfolio | Werbens",

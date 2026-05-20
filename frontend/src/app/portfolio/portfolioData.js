@@ -36,7 +36,7 @@ export async function getPortfolioCatalog() {
 
   try {
     const response = await fetch(`${apiBase}/api/portfolio`, {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
 
     if (!response.ok) {

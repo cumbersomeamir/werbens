@@ -15,7 +15,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
 
-const CATALOG_TTL_MS = Math.max(1000, Number(process.env.PORTFOLIO_CATALOG_TTL_MS) || 15000);
+const CATALOG_TTL_MS = Math.max(1000, Number(process.env.PORTFOLIO_CATALOG_TTL_MS) || 5 * 60 * 1000);
 const ADMIN_PASSWORD = process.env.PORTFOLIO_ADMIN_PASSWORD || "JuiceWrld@999";
 const ADMIN_SECRET = process.env.PORTFOLIO_ADMIN_SECRET || randomBytes(32).toString("hex");
 const ADMIN_TOKEN_TTL_MS = Math.max(60_000, Number(process.env.PORTFOLIO_ADMIN_TOKEN_TTL_MS) || 6 * 60 * 60_000);
@@ -498,10 +498,12 @@ export async function getPortfolioCatalogHandler(req, res) {
   try {
     const includeEmptyRequested =
       req.query.includeEmpty === "1" || req.query.includeEmpty === "true";
-    const catalog = await getPortfolioCatalog({
-      includeEmpty: includeEmptyRequested && verifyAdminToken(getBearerToken(req)),
-    });
-    res.set("Cache-Control", "public, max-age=15, stale-while-revalidate=60");
+    const includeEmpty = includeEmptyRequested && verifyAdminToken(getBearerToken(req));
+    const catalog = await getPortfolioCatalog({ includeEmpty });
+    res.set(
+      "Cache-Control",
+      includeEmpty ? "private, no-store" : "public, max-age=300, stale-while-revalidate=600"
+    );
     res.json(catalog);
   } catch {
     res.status(500).json({ error: "Unable to load portfolio catalog." });
