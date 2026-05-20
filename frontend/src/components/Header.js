@@ -12,6 +12,8 @@ const NAV_ITEMS = [
   { href: "/onboarding", label: "Onboarding" },
   { href: "/automatic", label: "Automatic" },
   { label: "Apps", apps: true },
+  { href: "/portfolio", label: "Portfolio" },
+  { href: "/packages", label: "Packages" },
   { href: "/pricing", label: "Pricing" },
   { href: "/create", label: "Create" },
   { href: "/login", label: "Login" },
