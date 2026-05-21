@@ -4,12 +4,14 @@ import { readdir, stat } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { preparePortfolioUpload } from "../lib/portfolioMediaProcessing.js";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultSourceDir = path.resolve(scriptDir, "../../../werbens-creations");
 const sourceDir = path.resolve(process.env.PORTFOLIO_MEDIA_DIR || defaultSourceDir);
 const prefix = String(process.env.PORTFOLIO_S3_PREFIX || "portfolio").replace(/^\/+|\/+$/g, "");
 const categoryMarkerPrefix = `${prefix}/.categories`;
+const thumbnailPrefix = `${prefix}/.thumbnails`;
 const bucket = process.env.AWS_S3_BUCKET || "werbens";
 
 const s3Client = new S3Client({
@@ -72,15 +74,34 @@ async function uploadFile(category, fileName, filePath, fileStat) {
     return "skipped";
   }
 
+  const processed = await preparePortfolioUpload(filePath, fileName);
+  const mediaStat = await stat(processed.mediaPath);
   await s3Client.send(
     new PutObjectCommand({
       Bucket: bucket,
       Key: key,
-      Body: fs.createReadStream(filePath),
-      ContentLength: fileStat.size,
+      Body: fs.createReadStream(processed.mediaPath),
+      ContentLength: mediaStat.size,
       ContentType: mimeTypes[path.extname(fileName).toLowerCase()] || "application/octet-stream",
     })
   );
+
+  if (processed.thumbnailPath) {
+    const thumbnailStat = await stat(processed.thumbnailPath);
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: `${thumbnailPrefix}/${encodeS3Segment(category)}/${encodeS3Segment(`${path.parse(fileName).name}.jpg`)}`,
+        Body: fs.createReadStream(processed.thumbnailPath),
+        ContentLength: thumbnailStat.size,
+        ContentType: "image/jpeg",
+      })
+    );
+  }
+
+  for (const cleanupPath of processed.cleanupPaths) {
+    fs.rmSync(cleanupPath, { force: true });
+  }
   return "uploaded";
 }
 

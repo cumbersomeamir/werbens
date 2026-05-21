@@ -14,6 +14,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import multer from "multer";
+import { preparePortfolioUpload } from "../lib/portfolioMediaProcessing.js";
 
 const CATALOG_TTL_MS = Math.max(1000, Number(process.env.PORTFOLIO_CATALOG_TTL_MS) || 5 * 60 * 1000);
 const ADMIN_PASSWORD = process.env.PORTFOLIO_ADMIN_PASSWORD || "JuiceWrld@999";
@@ -28,6 +29,7 @@ const MEDIA_URL_EXPIRES_SECONDS = Math.max(
 );
 const CATEGORY_MARKER_PREFIX = `${PORTFOLIO_PREFIX}/.categories`;
 const CATEGORY_ORDER_KEY = `${PORTFOLIO_PREFIX}/.category-order.json`;
+const THUMBNAIL_PREFIX = `${PORTFOLIO_PREFIX}/.thumbnails`;
 const UPLOAD_TMP_DIR = path.join(os.tmpdir(), "werbens-portfolio-uploads");
 
 const s3Client = new S3Client({
@@ -163,6 +165,17 @@ function ensureSafeFileName(value) {
   return fileName;
 }
 
+function ensureSafeExistingFileName(value) {
+  const fileName = path.basename(String(value || "").replace(/\0/g, ""));
+  if (!fileName || fileName === "." || fileName === ".." || fileName.startsWith(".")) {
+    const error = new Error("Invalid media file name.");
+    error.status = 400;
+    throw error;
+  }
+  ensureSupportedMediaFile(fileName);
+  return fileName;
+}
+
 function ensureSupportedMediaFile(fileName) {
   if (!getMediaType(fileName)) {
     const error = new Error("Unsupported media type.");
@@ -214,8 +227,7 @@ function decodeS3Segment(value) {
 
 function getMediaKey(categoryName, fileName) {
   const category = ensureSafeCategoryName(categoryName);
-  const mediaFile = ensureSafeFileName(fileName);
-  ensureSupportedMediaFile(mediaFile);
+  const mediaFile = ensureSafeExistingFileName(fileName);
   return `${PORTFOLIO_PREFIX}/${encodeS3Segment(category)}/${encodeS3Segment(mediaFile)}`;
 }
 
@@ -224,9 +236,20 @@ function getCategoryMarkerKey(categoryName) {
   return `${CATEGORY_MARKER_PREFIX}/${encodeS3Segment(category)}.json`;
 }
 
+function getThumbnailKey(categoryName, fileName) {
+  const category = ensureSafeCategoryName(categoryName);
+  const mediaFile = ensureSafeExistingFileName(fileName);
+  const parsed = path.parse(mediaFile);
+  return `${THUMBNAIL_PREFIX}/${encodeS3Segment(category)}/${encodeS3Segment(`${parsed.name}.jpg`)}`;
+}
+
 function parseMediaKey(key) {
   const prefix = `${PORTFOLIO_PREFIX}/`;
-  if (!key.startsWith(prefix) || key.startsWith(`${CATEGORY_MARKER_PREFIX}/`)) return null;
+  if (
+    !key.startsWith(prefix) ||
+    key.startsWith(`${CATEGORY_MARKER_PREFIX}/`) ||
+    key.startsWith(`${THUMBNAIL_PREFIX}/`)
+  ) return null;
 
   const remainder = key.slice(prefix.length);
   const slashIndex = remainder.indexOf("/");
@@ -255,6 +278,18 @@ async function buildSignedMediaUrl(fileName, key) {
       Bucket: BUCKET,
       Key: key,
       ResponseContentType: getContentType(fileName),
+    }),
+    { expiresIn: MEDIA_URL_EXPIRES_SECONDS }
+  );
+}
+
+async function buildSignedThumbnailUrl(key) {
+  return getSignedUrl(
+    s3Client,
+    new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      ResponseContentType: "image/jpeg",
     }),
     { expiresIn: MEDIA_URL_EXPIRES_SECONDS }
   );
@@ -368,6 +403,11 @@ async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
     getCategoryOrder(),
   ]);
   const categoryMap = new Map();
+  const thumbnailKeys = new Set(
+    objects
+      .map((object) => object.Key)
+      .filter((key) => key.startsWith(`${THUMBNAIL_PREFIX}/`))
+  );
 
   for (const object of objects) {
     const markerCategory = parseCategoryMarkerKey(object.Key);
@@ -394,6 +434,8 @@ async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
         .map(async (file) => {
           const extension = getExtension(file.fileName);
           const modifiedMs = file.lastModified ? new Date(file.lastModified).getTime() : Date.now();
+          const thumbnailKey = getThumbnailKey(file.category, file.fileName);
+          const hasThumbnail = thumbnailKeys.has(thumbnailKey);
           return {
             id: `${file.category}::${file.fileName}`,
             category: file.category,
@@ -405,6 +447,7 @@ async function buildPortfolioCatalog({ includeEmpty = false } = {}) {
             mimeType: getContentType(file.fileName),
             modifiedAt: file.lastModified ? new Date(file.lastModified).toISOString() : null,
             sizeBytes: file.sizeBytes,
+            thumbnailUrl: hasThumbnail ? await buildSignedThumbnailUrl(thumbnailKey) : null,
             title: formatTitle(file.fileName),
             type: getMediaType(file.fileName),
           };
@@ -453,6 +496,55 @@ function cleanupUploadedFiles(files = []) {
   files.forEach((file) => {
     if (file?.path) rm(file.path, { force: true }).catch(() => {});
   });
+}
+
+function cleanupPaths(paths = []) {
+  paths.forEach((filePath) => {
+    if (filePath) rm(filePath, { force: true }).catch(() => {});
+  });
+}
+
+async function putProcessedMediaObject({ category, fileName, file }) {
+  let processed;
+  try {
+    processed = await preparePortfolioUpload(file.path, fileName);
+    const mediaStat = await fs.promises.stat(processed.mediaPath);
+
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: getMediaKey(category, fileName),
+        Body: fs.createReadStream(processed.mediaPath),
+        ContentLength: mediaStat.size,
+        ContentType: getContentType(fileName),
+      })
+    );
+
+    if (processed.thumbnailPath) {
+      const thumbnailStat = await fs.promises.stat(processed.thumbnailPath);
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: BUCKET,
+          Key: getThumbnailKey(category, fileName),
+          Body: fs.createReadStream(processed.thumbnailPath),
+          ContentLength: thumbnailStat.size,
+          ContentType: "image/jpeg",
+        })
+      );
+    }
+  } finally {
+    cleanupPaths(processed?.cleanupPaths);
+  }
+}
+
+async function deleteThumbnail(category, fileName) {
+  try {
+    await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: getThumbnailKey(category, fileName) }));
+  } catch (error) {
+    if (error?.$metadata?.httpStatusCode !== 404 && error?.name !== "NoSuchKey") {
+      throw error;
+    }
+  }
 }
 
 const upload = multer({
@@ -620,15 +712,7 @@ export async function uploadPortfolioMediaHandler(req, res) {
     const uploaded = [];
     for (const file of files) {
       const fileName = await getUniqueFileName(category, ensureSafeFileName(file.originalname));
-      await s3Client.send(
-        new PutObjectCommand({
-          Bucket: BUCKET,
-          Key: getMediaKey(category, fileName),
-          Body: fs.createReadStream(file.path),
-          ContentLength: file.size,
-          ContentType: getContentType(fileName),
-        })
-      );
+      await putProcessedMediaObject({ category, fileName, file });
       uploaded.push(fileName);
     }
 
@@ -645,7 +729,7 @@ export async function uploadPortfolioMediaHandler(req, res) {
 export async function updatePortfolioMediaHandler(req, res) {
   try {
     const currentCategory = ensureSafeCategoryName(req.params.category);
-    const currentFile = ensureSafeFileName(req.params.file);
+    const currentFile = ensureSafeExistingFileName(req.params.file);
     const nextCategory = ensureSafeCategoryName(req.body?.category || currentCategory);
     const requestedName = String(req.body?.fileName || currentFile).trim();
     const currentExtension = path.extname(currentFile);
@@ -661,6 +745,8 @@ export async function updatePortfolioMediaHandler(req, res) {
     }
 
     if (sourceKey !== targetKey) {
+      const sourceThumbnailKey = getThumbnailKey(currentCategory, currentFile);
+      const targetThumbnailKey = getThumbnailKey(nextCategory, nextFile);
       await s3Client.send(
         new CopyObjectCommand({
           Bucket: BUCKET,
@@ -670,6 +756,18 @@ export async function updatePortfolioMediaHandler(req, res) {
           MetadataDirective: "REPLACE",
         })
       );
+      if (await s3ObjectExists(sourceThumbnailKey)) {
+        await s3Client.send(
+          new CopyObjectCommand({
+            Bucket: BUCKET,
+            CopySource: `${BUCKET}/${encodeURIComponent(sourceThumbnailKey).replace(/%2F/g, "/")}`,
+            Key: targetThumbnailKey,
+            ContentType: "image/jpeg",
+            MetadataDirective: "REPLACE",
+          })
+        );
+        await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: sourceThumbnailKey }));
+      }
       await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: sourceKey }));
       await putCategoryMarker(nextCategory);
     }
@@ -693,7 +791,7 @@ export async function replacePortfolioMediaHandler(req, res) {
     }
 
     const category = ensureSafeCategoryName(req.params.category);
-    const currentFile = ensureSafeFileName(req.params.file);
+    const currentFile = ensureSafeExistingFileName(req.params.file);
     const replacementName = ensureSafeFileName(file.originalname);
     const replacementExtension = path.extname(replacementName);
     const currentBaseName = path.basename(currentFile, path.extname(currentFile));
@@ -711,17 +809,10 @@ export async function replacePortfolioMediaHandler(req, res) {
       return;
     }
 
-    await s3Client.send(
-      new PutObjectCommand({
-        Bucket: BUCKET,
-        Key: targetKey,
-        Body: fs.createReadStream(file.path),
-        ContentLength: file.size,
-        ContentType: getContentType(nextFile),
-      })
-    );
+    await putProcessedMediaObject({ category, fileName: nextFile, file });
     if (targetKey !== currentKey) {
       await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: currentKey }));
+      await deleteThumbnail(category, currentFile);
     }
 
     cleanupUploadedFiles([file]);
@@ -737,8 +828,11 @@ export async function replacePortfolioMediaHandler(req, res) {
 
 export async function deletePortfolioMediaHandler(req, res) {
   try {
-    const mediaKey = getMediaKey(req.params.category, req.params.file);
+    const category = ensureSafeCategoryName(req.params.category);
+    const file = ensureSafeExistingFileName(req.params.file);
+    const mediaKey = getMediaKey(category, file);
     await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: mediaKey }));
+    await deleteThumbnail(category, file);
     clearCatalogCache();
     await sendAdminCatalog(res);
   } catch (error) {
@@ -751,7 +845,7 @@ export async function deletePortfolioMediaHandler(req, res) {
 export async function streamPortfolioMediaHandler(req, res) {
   try {
     const category = ensureSafeCategoryName(req.params.category);
-    const file = ensureSafeFileName(req.params.file);
+    const file = ensureSafeExistingFileName(req.params.file);
     const key = getMediaKey(category, file);
     const extension = getExtension(file);
     const head = await s3Client.send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }));

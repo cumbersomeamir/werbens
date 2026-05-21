@@ -42,7 +42,7 @@ function attachMediaUrls(catalog, apiBase) {
       items: Array.isArray(category.items)
         ? category.items.map((item) => ({
             ...item,
-            mediaUrl: item.mediaUrl || `${apiBase}${item.mediaPath || ""}`,
+            mediaUrl: item.mediaPath ? `${apiBase}${item.mediaPath}` : item.mediaUrl,
           }))
         : [],
     })),
@@ -516,7 +516,8 @@ function PortfolioItemCard({
             className="h-full w-full bg-werbens-midnight object-contain"
             controls
             playsInline
-            preload="metadata"
+            preload={item.thumbnailUrl ? "none" : "metadata"}
+            poster={item.thumbnailUrl || undefined}
             src={item.mediaUrl}
             onPlay={(event) => {
               document.querySelectorAll("video").forEach((video) => {
