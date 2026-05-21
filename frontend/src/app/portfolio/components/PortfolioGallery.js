@@ -269,8 +269,16 @@ function AdminPanel({
   }
 
   return (
-    <section className="border-b border-werbens-dark-cyan/10 bg-werbens-surface">
+    <section id="portfolio-admin-tools" className="scroll-mt-36 border-b border-werbens-dark-cyan/10 bg-werbens-surface">
       <div className="mx-auto grid max-w-7xl gap-5 px-5 py-5 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-1 rounded-lg border border-werbens-dark-cyan/10 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-werbens-text">Portfolio admin tools</h2>
+            <p className="text-sm text-werbens-muted">Create categories, upload media, and reorder sections.</p>
+          </div>
+          <span className="text-xs font-semibold uppercase tracking-wide text-werbens-dark-cyan">Admin mode</span>
+        </div>
+
         <div className="rounded-lg border border-werbens-dark-cyan/10 bg-white p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-werbens-text">Section order</h2>
@@ -712,6 +720,16 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
       setAuthBusy(false);
     }
   }
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    window.requestAnimationFrame(() => {
+      document.getElementById("portfolio-admin-tools")?.scrollIntoView({
+        block: "start",
+        behavior: "smooth",
+      });
+    });
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!initialCategorySlug || activeCategory !== "all") return;
