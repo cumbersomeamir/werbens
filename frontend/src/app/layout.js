@@ -48,8 +48,19 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${bodyFont.variable} ${displayFont.variable}`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+try {
+  if (window.localStorage.getItem("werbens-theme") === "night") {
+    document.documentElement.classList.add("night");
+  }
+} catch (_) {}
+            `.trim(),
+          }}
+        />
         <AuthSessionProvider>
           <AuthGuard>
             <Header />

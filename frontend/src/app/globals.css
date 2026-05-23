@@ -198,6 +198,71 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
+  html.night {
+    color-scheme: dark;
+    --color-werbens-midnight: #070b14;
+    --color-werbens-deep: #0b1120;
+    --color-werbens-slate: #1e293b;
+    --color-werbens-steel: #b7c8ca;
+    --color-werbens-surface: #0b1120;
+    --color-werbens-mist: #070b14;
+    --color-werbens-cloud: #121a2a;
+    --color-werbens-text: #f5fbfb;
+    --color-werbens-alt-text: #f0fdfa;
+    --color-werbens-muted: #a7b8bd;
+  }
+
+  html.night body {
+    background:
+      radial-gradient(circle at top, rgba(49, 104, 121, 0.16), transparent 34rem),
+      #070b14;
+    color: #f5fbfb;
+  }
+
+  html.night [class*="bg-white"] {
+    background-color: rgba(13, 20, 34, 0.86) !important;
+  }
+
+  html.night [class*="bg-werbens-mist"],
+  html.night [class*="bg-werbens-surface"],
+  html.night [class*="bg-werbens-cloud"] {
+    background-color: rgba(7, 11, 20, 0.92) !important;
+  }
+
+  html.night [class*="text-werbens-text"],
+  html.night [class*="text-slate-900"],
+  html.night [class*="text-gray-900"] {
+    color: #f5fbfb !important;
+  }
+
+  html.night [class*="text-werbens-steel"],
+  html.night [class*="text-werbens-muted"],
+  html.night [class*="text-slate-600"],
+  html.night [class*="text-slate-500"],
+  html.night [class*="text-gray-600"],
+  html.night [class*="text-gray-500"] {
+    color: #a7b8bd !important;
+  }
+
+  html.night [class*="border-werbens-dark-cyan"],
+  html.night [class*="border-slate-"],
+  html.night [class*="border-gray-"] {
+    border-color: rgba(127, 231, 220, 0.18) !important;
+  }
+
+  html.night input,
+  html.night textarea,
+  html.night select {
+    background-color: rgba(9, 16, 30, 0.92);
+    border-color: rgba(127, 231, 220, 0.2);
+    color: #f5fbfb;
+  }
+
+  html.night input::placeholder,
+  html.night textarea::placeholder {
+    color: rgba(167, 184, 189, 0.72);
+  }
+
   ::selection {
     @apply bg-werbens-light-cyan/40 text-werbens-midnight;
   }

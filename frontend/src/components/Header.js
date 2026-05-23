@@ -609,6 +609,57 @@ function HamburgerIcon({ isOpen }) {
   );
 }
 
+function NightModeToggle() {
+  const [nightMode, setNightMode] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem("werbens-theme");
+    const shouldUseNight = storedTheme === "night";
+    document.documentElement.classList.toggle("night", shouldUseNight);
+    setNightMode(shouldUseNight);
+    setMounted(true);
+  }, []);
+
+  function toggleNightMode() {
+    setNightMode((current) => {
+      const next = !current;
+      document.documentElement.classList.toggle("night", next);
+      window.localStorage.setItem("werbens-theme", next ? "night" : "light");
+      return next;
+    });
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggleNightMode}
+      className="
+        relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl
+        border border-werbens-dark-cyan/10 bg-white/70 text-werbens-text
+        shadow-sm shadow-werbens-dark-cyan/10
+        transition-all duration-300 ease-out
+        hover:bg-werbens-dark-cyan/5 hover:text-werbens-dark-cyan
+        active:scale-95 focus-ring
+      "
+      aria-label={nightMode ? "Switch to light mode" : "Switch to night mode"}
+      aria-pressed={mounted ? nightMode : false}
+      title={nightMode ? "Light mode" : "Night mode"}
+    >
+      {nightMode ? (
+        <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth={2}>
+          <circle cx="12" cy="12" r="4" />
+          <path strokeLinecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.8A8.5 8.5 0 1111.2 3a6.6 6.6 0 009.8 9.8z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -668,27 +719,33 @@ export function Header() {
                 </span>
               </Link>
 
-              <DesktopNav pathname={pathname} />
+              <div className="hidden items-center gap-4 md:flex">
+                <DesktopNav pathname={pathname} />
+                <NightModeToggle />
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setMenuOpen((prev) => !prev)}
-                className="
-                  md:hidden relative rounded-2xl border border-werbens-dark-cyan/10 bg-white/65 p-2.5
-                  text-werbens-text
-                  transition-all duration-300 ease-out
-                  hover:text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5
-                  active:scale-95
-                  min-h-[46px] min-w-[46px]
-                  flex items-center justify-center
-                  focus-ring
-                "
-                aria-expanded={menuOpen}
-                aria-controls="mobile-nav"
-                aria-label={menuOpen ? "Close menu" : "Open menu"}
-              >
-                <HamburgerIcon isOpen={menuOpen} />
-              </button>
+              <div className="flex items-center gap-2 md:hidden">
+                <NightModeToggle />
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="
+                    relative rounded-2xl border border-werbens-dark-cyan/10 bg-white/65 p-2.5
+                    text-werbens-text
+                    transition-all duration-300 ease-out
+                    hover:text-werbens-dark-cyan hover:bg-werbens-dark-cyan/5
+                    active:scale-95
+                    min-h-[46px] min-w-[46px]
+                    flex items-center justify-center
+                    focus-ring
+                  "
+                  aria-expanded={menuOpen}
+                  aria-controls="mobile-nav"
+                  aria-label={menuOpen ? "Close menu" : "Open menu"}
+                >
+                  <HamburgerIcon isOpen={menuOpen} />
+                </button>
+              </div>
             </div>
           </div>
 
