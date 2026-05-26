@@ -4,6 +4,36 @@ import { useEffect, useMemo, useState } from "react";
 
 const MEDIA_ACCEPT = ".mp4,.webm,.mov,.m4v,.jpg,.jpeg,.png,.webp,.gif";
 
+const HELP_STEPS = [
+  {
+    number: "01",
+    title: "Strategy",
+    body: "We read the brand, audience, offer, and platform before a single asset is made.",
+  },
+  {
+    number: "02",
+    title: "Concept",
+    body: "Hooks, story angles, visual direction, and campaign ideas are shaped for attention.",
+  },
+  {
+    number: "03",
+    title: "AI production",
+    body: "We use AI systems and human taste to create videos, images, and campaign assets.",
+  },
+  {
+    number: "04",
+    title: "Delivery",
+    body: "Ready-to-post content is organized for reels, ads, social, and brand launches.",
+  },
+  {
+    number: "05",
+    title: "Performance",
+    body: "The work is built to be tested, promoted, and improved across campaigns.",
+  },
+];
+
+const STUDIO_MARKERS = ["Werbens archive", "AI content studio", "Mumbai - worldwide"];
+
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
 }
@@ -47,6 +77,15 @@ function attachMediaUrls(catalog, apiBase) {
         : [],
     })),
   };
+}
+
+function getAllPortfolioItems(categories) {
+  return categories.flatMap((category) =>
+    (category.items || []).map((item) => ({
+      ...item,
+      categoryName: category.name,
+    }))
+  );
 }
 
 function getAdminHeaders(token) {
@@ -508,7 +547,8 @@ function PortfolioItemCard({
   }
 
   return (
-    <article className="group overflow-hidden rounded-lg border border-werbens-dark-cyan/10 bg-white shadow-sm shadow-werbens-dark-cyan/5 transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-werbens-dark-cyan/10">
+    <article className="group relative overflow-hidden rounded-2xl border border-werbens-light-cyan/12 bg-[#07111f] shadow-2xl shadow-black/25 transition-transform duration-300 hover:-translate-y-1 hover:border-werbens-glow/35">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-werbens-glow/60 to-transparent" />
       <div className="relative aspect-[9/16] overflow-hidden bg-werbens-midnight">
         {isVideo && (
           <video
@@ -548,19 +588,22 @@ function PortfolioItemCard({
         )}
       </div>
 
-      <div className="space-y-3 p-4">
-        <h3 className="truncate text-sm font-semibold text-werbens-text" title={item.title}>
+      <div className="space-y-3 border-t border-werbens-light-cyan/10 p-4">
+        <p className="text-[0.65rem] font-semibold uppercase text-werbens-glow">
+          {item.category}
+        </p>
+        <h3 className="truncate text-sm font-semibold text-white" title={item.title}>
           {item.title}
         </h3>
-        <div className="flex items-center justify-between gap-3 text-xs text-werbens-muted">
-          <span className="rounded-md bg-werbens-cloud px-2 py-1 font-semibold text-werbens-dark-cyan">
+        <div className="flex items-center justify-between gap-3 text-xs text-slate-400">
+          <span className="rounded-full bg-werbens-glow/10 px-2.5 py-1 font-semibold text-werbens-light-cyan ring-1 ring-werbens-light-cyan/15">
             {extension}
           </span>
           <span>{item.formattedSize}</span>
         </div>
 
         {admin && (
-          <div className="border-t border-werbens-dark-cyan/10 pt-3">
+          <div className="border-t border-werbens-light-cyan/10 pt-3">
             <div className="flex flex-wrap gap-2">
               <AdminButton variant="secondary" className="min-h-9 px-3 py-1.5 text-xs" onClick={() => setEditing((value) => !value)}>
                 Edit
@@ -576,22 +619,22 @@ function PortfolioItemCard({
             </div>
 
             {editing && (
-              <div className="mt-3 space-y-3 rounded-lg bg-werbens-mist p-3">
-                <label className="block text-xs font-semibold text-werbens-text">
+              <div className="mt-3 space-y-3 rounded-xl border border-werbens-light-cyan/10 bg-werbens-midnight/80 p-3">
+                <label className="block text-xs font-semibold text-white">
                   File name
                   <input
                     value={fileName}
                     onChange={(event) => setFileName(event.target.value)}
-                    className="mt-1 w-full rounded-lg border border-werbens-dark-cyan/15 bg-white px-3 py-2 text-xs outline-none focus:border-werbens-dark-cyan"
+                    className="mt-1 w-full rounded-lg border border-werbens-light-cyan/15 bg-white px-3 py-2 text-xs text-werbens-text outline-none focus:border-werbens-dark-cyan"
                   />
                 </label>
 
-                <label className="block text-xs font-semibold text-werbens-text">
+                <label className="block text-xs font-semibold text-white">
                   Category
                   <select
                     value={targetCategory}
                     onChange={(event) => setTargetCategory(event.target.value)}
-                    className="mt-1 w-full rounded-lg border border-werbens-dark-cyan/15 bg-white px-3 py-2 text-xs outline-none focus:border-werbens-dark-cyan"
+                    className="mt-1 w-full rounded-lg border border-werbens-light-cyan/15 bg-white px-3 py-2 text-xs text-werbens-text outline-none focus:border-werbens-dark-cyan"
                   >
                     {categories.map((category) => (
                       <option key={category.id} value={category.name}>
@@ -601,7 +644,7 @@ function PortfolioItemCard({
                   </select>
                 </label>
 
-                <label className="block text-xs font-semibold text-werbens-text">
+                <label className="block text-xs font-semibold text-white">
                   Replace file
                   <input
                     type="file"
@@ -612,7 +655,7 @@ function PortfolioItemCard({
                       event.target.value = "";
                       replaceMedia(replacement);
                     }}
-                    className="mt-1 w-full rounded-lg border border-werbens-dark-cyan/15 bg-white px-3 py-2 text-xs"
+                    className="mt-1 w-full rounded-lg border border-werbens-light-cyan/15 bg-white px-3 py-2 text-xs text-werbens-text"
                   />
                 </label>
 
@@ -633,27 +676,152 @@ function PortfolioItemCard({
   );
 }
 
-function CategoryButton({ category, active, onClick }) {
+function EditorialHeading({ eyebrow, title, children }) {
+  return (
+    <div>
+      <p className="mb-3 text-xs font-semibold uppercase text-werbens-glow">{eyebrow}</p>
+      <h2
+        className="max-w-3xl text-4xl font-semibold leading-[0.95] text-white sm:text-5xl lg:text-6xl"
+        style={{ fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: 0 }}
+      >
+        {title}
+      </h2>
+      {children && <div className="mt-5 max-w-2xl text-base leading-7 text-slate-300">{children}</div>}
+    </div>
+  );
+}
+
+function HeroMediaStage({ categories, featuredItem }) {
+  const posterUrl =
+    featuredItem?.thumbnailUrl || (featuredItem?.type === "image" ? featuredItem.mediaUrl : "");
+
+  return (
+    <div className="relative h-[26rem] overflow-hidden rounded-[2rem] border border-werbens-light-cyan/15 bg-[#081321] p-3 shadow-2xl shadow-black/40 lg:h-[34rem]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(92,224,210,0.23),transparent_34%),linear-gradient(135deg,rgba(127,231,220,0.08),transparent_42%)]" />
+      <div className="hero-grid absolute inset-0 opacity-35" />
+      <div className="relative h-full overflow-hidden rounded-[1.5rem] border border-white/8 bg-werbens-midnight">
+        {posterUrl ? (
+          <img
+            alt={featuredItem?.title || "Werbens featured work"}
+            className="h-full w-full object-cover opacity-80"
+            decoding="async"
+            loading="eager"
+            src={posterUrl}
+          />
+        ) : (
+          <div className="absolute inset-0">
+            <div className="absolute left-[14%] top-[18%] h-44 w-44 rounded-full border border-werbens-glow/25" />
+            <div className="absolute right-[12%] top-[12%] h-52 w-52 rounded-full bg-werbens-glow/10 blur-3xl" />
+            <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-black via-black/60 to-transparent" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+        <div className="absolute left-5 top-5 rounded-full border border-werbens-light-cyan/20 bg-black/35 px-3 py-1 text-xs font-semibold text-werbens-light-cyan backdrop-blur">
+          Featured reel
+        </div>
+        <div className="absolute bottom-5 left-5 right-5">
+          <p className="text-xs font-semibold uppercase text-werbens-glow">
+            {featuredItem?.categoryName || categories[0]?.name || "Werbens archive"}
+          </p>
+          <h3 className="mt-2 max-w-xl text-2xl font-semibold text-white sm:text-3xl">
+            {featuredItem?.categoryName ? `Selected work from ${featuredItem.categoryName}` : "Creative systems for brand stories"}
+          </h3>
+          <div className="mt-5 flex items-center gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-werbens-glow text-lg font-bold text-werbens-midnight shadow-lg shadow-werbens-glow/25">
+              ▶
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-white">Browse the archive</p>
+              <p className="text-xs text-slate-400">Videos stay playable in the sections below.</p>
+            </div>
+          </div>
+        </div>
+        <div className="absolute right-4 top-4 hidden w-32 space-y-2 lg:block">
+          {categories.slice(0, 4).map((category, index) => (
+            <div
+              key={category.id}
+              className="rounded-xl border border-white/10 bg-black/35 px-3 py-2 text-right backdrop-blur"
+            >
+              <p className="text-xs text-werbens-glow">0{index + 1}</p>
+              <p className="truncate text-xs font-semibold text-white">{category.name}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StudioStory({ totalItems, categories }) {
+  return (
+    <section id="about-us" className="border-y border-werbens-light-cyan/10 bg-[#081321]/80">
+      <div className="mx-auto grid max-w-7xl gap-0 px-5 sm:px-6 lg:grid-cols-[0.9fr_1.4fr] lg:px-8">
+        <div className="border-b border-werbens-light-cyan/10 py-10 lg:border-b-0 lg:border-r lg:pr-10">
+          <EditorialHeading eyebrow="About us" title="We're Werbens. A creative AI content studio.">
+            <p>
+              We fuse strategy, AI production, and human creative direction to turn brand ideas into
+              scroll-stopping films, images, reels, and campaign assets.
+            </p>
+          </EditorialHeading>
+          <div className="mt-8 grid grid-cols-3 gap-3">
+            <div className="rounded-2xl border border-werbens-light-cyan/10 bg-white/5 p-4">
+              <p className="text-3xl font-bold text-white">{totalItems}</p>
+              <p className="mt-1 text-xs text-slate-400">Assets</p>
+            </div>
+            <div className="rounded-2xl border border-werbens-light-cyan/10 bg-white/5 p-4">
+              <p className="text-3xl font-bold text-white">{categories.length}</p>
+              <p className="mt-1 text-xs text-slate-400">Categories</p>
+            </div>
+            <div className="rounded-2xl border border-werbens-light-cyan/10 bg-white/5 p-4">
+              <p className="text-3xl font-bold text-white">01</p>
+              <p className="mt-1 text-xs text-slate-400">Studio</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="how-we-help" className="py-10 lg:pl-10">
+          <p className="mb-8 text-xs font-semibold uppercase text-werbens-glow">How we help brands</p>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            {HELP_STEPS.map((step, index) => (
+              <div key={step.number} className="relative rounded-2xl border border-werbens-light-cyan/10 bg-white/[0.04] p-4">
+                {index < HELP_STEPS.length - 1 && (
+                  <span className="absolute right-[-1.25rem] top-7 hidden h-px w-8 bg-werbens-light-cyan/25 xl:block" />
+                )}
+                <p className="text-2xl text-werbens-light-cyan">{step.number}</p>
+                <h3 className="mt-5 text-sm font-bold uppercase text-white">{step.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-400">{step.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CategoryButton({ category, active, onClick, index }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cx(
-        "flex shrink-0 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors focus-ring",
+        "group relative flex min-w-[9rem] shrink-0 flex-col items-start gap-3 overflow-hidden rounded-2xl border px-4 py-4 text-left transition-colors focus-ring",
         active
-          ? "border-werbens-dark-cyan bg-werbens-dark-cyan text-white"
-          : "border-werbens-dark-cyan/12 bg-white text-werbens-text hover:border-werbens-dark-cyan/30 hover:text-werbens-dark-cyan"
+          ? "border-werbens-glow bg-werbens-glow/12 text-white"
+          : "border-werbens-light-cyan/10 bg-white/[0.04] text-slate-300 hover:border-werbens-light-cyan/30 hover:text-white"
       )}
     >
-      <span>{category.name}</span>
+      <span className="text-xs text-werbens-glow">{index === 0 ? "00" : String(index).padStart(2, "0")}</span>
+      <span className="relative z-10 text-base font-semibold leading-tight">{category.name}</span>
       <span
         className={cx(
-          "rounded-md px-2 py-0.5 text-xs",
-          active ? "bg-white/15 text-white" : "bg-werbens-cloud text-werbens-dark-cyan"
+          "relative z-10 rounded-full px-2 py-0.5 text-xs",
+          active ? "bg-werbens-glow text-werbens-midnight" : "bg-werbens-light-cyan/10 text-werbens-light-cyan"
         )}
       >
-        {category.itemCount}
+        {pluralize(category.itemCount || 0, "asset")}
       </span>
+      <span className="pointer-events-none absolute inset-x-4 bottom-0 h-px bg-werbens-glow opacity-0 transition-opacity group-hover:opacity-80" />
     </button>
   );
 }
@@ -685,6 +853,11 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
 
   const totalItems = Number(catalogState?.totalItems || 0);
   const isAdmin = Boolean(adminToken);
+  const allItems = useMemo(() => getAllPortfolioItems(categories), [categories]);
+  const featuredItem = useMemo(
+    () => allItems.find((item) => item.type === "video") || allItems[0],
+    [allItems]
+  );
 
   function updateCatalog(nextCatalog) {
     const hydratedCatalog = attachMediaUrls(nextCatalog, apiBase);
@@ -758,31 +931,79 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-werbens-mist via-white to-white">
-      <section className="border-b border-werbens-dark-cyan/10 bg-white">
-        <div className="mx-auto flex max-w-7xl items-end justify-between gap-4 px-5 py-10 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <p className="mb-3 text-sm font-semibold text-werbens-dark-cyan">Werbens work</p>
-            <h1 className="font-display text-4xl font-bold text-werbens-text sm:text-5xl">
-              Portfolio
-            </h1>
+    <main className="min-h-screen overflow-hidden bg-[#050b12] text-white">
+      <section className="relative overflow-hidden border-b border-werbens-light-cyan/10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(92,224,210,0.16),transparent_30%),radial-gradient(circle_at_90%_8%,rgba(49,104,121,0.22),transparent_32%),linear-gradient(180deg,#07111f_0%,#050b12_100%)]" />
+        <div className="hero-grid absolute inset-0 opacity-30" />
+
+        <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-10 sm:px-6 lg:grid-cols-[0.9fr_1.25fr] lg:px-8 lg:py-14">
+          <div className="flex flex-col justify-between gap-10">
+            <div>
+              <div className="mb-8 flex flex-wrap items-center gap-3 text-xs font-semibold uppercase text-werbens-glow">
+                {STUDIO_MARKERS.map((marker) => (
+                  <span key={marker} className="rounded-full border border-werbens-light-cyan/15 px-3 py-1">
+                    {marker}
+                  </span>
+                ))}
+              </div>
+
+              <p className="mb-3 text-sm font-semibold text-werbens-glow">Werbens / Portfolio</p>
+              <h1
+                className="max-w-3xl text-5xl font-semibold leading-[0.9] text-white sm:text-6xl lg:text-7xl"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: 0 }}
+              >
+                Stories that <span className="text-werbens-light-cyan">move</span> brands.
+              </h1>
+              <p className="mt-6 max-w-xl text-base leading-7 text-slate-300">
+                Category-wise creative work across ads, hospitality, education, fashion, food,
+                personal brands, home decor, and more.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  document.getElementById("portfolio-archive")?.scrollIntoView({
+                    block: "start",
+                    behavior: "smooth",
+                  });
+                }}
+                className="group inline-flex items-center gap-4 rounded-full border border-werbens-glow/40 bg-werbens-glow/10 px-5 py-3 text-sm font-bold text-white transition hover:bg-werbens-glow/20 focus-ring"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-werbens-glow text-werbens-midnight">
+                  ▶
+                </span>
+                Browse work
+              </button>
+              <a
+                href="mailto:hello@werbens.com"
+                className="inline-flex min-h-12 items-center rounded-full border border-white/15 px-5 text-sm font-bold text-white transition hover:border-werbens-light-cyan/45 focus-ring"
+              >
+                Contact Werbens
+              </a>
+              <AdminButton
+                variant={isAdmin ? "secondary" : "primary"}
+                className="min-h-12 rounded-full px-5"
+                onClick={() => {
+                  if (isAdmin) {
+                    setAdminToken("");
+                    setNotice("Admin mode closed.");
+                    return;
+                  }
+                  setShowPasswordModal(true);
+                }}
+              >
+                {isAdmin ? "Admin on" : "Edit"}
+              </AdminButton>
+            </div>
           </div>
 
-          <AdminButton
-            variant={isAdmin ? "secondary" : "primary"}
-            onClick={() => {
-              if (isAdmin) {
-                setAdminToken("");
-                setNotice("Admin mode closed.");
-                return;
-              }
-              setShowPasswordModal(true);
-            }}
-          >
-            {isAdmin ? "Admin on" : "Edit"}
-          </AdminButton>
+          <HeroMediaStage categories={categories} featuredItem={featuredItem} />
         </div>
       </section>
+
+      <StudioStory totalItems={totalItems} categories={categories} />
 
       {isAdmin && (
         <AdminPanel
@@ -798,19 +1019,21 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
         />
       )}
 
-      <section className="sticky top-[6.75rem] z-20 border-b border-werbens-dark-cyan/10 bg-white/95 backdrop-blur sm:top-[7.5rem]">
+      <section id="portfolio-archive" className="sticky top-[6.75rem] z-20 border-y border-werbens-light-cyan/10 bg-[#050b12]/92 backdrop-blur-xl sm:top-[7.5rem]">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-          <nav className="-mx-5 flex gap-2 overflow-x-auto px-5 py-4 sm:-mx-6 sm:px-6" aria-label="Portfolio categories">
+          <nav className="-mx-5 flex gap-3 overflow-x-auto px-5 py-4 sm:-mx-6 sm:px-6" aria-label="Portfolio categories">
             <CategoryButton
-              category={{ id: "all", name: "All", itemCount: totalItems }}
+              category={{ id: "all", name: "All work", itemCount: totalItems }}
               active={activeCategory === "all"}
+              index={0}
               onClick={() => handleCategoryChange("all")}
             />
-            {categories.map((category) => (
+            {categories.map((category, index) => (
               <CategoryButton
                 key={category.id}
                 category={category}
                 active={activeCategory === category.id}
+                index={index + 1}
                 onClick={() => handleCategoryChange(category.id, category.name)}
               />
             ))}
@@ -834,10 +1057,10 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
         <div className="mx-auto max-w-7xl px-5 pt-8 sm:px-6 lg:px-8">
           <div
             className={cx(
-              "rounded-lg border px-4 py-3 text-sm font-medium",
+              "rounded-2xl border px-4 py-3 text-sm font-medium",
               error
                 ? "border-amber-200 bg-amber-50 text-amber-800"
-                : "border-werbens-dark-cyan/15 bg-white text-werbens-dark-cyan"
+                : "border-werbens-light-cyan/15 bg-white/[0.06] text-werbens-light-cyan"
             )}
           >
             {error || notice}
@@ -847,35 +1070,41 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
 
       {!error && categories.length === 0 && (
         <div className="mx-auto max-w-7xl px-5 py-16 sm:px-6 lg:px-8">
-          <div className="rounded-lg border border-werbens-dark-cyan/10 bg-white p-8 text-center text-werbens-muted">
+          <div className="rounded-2xl border border-werbens-light-cyan/10 bg-white/[0.04] p-8 text-center text-slate-400">
             No portfolio media found.
           </div>
         </div>
       )}
 
-      <div className="mx-auto max-w-7xl space-y-14 px-5 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-16 px-5 py-12 sm:px-6 lg:px-8">
         {visibleCategories.map((category, categoryIndex) => (
           <section
             key={category.id}
             id={`portfolio-${category.id}`}
-            className="scroll-mt-48"
+            className="scroll-mt-52"
           >
-            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-6 grid gap-4 border-b border-werbens-light-cyan/10 pb-5 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
-                <h2 className="font-display text-2xl font-bold text-werbens-text sm:text-3xl">
+                <p className="mb-2 text-xs font-semibold uppercase text-werbens-glow">
+                  {String(categoryIndex + 1).padStart(2, "0")} / Featured work
+                </p>
+                <h2
+                  className="text-4xl font-semibold leading-none text-white sm:text-5xl"
+                  style={{ fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: 0 }}
+                >
                   {category.name}
                 </h2>
-                <p className="mt-1 text-sm text-werbens-muted">
+                <p className="mt-3 text-sm text-slate-400">
                   {pluralize(category.videoCount || 0, "video")} / {pluralize(category.imageCount || 0, "image")}
                 </p>
               </div>
-              <div className="text-sm font-semibold text-werbens-dark-cyan">
+              <div className="text-sm font-semibold text-werbens-light-cyan">
                 {pluralize(category.itemCount || 0, "asset")}
               </div>
             </div>
 
             {category.itemCount === 0 ? (
-              <div className="rounded-lg border border-dashed border-werbens-dark-cyan/20 bg-white px-5 py-8 text-center text-sm text-werbens-muted">
+              <div className="rounded-2xl border border-dashed border-werbens-light-cyan/20 bg-white/[0.04] px-5 py-8 text-center text-sm text-slate-400">
                 This category is empty. Upload media from admin mode.
               </div>
             ) : (
@@ -898,6 +1127,29 @@ export function PortfolioGallery({ apiBase, catalog, error, initialCategorySlug 
           </section>
         ))}
       </div>
+
+      <section className="border-t border-werbens-light-cyan/10 px-5 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-8 rounded-[2rem] border border-werbens-light-cyan/15 bg-gradient-to-br from-werbens-glow/14 via-white/[0.04] to-werbens-dark-cyan/20 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase text-werbens-glow">Start a project</p>
+            <h2
+              className="text-4xl font-semibold leading-none text-white sm:text-5xl"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif", letterSpacing: 0 }}
+            >
+              Let's build your brand story.
+            </h2>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300">
+              Have a project in mind? Werbens can help turn it into ready-to-post creative work.
+            </p>
+          </div>
+          <a
+            href="mailto:hello@werbens.com"
+            className="inline-flex min-h-12 items-center justify-center rounded-full border border-werbens-glow/35 bg-werbens-glow px-6 text-sm font-bold text-werbens-midnight transition hover:bg-werbens-light-cyan focus-ring"
+          >
+            Get in touch
+          </a>
+        </div>
+      </section>
     </main>
   );
 }

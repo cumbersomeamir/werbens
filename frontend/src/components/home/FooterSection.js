@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WerbensLogo } from "@/components/WerbensLogo";
 
 const footerLinkClass =
   "inline-block text-werbens-alt-text/56 transition-colors duration-200 hover:text-werbens-light-cyan";
@@ -10,9 +11,7 @@ export function FooterSection() {
         <div className="rounded-[2rem] border border-white/8 bg-white/[0.03] px-6 py-8 backdrop-blur-xl sm:px-8 sm:py-10">
           <div className="grid gap-10 md:grid-cols-[1.25fr_0.75fr_0.75fr_0.75fr]">
             <div>
-              <p className="font-display gradient-text text-3xl font-bold">
-                Werbens
-              </p>
+              <WerbensLogo markClassName="h-10 max-w-[5.6rem]" />
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-werbens-alt-text/46">
                 Autonomous content creation for modern marketing teams that need
                 more output without more operational overhead.

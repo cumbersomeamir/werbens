@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { WerbensLogo } from "@/components/WerbensLogo";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
@@ -704,19 +705,12 @@ export function Header() {
               <Link
                 href="/"
                 className="
-                  group relative inline-flex items-center gap-3 rounded-2xl py-1 pr-3
+                  group relative inline-flex items-center rounded-2xl py-1 pr-3
                   transition-transform duration-300 ease-out
                   hover:scale-[1.02] active:scale-[0.98]
                 "
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-werbens-dark-cyan to-werbens-light-cyan text-sm font-black text-white shadow-lg shadow-werbens-dark-cyan/15">
-                  W
-                </span>
-                <span className="min-w-0">
-                  <span className="font-display gradient-text block text-[1.65rem] font-bold leading-none sm:text-[1.9rem]">
-                    Werbens
-                  </span>
-                </span>
+                <WerbensLogo markClassName="h-9 max-w-[4.8rem]" />
               </Link>
 
               <div className="hidden items-center gap-4 md:flex">

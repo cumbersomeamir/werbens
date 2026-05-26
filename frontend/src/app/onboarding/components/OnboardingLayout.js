@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { WerbensLogo } from "@/components/WerbensLogo";
 
 export function OnboardingLayout({ children, step, totalSteps }) {
   const progressPercent = totalSteps > 0 ? (step / totalSteps) * 100 : 0;
@@ -13,9 +14,7 @@ export function OnboardingLayout({ children, step, totalSteps }) {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 sm:px-8 py-5">
-        <span className="text-xl font-bold tracking-tight gradient-text-light">
-          Werbens
-        </span>
+        <WerbensLogo markClassName="h-8 max-w-[4.6rem]" />
         <Link
           href="/"
           className="text-sm text-werbens-muted hover:text-werbens-alt-text transition-colors duration-200 font-medium"

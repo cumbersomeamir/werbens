@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { WerbensLogo } from "@/components/WerbensLogo";
 import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
@@ -127,9 +128,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="relative z-10 animate-fade-in">
-          <h2 className="text-3xl font-bold tracking-tight gradient-text-light">
-            Werbens
-          </h2>
+          <WerbensLogo markClassName="h-10 max-w-[5.6rem]" />
         </div>
 
         {/* Headline & features */}
@@ -174,9 +173,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile header */}
           <div className="lg:hidden text-center mb-10 animate-fade-in-down">
-            <h1 className="text-3xl font-bold gradient-text tracking-tight">
-              Werbens
-            </h1>
+            <WerbensLogo className="justify-center" markClassName="h-10 max-w-[5.6rem]" />
             <p className="text-werbens-muted mt-2 text-sm">
               Content for your business, autonomously.
             </p>

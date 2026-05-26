@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 /*
   Splash screen animation sequence:
 
-  Phase 1 (0–1.2s)   : W logo strokes draw themselves via SVG path animation
+  Phase 1 (0–1.2s)   : Werbens logo scales into view
   Phase 2 (1.2–2.0s) : Cyan accent spark pulses, content particles emit outward
   Phase 3 (2.0–3.5s) : Content icons orbit the logo, then converge back
   Phase 4 (3.5–5.0s) : "Werbens" + tagline fade in with stagger
@@ -69,96 +69,27 @@ function ContentParticle({ type, delay, angle, phase }) {
   );
 }
 
-// The SVG W logo with stroke-draw animation
+// The Werbens logo mark
 function WLogo({ phase }) {
   return (
-    <svg
-      viewBox="0 0 200 140"
-      className="w-40 h-28 sm:w-56 sm:h-40 md:w-64 md:h-44"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Left outer stroke of W */}
-      <path
-        d="M 10 20 L 45 120 L 70 55"
-        stroke="#316879"
-        strokeWidth="14"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        className="splash-stroke"
+    <div className="relative flex w-48 justify-center sm:w-64 md:w-72">
+      <img
+        src="/app/werbens-logo.svg"
+        alt="Werbens"
+        className="h-auto w-full rounded-xl"
         style={{
-          strokeDasharray: 220,
-          strokeDashoffset: 220,
-          animation: "strokeDraw 1s cubic-bezier(0.65, 0, 0.35, 1) 0.1s forwards",
-        }}
-      />
-
-      {/* Center V of W */}
-      <path
-        d="M 70 55 L 100 120 L 130 55"
-        stroke="#316879"
-        strokeWidth="14"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        className="splash-stroke"
-        style={{
-          strokeDasharray: 180,
-          strokeDashoffset: 180,
-          animation: "strokeDraw 0.9s cubic-bezier(0.65, 0, 0.35, 1) 0.3s forwards",
-        }}
-      />
-
-      {/* Right outer stroke of W */}
-      <path
-        d="M 130 55 L 155 120 L 190 20"
-        stroke="#316879"
-        strokeWidth="14"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        className="splash-stroke"
-        style={{
-          strokeDasharray: 220,
-          strokeDashoffset: 220,
-          animation: "strokeDraw 1s cubic-bezier(0.65, 0, 0.35, 1) 0.5s forwards",
-        }}
-      />
-
-      {/* Cyan accent spark — the inner-left highlight */}
-      <path
-        d="M 35 75 L 55 120 L 70 82"
-        stroke="#7fe7dc"
-        strokeWidth="12"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        style={{
-          strokeDasharray: 120,
-          strokeDashoffset: 120,
-          animation: "strokeDraw 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.9s forwards",
-          filter: phase >= 2 ? "drop-shadow(0 0 12px rgba(127, 231, 220, 0.8))" : "none",
+          filter: phase >= 2 ? "drop-shadow(0 0 18px rgba(127, 231, 220, 0.35))" : "none",
+          animation: "scale-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both",
           transition: "filter 0.5s ease",
         }}
       />
-
-      {/* Glow pulse on the accent */}
       {phase >= 2 && (
-        <circle
-          cx="55"
-          cy="100"
-          r="20"
-          fill="none"
-          stroke="#7fe7dc"
-          strokeWidth="2"
-          style={{
-            opacity: 0,
-            animation: "glowRing 0.8s ease-out 1.4s forwards",
-          }}
+        <span
+          className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-werbens-light-cyan"
+          style={{ opacity: 0, animation: "glowRing 0.8s ease-out 1.4s forwards" }}
         />
       )}
-    </svg>
+    </div>
   );
 }
 

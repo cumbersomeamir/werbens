@@ -1,0 +1,63 @@
+<svg width="1388" height="812" viewBox="0 0 694 406" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Werbens Logo</title>
+  <desc id="desc">Werbens angular W logo recreated from the original silhouette as clean SVG geometry.</desc>
+
+  <defs>
+    <filter id="core-shadow" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="8" dy="8" stdDeviation="5" flood-color="#316879" flood-opacity="0.35"/>
+      <feDropShadow dx="13" dy="8" stdDeviation="7" flood-color="#5ce0d2" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <rect width="694" height="406" fill="#7fe7dc"/>
+
+  <path
+    fill="#316879"
+    fill-rule="evenodd"
+    filter="url(#core-shadow)"
+    d="
+      M 21 29
+      L 211 367
+      L 228 386
+      L 335 202
+      L 337 184
+      L 326 162
+      L 286 211
+      L 178 28
+      Z
+
+      M 78 62
+      L 162 63
+      L 244 201
+      L 264 240
+      L 267 255
+      L 228 319
+      L 206 289
+      L 77 69
+      Z
+
+      M 684 28
+      L 522 28
+      L 413 213
+      L 373 140
+      L 435 28
+      L 398 29
+      L 348 104
+      L 303 28
+      L 269 29
+      L 392 246
+      L 351 320
+      L 316 273
+      L 300 297
+      L 349 387
+      L 536 75
+      L 562 59
+      L 625 60
+      L 482 317
+      L 445 272
+      L 429 291
+      L 475 383
+      Z
+    "
+  />
+</svg>
