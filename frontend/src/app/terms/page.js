@@ -1,6 +1,9 @@
 export const metadata = {
-  title: "Terms of Service | Werbens",
+  title: "Terms of Service",
   description: "Terms of Service for the Werbens platform and services.",
+  alternates: {
+    canonical: "/app/terms",
+  },
 };
 
 export default function TermsPage() {

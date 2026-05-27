@@ -1,6 +1,9 @@
 export const metadata = {
-  title: "Privacy Policy | Werbens",
+  title: "Privacy Policy",
   description: "Privacy Policy for the Werbens platform and services.",
+  alternates: {
+    canonical: "/app/privacy",
+  },
 };
 
 export default function PrivacyPage() {

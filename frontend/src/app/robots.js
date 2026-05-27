@@ -1,0 +1,36 @@
+const siteUrl = "https://app.werbens.com";
+
+export default function robots() {
+  return {
+    rules: [
+      {
+        userAgent: "*",
+        allow: [
+          "/app",
+          "/app/portfolio",
+          "/app/packages",
+          "/app/pricing",
+          "/app/terms",
+          "/app/privacy",
+        ],
+        disallow: [
+          "/app/accounts",
+          "/app/analytics",
+          "/app/automatic",
+          "/app/create",
+          "/app/feedback-loop",
+          "/app/ideation-engine",
+          "/app/login",
+          "/app/onboarding",
+          "/app/post",
+          "/app/reports",
+          "/app/templates",
+          "/app/youtube",
+          "/app/api",
+        ],
+      },
+    ],
+    sitemap: `${siteUrl}/app/sitemap.xml`,
+    host: siteUrl,
+  };
+}

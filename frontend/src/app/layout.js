@@ -23,26 +23,53 @@ export const viewport = {
 };
 
 export const metadata = {
-  title: "Werbens — AI Content Creation Platform | Autonomous Social Media, Ads & Email",
+  metadataBase: new URL("https://app.werbens.com"),
+  title: {
+    default: "Werbens — AI Content Creation Platform for Brands",
+    template: "%s | Werbens",
+  },
   description:
-    "Create content for your business autonomously. AI-powered social media posts, ad copy, email marketing & brand-consistent campaigns at scale. Free trial.",
+    "Create ready-to-post brand content with Werbens. AI-powered reels, social posts, ad creatives, brand visuals, and campaign assets for growing businesses.",
   keywords: [
     "AI content creation",
-    "autonomous content",
+    "AI content creation platform",
     "social media automation",
+    "AI reels",
+    "AI video content",
+    "AI ad creatives",
     "brand voice AI",
+    "brand content studio",
     "content marketing platform",
     "social media management",
-    "email copy AI",
     "marketing automation",
-    "content at scale",
-    "brand consistency",
-    "AI writing tool",
   ].join(", "),
+  alternates: {
+    canonical: "/app",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
-    title: "Werbens — AI Content Creation for Your Business",
-    description: "Create content autonomously. Social media, ads, email—all at scale.",
+    title: "Werbens — AI Content Creation Platform for Brands",
+    description:
+      "AI-powered reels, social posts, ad creatives, brand visuals, and campaign assets for growing businesses.",
+    url: "https://app.werbens.com/app",
+    siteName: "Werbens",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Werbens — AI Content Creation Platform for Brands",
+    description:
+      "AI-powered reels, social posts, ad creatives, brand visuals, and campaign assets for growing businesses.",
   },
 };
 

@@ -757,7 +757,7 @@ function StudioStory({ totalItems, categories }) {
     <section id="about-us" className="border-y border-werbens-light-cyan/10 bg-[#081321]/80">
       <div className="mx-auto grid max-w-7xl gap-0 px-5 sm:px-6 lg:grid-cols-[0.9fr_1.4fr] lg:px-8">
         <div className="border-b border-werbens-light-cyan/10 py-10 lg:border-b-0 lg:border-r lg:pr-10">
-          <EditorialHeading eyebrow="About us" title="We're Werbens. A creative AI content studio.">
+          <EditorialHeading eyebrow="Who we are" title="We're Werbens. A creative AI content studio.">
             <p>
               We fuse strategy, AI production, and human creative direction to turn brand ideas into
               scroll-stopping films, images, reels, and campaign assets.

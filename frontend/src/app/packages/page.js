@@ -2,9 +2,18 @@ import { PackagesFlow } from "./components/PackagesFlow";
 import { getRequestCountry } from "@/lib/requestCountry";
 
 export const metadata = {
-  title: "Packages | Werbens",
+  title: "Content Packages",
   description:
-    "Website content packages for ready-to-post reels, brand visuals, revisions, and social ad management.",
+    "Werbens content packages for ready-to-post reels, brand visuals, revisions, personal image cloning, and social ad management.",
+  alternates: {
+    canonical: "/app/packages",
+  },
+  openGraph: {
+    title: "Werbens Content Packages",
+    description:
+      "Ready-to-post reels, brand visuals, revisions, and ad management packages for growing brands.",
+    url: "https://app.werbens.com/app/packages",
+  },
 };
 
 export default async function PackagesPage() {
