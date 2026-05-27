@@ -48,27 +48,27 @@ export function FooterSection() {
 
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-[0.24em] text-werbens-alt-text/32">
-                Explore
+                Solutions
               </h4>
               <ul className="mt-5 space-y-3 text-sm">
                 <li>
-                  <Link href="/create" className={footerLinkClass}>
-                    Create
+                  <Link href="/solutions/ai-reel-generator" className={footerLinkClass}>
+                    AI reel generator
                   </Link>
                 </li>
                 <li>
-                  <Link href="/accounts" className={footerLinkClass}>
-                    Accounts
+                  <Link href="/solutions/ai-ad-creatives" className={footerLinkClass}>
+                    AI ad creatives
                   </Link>
                 </li>
                 <li>
-                  <Link href="/templates" className={footerLinkClass}>
-                    Templates
+                  <Link href="/solutions/social-media-automation" className={footerLinkClass}>
+                    Social automation
                   </Link>
                 </li>
                 <li>
-                  <Link href="/automatic" className={footerLinkClass}>
-                    Automatic
+                  <Link href="/solutions/brand-content-studio" className={footerLinkClass}>
+                    Brand content studio
                   </Link>
                 </li>
               </ul>

@@ -1,4 +1,5 @@
 import { getPortfolioCatalog } from "./portfolio/portfolioData";
+import { industryPages, solutionPages } from "./seoPages";
 
 const siteUrl = "https://app.werbens.com";
 
@@ -27,8 +28,18 @@ export default async function sitemap() {
     priority: 0.7,
     changeFrequency: "daily",
   }));
+  const solutionUrls = solutionPages.map((page) => ({
+    path: `/app/solutions/${page.slug}`,
+    priority: 0.85,
+    changeFrequency: "monthly",
+  }));
+  const industryUrls = industryPages.map((page) => ({
+    path: `/app/industries/${page.slug}`,
+    priority: 0.8,
+    changeFrequency: "monthly",
+  }));
 
-  return [...publicPages, ...portfolioCategories].map((page) => ({
+  return [...publicPages, ...solutionUrls, ...industryUrls, ...portfolioCategories].map((page) => ({
     url: `${siteUrl}${page.path}`,
     lastModified: now,
     changeFrequency: page.changeFrequency,

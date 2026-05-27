@@ -10,6 +10,8 @@ export default function robots() {
           "/app/portfolio",
           "/app/packages",
           "/app/pricing",
+          "/app/solutions",
+          "/app/industries",
           "/app/terms",
           "/app/privacy",
         ],

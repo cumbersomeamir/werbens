@@ -1,4 +1,15 @@
+import Link from "next/link";
+
 export function SEOContentSection() {
+  const solutionLinks = [
+    ["AI reel generator", "/solutions/ai-reel-generator"],
+    ["AI ad creatives", "/solutions/ai-ad-creatives"],
+    ["Social media automation", "/solutions/social-media-automation"],
+    ["Personal brand content", "/solutions/personal-brand-content"],
+    ["Food brand content", "/industries/restaurants-and-food-brands"],
+    ["SaaS content marketing", "/industries/saas-and-b2b"],
+  ];
+
   return (
     <section className="py-16 sm:py-20 md:py-24 bg-white border-t border-werbens-dark-cyan/8">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 animate-fade-in">
@@ -25,6 +36,17 @@ export function SEOContentSection() {
             <strong>content marketing</strong>—autonomous, intelligent, and infinitely
             scalable.
           </p>
+          <div className="mt-8 flex flex-wrap gap-2">
+            {solutionLinks.map(([label, href]) => (
+              <Link
+                key={href}
+                href={href}
+                className="rounded-full border border-werbens-dark-cyan/12 px-4 py-2 text-sm font-semibold text-werbens-dark-cyan transition hover:border-werbens-light-cyan hover:bg-werbens-light-cyan/10"
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </article>
       </div>
     </section>

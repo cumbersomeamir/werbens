@@ -17,7 +17,10 @@ export function AuthGuard({ children }) {
   // Note: basePath is "/app", but usePathname() returns pathname WITHOUT basePath
   const publicRoutes = ["/", "/portfolio", "/packages", "/pricing", "/login", "/terms", "/privacy"];
   const isPublicRoute =
-    publicRoutes.includes(pathname) || pathname.startsWith("/portfolio/");
+    publicRoutes.includes(pathname) ||
+    pathname.startsWith("/portfolio/") ||
+    pathname.startsWith("/solutions/") ||
+    pathname.startsWith("/industries/");
 
   useEffect(() => {
     // Don't redirect if still loading or on public route

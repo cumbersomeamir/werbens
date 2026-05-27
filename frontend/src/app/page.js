@@ -46,6 +46,7 @@ export default function Home() {
       <TestimonialsSection />
       <UseCasesSection />
       <IntegrationsSection />
+      <SEOContentSection />
       <FAQSection />
       <CTASection />
       <FooterSection />
