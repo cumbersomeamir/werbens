@@ -18,8 +18,9 @@ export function SEOContentSection() {
             Why choose Werbens for AI content creation?
           </h2>
           <p className="text-werbens-text/80 leading-[1.8] mb-6 text-[15px] sm:text-base break-words [&>strong]:text-werbens-dark-cyan [&>strong]:font-semibold">
-            Werbens is the leading <strong>autonomous content creation platform</strong> for
-            businesses that want to scale their <strong>social media marketing</strong>,{" "}
+            Werbens is a <strong>marketing company</strong> that owns and operates an{" "}
+            <strong>autonomous content creation platform</strong> for businesses that
+            want to scale their <strong>social media marketing</strong>,{" "}
             <strong>email campaigns</strong>, and <strong>ad copy</strong> without hiring more
             writers. Our <strong>AI content generator</strong> learns your{" "}
             <strong>brand voice</strong> and produces consistent, on-brand content for{" "}
@@ -30,7 +31,7 @@ export function SEOContentSection() {
             while maintaining quality and <strong>brand consistency</strong>.
           </p>
           <p className="text-werbens-text/80 leading-[1.8] text-[15px] sm:text-base [&>strong]:text-werbens-dark-cyan [&>strong]:font-semibold">
-            Perfect for <strong>e-commerce brands</strong>, <strong>SaaS companies</strong>,{" "}
+            Built for <strong>e-commerce brands</strong>, <strong>SaaS companies</strong>,{" "}
             <strong>content creators</strong>, and <strong>marketing agencies</strong>. Start
             your free trial today and experience the future of{" "}
             <strong>content marketing</strong>—autonomous, intelligent, and infinitely

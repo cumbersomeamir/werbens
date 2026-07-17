@@ -8,7 +8,7 @@ export const metadata = {
   keywords:
     "Werbens pricing, content creation plans, AI content pricing, social media automation plans",
   alternates: {
-    canonical: "/app/pricing",
+    canonical: "https://app.werbens.com/app/pricing",
   },
   openGraph: {
     title: "Werbens Pricing",

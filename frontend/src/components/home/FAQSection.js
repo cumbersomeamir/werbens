@@ -5,7 +5,7 @@ import { useState } from "react";
 const faqs = [
   {
     q: "What is Werbens?",
-    a: "Werbens is an AI-powered autonomous content creation platform. It generates social media posts, ad copy, emails, blog content, and marketing campaigns that match your brand voice. Connect your platforms, train the AI on your style, and create content at scale.",
+    a: "Werbens is a marketing company that owns and operates an AI-powered content creation platform. It helps create social media posts, ad copy, emails, blog content, and marketing campaigns that match your brand voice.",
   },
   {
     q: "How does brand voice cloning work?",

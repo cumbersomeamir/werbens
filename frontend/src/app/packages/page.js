@@ -6,7 +6,7 @@ export const metadata = {
   description:
     "Werbens content packages for ready-to-post reels, brand visuals, revisions, personal image cloning, and social ad management.",
   alternates: {
-    canonical: "/app/packages",
+    canonical: "https://app.werbens.com/app/packages",
   },
   openGraph: {
     title: "Werbens Content Packages",

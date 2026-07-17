@@ -2,7 +2,7 @@ export const metadata = {
   title: "Privacy Policy",
   description: "Privacy Policy for the Werbens platform and services.",
   alternates: {
-    canonical: "/app/privacy",
+    canonical: "https://app.werbens.com/app/privacy",
   },
 };
 

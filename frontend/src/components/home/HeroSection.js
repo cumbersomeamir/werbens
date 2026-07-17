@@ -43,10 +43,9 @@ export function HeroSection() {
 
           <div className="max-w-3xl">
             <p className="animate-fade-in-up stagger-4 mt-7 max-w-2xl text-[1.02rem] leading-relaxed text-werbens-cloud/72 sm:text-xl md:text-[1.38rem]">
-              Werbens is the autonomous content creation platform that
-              generates brand-consistent social media posts, ad copy, emails,
-              and marketing campaigns at scale. Save hours every week with AI
-              that understands your voice.
+              Werbens is a marketing company that owns and operates this
+              autonomous content creation platform for brand-consistent social
+              media posts, ad copy, emails, and marketing campaigns.
             </p>
 
             <div className="animate-fade-in-up stagger-5 mt-8 flex flex-col gap-4 sm:flex-row">

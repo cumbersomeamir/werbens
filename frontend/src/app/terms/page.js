@@ -2,7 +2,7 @@ export const metadata = {
   title: "Terms of Service",
   description: "Terms of Service for the Werbens platform and services.",
   alternates: {
-    canonical: "/app/terms",
+    canonical: "https://app.werbens.com/app/terms",
   },
 };
 

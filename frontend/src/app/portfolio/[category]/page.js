@@ -18,7 +18,7 @@ export async function generateMetadata({ params }) {
     title: `${categoryName || "Portfolio"} Work`,
     description: `Explore Werbens ${categoryName || "portfolio"} creative work, including AI-powered videos, reels, ads, images, and brand campaign assets.`,
     alternates: {
-      canonical: categoryPath,
+      canonical: `https://app.werbens.com${categoryPath}`,
     },
     openGraph: {
       title: `${categoryName || "Portfolio"} Work | Werbens`,

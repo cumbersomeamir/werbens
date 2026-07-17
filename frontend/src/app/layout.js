@@ -25,11 +25,11 @@ export const viewport = {
 export const metadata = {
   metadataBase: new URL("https://app.werbens.com"),
   title: {
-    default: "Werbens — AI Content Creation Platform for Brands",
+    default: "Werbens — Marketing Company and AI Content Platform",
     template: "%s | Werbens",
   },
   description:
-    "Create ready-to-post brand content with Werbens. AI-powered reels, social posts, ad creatives, brand visuals, and campaign assets for growing businesses.",
+    "Werbens is a marketing company that owns and operates an AI-powered platform for brand content, social posts, ad creatives, visuals, and campaign assets.",
   keywords: [
     "AI content creation",
     "AI content creation platform",
@@ -44,7 +44,7 @@ export const metadata = {
     "marketing automation",
   ].join(", "),
   alternates: {
-    canonical: "/app",
+    canonical: "https://app.werbens.com/app",
   },
   robots: {
     index: true,
@@ -58,18 +58,18 @@ export const metadata = {
     },
   },
   openGraph: {
-    title: "Werbens — AI Content Creation Platform for Brands",
+    title: "Werbens — Marketing Company and AI Content Platform",
     description:
-      "AI-powered reels, social posts, ad creatives, brand visuals, and campaign assets for growing businesses.",
+      "A marketing company operating an AI-powered platform for brand content, social posts, ad creatives, visuals, and campaign assets.",
     url: "https://app.werbens.com/app",
     siteName: "Werbens",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Werbens — AI Content Creation Platform for Brands",
+    title: "Werbens — Marketing Company and AI Content Platform",
     description:
-      "AI-powered reels, social posts, ad creatives, brand visuals, and campaign assets for growing businesses.",
+      "A marketing company operating an AI-powered platform for brand content, social posts, ad creatives, visuals, and campaign assets.",
   },
 };
 

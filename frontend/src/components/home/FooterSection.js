@@ -13,8 +13,8 @@ export function FooterSection() {
             <div>
               <WerbensLogo markClassName="h-10 max-w-[5.6rem]" />
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-werbens-alt-text/46">
-                Autonomous content creation for modern marketing teams that need
-                more output without more operational overhead.
+                Werbens is a marketing company operating a content platform for
+                teams that need more output without more operational overhead.
               </p>
             </div>
 
@@ -31,11 +31,6 @@ export function FooterSection() {
                 <li>
                   <Link href="/login" className={footerLinkClass}>
                     Sign in
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/analytics" className={footerLinkClass}>
-                    Analytics
                   </Link>
                 </li>
                 <li>
@@ -89,24 +84,14 @@ export function FooterSection() {
                     Terms
                   </Link>
                 </li>
-                <li>
-                  <a href="#" className={footerLinkClass}>
-                    Contact
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className={footerLinkClass}>
-                    About
-                  </a>
-                </li>
               </ul>
             </div>
           </div>
 
           <div className="mt-10 border-t border-white/8 pt-6">
             <p className="text-xs uppercase tracking-[0.18em] text-werbens-alt-text/30">
-              &copy; {new Date().getFullYear()} Werbens. AI content creation
-              platform for social media, email marketing, and brand
+              &copy; {new Date().getFullYear()} Werbens. Marketing company and
+              content platform for social media, email marketing, and brand
               consistency.
             </p>
           </div>

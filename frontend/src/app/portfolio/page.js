@@ -8,7 +8,7 @@ export const metadata = {
   description:
     "Explore Werbens creative work across ads, food and beverages, fashion, home decor, hospitality, personal brands, and more.",
   alternates: {
-    canonical: "/app/portfolio",
+    canonical: "https://app.werbens.com/app/portfolio",
   },
   openGraph: {
     title: "Werbens Portfolio",

@@ -22,7 +22,12 @@ const structuredData = {
   operatingSystem: "Web",
   url: "https://app.werbens.com/app",
   description:
-    "AI content creation platform for reels, social posts, ad creatives, brand visuals, and campaign assets.",
+    "Marketing platform owned and operated by Werbens for reels, social posts, ad creatives, brand visuals, and campaign assets.",
+  publisher: {
+    "@type": "Organization",
+    name: "Werbens",
+    url: "https://app.werbens.com/app",
+  },
   offers: {
     "@type": "Offer",
     price: "0",

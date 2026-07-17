@@ -18,7 +18,7 @@ export async function generateMetadata({ params }) {
     title: `${page.title} Content Marketing`,
     description: page.description,
     keywords: page.keywords.join(", "),
-    alternates: { canonical: url },
+    alternates: { canonical: `${siteUrl}${url}` },
     openGraph: {
       title: `${page.title} Content Marketing | Werbens`,
       description: page.description,
