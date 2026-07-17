@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { findPage, industryPages, siteUrl, solutionPages } from "../../seoPages";
+import { findPage, industryPages, organizationId, siteUrl, solutionPages } from "../../seoPages";
 
 export function generateStaticParams() {
   return solutionPages.map((page) => ({ slug: page.slug }));
@@ -35,8 +35,7 @@ function StructuredData({ page }) {
     name: `${page.title} by Werbens`,
     provider: {
       "@type": "Organization",
-      name: "Werbens",
-      url: siteUrl,
+      "@id": organizationId,
     },
     serviceType: page.title,
     url: `${siteUrl}/app/solutions/${page.slug}`,

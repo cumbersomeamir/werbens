@@ -13,31 +13,34 @@ import {
   CTASection,
   FooterSection,
 } from "@/components/home";
+import {
+  appUrl,
+  organizationId,
+  organizationSchema,
+  softwareSchema,
+  websiteId,
+} from "./seoPages";
 
 const structuredData = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  name: "Werbens",
-  applicationCategory: "BusinessApplication",
-  operatingSystem: "Web",
-  url: "https://app.werbens.com/app",
-  description:
-    "Marketing platform owned and operated by Werbens for reels, social posts, ad creatives, brand visuals, and campaign assets.",
-  publisher: {
-    "@type": "Organization",
-    name: "Werbens",
-    url: "https://app.werbens.com/app",
-  },
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
+  "@graph": [
+    {
+      ...organizationSchema,
+    },
+    {
+      "@type": "WebSite",
+      "@id": websiteId,
+      name: "Werbens",
+      url: appUrl,
+      publisher: { "@id": organizationId },
+    },
+    softwareSchema,
+  ],
 };
 
 export default function Home() {
   return (
-    <main>
+    <main className="home-page overflow-x-hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

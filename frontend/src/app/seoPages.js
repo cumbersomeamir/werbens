@@ -1,4 +1,30 @@
 export const siteUrl = "https://app.werbens.com";
+export const appUrl = `${siteUrl}/app`;
+export const organizationId = `${appUrl}#organization`;
+export const softwareId = `${appUrl}#software`;
+export const websiteId = `${appUrl}#website`;
+export const logoUrl = `${siteUrl}/app/werbens-logo.svg`;
+export const productDescription =
+  "Werbens is a marketing company that owns and operates an AI-powered platform for brand content, social posts, ad creatives, visuals, and campaign assets.";
+
+export const organizationSchema = {
+  "@type": "Organization",
+  "@id": organizationId,
+  name: "Werbens",
+  url: appUrl,
+  logo: logoUrl,
+};
+
+export const softwareSchema = {
+  "@type": "SoftwareApplication",
+  "@id": softwareId,
+  name: "Werbens",
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  url: appUrl,
+  description: productDescription,
+  publisher: { "@id": organizationId },
+};
 
 export const solutionPages = [
   {

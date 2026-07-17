@@ -3,6 +3,7 @@ import { AuthSessionProvider } from "@/components/SessionProvider";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Header } from "@/components/Header";
 import { Manrope, Space_Grotesk } from "next/font/google";
+import { appUrl, productDescription } from "./seoPages";
 
 const bodyFont = Manrope({
   subsets: ["latin"],
@@ -25,11 +26,11 @@ export const viewport = {
 export const metadata = {
   metadataBase: new URL("https://app.werbens.com"),
   title: {
-    default: "Werbens — Marketing Company and AI Content Platform",
+    default: "Werbens - Marketing Company and AI Content Platform",
     template: "%s | Werbens",
   },
   description:
-    "Werbens is a marketing company that owns and operates an AI-powered platform for brand content, social posts, ad creatives, visuals, and campaign assets.",
+    productDescription,
   keywords: [
     "AI content creation",
     "AI content creation platform",
@@ -44,7 +45,13 @@ export const metadata = {
     "marketing automation",
   ].join(", "),
   alternates: {
-    canonical: "https://app.werbens.com/app",
+    canonical: appUrl,
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: {
+      "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION || undefined,
+    },
   },
   robots: {
     index: true,
@@ -58,18 +65,16 @@ export const metadata = {
     },
   },
   openGraph: {
-    title: "Werbens — Marketing Company and AI Content Platform",
-    description:
-      "A marketing company operating an AI-powered platform for brand content, social posts, ad creatives, visuals, and campaign assets.",
-    url: "https://app.werbens.com/app",
+    title: "Werbens - Marketing Company and AI Content Platform",
+    description: productDescription,
+    url: appUrl,
     siteName: "Werbens",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Werbens — Marketing Company and AI Content Platform",
-    description:
-      "A marketing company operating an AI-powered platform for brand content, social posts, ad creatives, visuals, and campaign assets.",
+    title: "Werbens - Marketing Company and AI Content Platform",
+    description: productDescription,
   },
 };
 
