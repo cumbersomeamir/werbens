@@ -1,15 +1,6 @@
-import { getPortfolioCatalog } from "./portfolio/portfolioData";
 import { industryPages, solutionPages } from "./seoPages";
 
 const siteUrl = "https://app.werbens.com";
-
-function toCategorySlug(value) {
-  return String(value || "")
-    .trim()
-    .replace(/&/g, "and")
-    .replace(/[^A-Za-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 export default async function sitemap() {
   const now = new Date();
@@ -22,12 +13,6 @@ export default async function sitemap() {
     { path: "/app/privacy", priority: 0.2, changeFrequency: "yearly" },
   ];
 
-  const { catalog } = await getPortfolioCatalog();
-  const portfolioCategories = (catalog?.categories || []).map((category) => ({
-    path: `/app/portfolio/${toCategorySlug(category.name)}`,
-    priority: 0.7,
-    changeFrequency: "daily",
-  }));
   const solutionUrls = solutionPages.map((page) => ({
     path: `/app/solutions/${page.slug}`,
     priority: 0.85,
@@ -39,7 +24,7 @@ export default async function sitemap() {
     changeFrequency: "monthly",
   }));
 
-  return [...publicPages, ...solutionUrls, ...industryUrls, ...portfolioCategories].map((page) => ({
+  return [...publicPages, ...solutionUrls, ...industryUrls].map((page) => ({
     url: `${siteUrl}${page.path}`,
     lastModified: now,
     changeFrequency: page.changeFrequency,
