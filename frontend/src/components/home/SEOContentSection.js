@@ -34,7 +34,7 @@ export function SEOContentSection() {
             Built for <strong>e-commerce brands</strong>, <strong>SaaS companies</strong>,{" "}
             <strong>content creators</strong>, and <strong>marketing agencies</strong>. Start
             your free trial today and experience the future of{" "}
-            <strong>content marketing</strong>—autonomous, intelligent, and infinitely
+            <strong>content marketing</strong> - autonomous, intelligent, and infinitely
             scalable.
           </p>
           <div className="mt-8 flex flex-wrap gap-2">

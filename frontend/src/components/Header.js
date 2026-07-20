@@ -4,8 +4,18 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { WerbensLogo } from "@/components/WerbensLogo";
+import { useCurrentUser } from "@/app/onboarding/components/useCurrentUser";
 
-const NAV_ITEMS = [
+const PUBLIC_NAV_ITEMS = [
+  { href: "/", label: "Home" },
+  { href: "/solutions/ai-reel-generator", label: "Solutions" },
+  { href: "/portfolio", label: "Portfolio" },
+  { href: "/packages", label: "Packages" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/login", label: "Login" },
+];
+
+const AUTH_NAV_ITEMS = [
   { href: "/", label: "Home" },
   { href: "/accounts", label: "Accounts" },
   { href: "/analytics", label: "Analytics" },
@@ -17,7 +27,6 @@ const NAV_ITEMS = [
   { href: "/packages", label: "Packages" },
   { href: "/pricing", label: "Pricing" },
   { href: "/create", label: "Create" },
-  { href: "/login", label: "Login" },
 ];
 
 const APP_ITEMS = [
@@ -145,13 +154,13 @@ function NavLink({ href, label, muted, isActive, onClick, isCta, isSplash }) {
   );
 }
 
-function DesktopNav({ pathname }) {
+function DesktopNav({ pathname, navItems }) {
   return (
     <nav
-      className="hidden md:flex items-center gap-6"
+      className="hidden xl:flex items-center gap-4"
       aria-label="Main"
     >
-      {NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         if (item?.postMenu) {
           return <DesktopPostMenu key="post-nav" pathname={pathname} />;
         }
@@ -501,14 +510,14 @@ function MobilePostMenu({ pathname, onClose }) {
   );
 }
 
-function MobileNav({ pathname, isOpen, onClose }) {
+function MobileNav({ pathname, isOpen, onClose, navItems }) {
   return (
     <div
       id="mobile-nav"
       className={`
-        md:hidden overflow-hidden
+        xl:hidden overflow-hidden
         transition-all duration-400 ease-out
-        ${isOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"}
+        ${isOpen ? "max-h-[80vh] opacity-100 overflow-y-auto" : "max-h-0 opacity-0"}
       `}
     >
       <nav
@@ -518,7 +527,7 @@ function MobileNav({ pathname, isOpen, onClose }) {
         "
         aria-label="Main"
       >
-        {NAV_ITEMS.map((item, index) => {
+        {navItems.map((item, index) => {
           if (item?.postMenu) {
             return (
               <div
@@ -663,8 +672,10 @@ function NightModeToggle() {
 
 export function Header() {
   const pathname = usePathname();
+  const { userId } = useCurrentUser();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navItems = userId ? AUTH_NAV_ITEMS : PUBLIC_NAV_ITEMS;
 
   const handleScroll = useCallback(() => {
     setScrolled(window.scrollY > 12);
@@ -683,7 +694,7 @@ export function Header() {
 
   return (
     <header
-      className="fixed inset-x-0 top-0 z-50 px-3 sm:px-6"
+      className="site-header fixed inset-x-0 top-0 z-50 px-3 sm:px-6"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div className="mx-auto max-w-7xl">
@@ -713,12 +724,12 @@ export function Header() {
                 <WerbensLogo markClassName="h-9 max-w-[4.8rem]" />
               </Link>
 
-              <div className="hidden items-center gap-4 md:flex">
-                <DesktopNav pathname={pathname} />
+              <div className="hidden items-center gap-3 xl:flex">
+                <DesktopNav pathname={pathname} navItems={navItems} />
                 <NightModeToggle />
               </div>
 
-              <div className="flex items-center gap-2 md:hidden">
+              <div className="flex items-center gap-2 xl:hidden">
                 <NightModeToggle />
                 <button
                   type="button"
@@ -747,6 +758,7 @@ export function Header() {
             pathname={pathname}
             isOpen={menuOpen}
             onClose={() => setMenuOpen(false)}
+            navItems={navItems}
           />
         </div>
       </div>

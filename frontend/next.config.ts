@@ -6,15 +6,15 @@ const nextConfig: NextConfig = {
   basePath: "/app",
   async redirects() {
     return [
-      { source: "/", destination: "/app", permanent: false, basePath: false },
-      { source: "/portfolio", destination: "/app/portfolio", permanent: false, basePath: false },
-      { source: "/portfolio/:category", destination: "/app/portfolio/:category", permanent: false, basePath: false },
-      { source: "/packages", destination: "/app/packages", permanent: false, basePath: false },
-      { source: "/pricing", destination: "/app/pricing", permanent: false, basePath: false },
-      { source: "/robots.txt", destination: "/app/robots.txt", permanent: false, basePath: false },
-      { source: "/sitemap.xml", destination: "/app/sitemap.xml", permanent: false, basePath: false },
+      { source: "/", destination: "/app", permanent: true, basePath: false },
+      { source: "/portfolio", destination: "/app/portfolio", permanent: true, basePath: false },
+      { source: "/portfolio/:category", destination: "/app/portfolio/:category", permanent: true, basePath: false },
+      { source: "/packages", destination: "/app/packages", permanent: true, basePath: false },
+      { source: "/pricing", destination: "/app/pricing", permanent: true, basePath: false },
+      { source: "/robots.txt", destination: "/app/robots.txt", permanent: true, basePath: false },
+      { source: "/sitemap.xml", destination: "/app/sitemap.xml", permanent: true, basePath: false },
       { source: "/llms.txt", destination: "/app/llms.txt", permanent: true, basePath: false },
-      { source: "/api/auth/:path*", destination: "/app/api/auth/:path*", permanent: false, basePath: false },
+      { source: "/api/auth/:path*", destination: "/app/api/auth/:path*", permanent: true, basePath: false },
     ];
   },
 };

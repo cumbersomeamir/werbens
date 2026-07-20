@@ -34,7 +34,7 @@ export function UseCasesSection() {
           </h2>
           <p className="text-base sm:text-lg text-werbens-text/80 max-w-2xl leading-relaxed">
             Whether you&apos;re a solopreneur, a marketing team, or an agency
-            managing dozens of brands—Werbens adapts to your workflow.
+            managing dozens of brands - Werbens adapts to your workflow.
           </p>
         </div>
 

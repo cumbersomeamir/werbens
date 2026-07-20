@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "How does brand voice cloning work?",
-    a: "You provide samples of your best content—past posts, brand guidelines, or a brief description. Our AI analyzes tone, vocabulary, sentence structure, and formatting. Every new piece it generates follows those patterns, so it sounds like you.",
+    a: "You provide samples of your best content - past posts, brand guidelines, or a brief description. Our AI analyzes tone, vocabulary, sentence structure, and formatting. Every new piece it generates follows those patterns, so it sounds like you.",
   },
   {
     q: "Is my data secure?",
