@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
       { source: "/pricing", destination: "/app/pricing", permanent: false, basePath: false },
       { source: "/robots.txt", destination: "/app/robots.txt", permanent: false, basePath: false },
       { source: "/sitemap.xml", destination: "/app/sitemap.xml", permanent: false, basePath: false },
+      { source: "/llms.txt", destination: "/app/llms.txt", permanent: true, basePath: false },
       { source: "/api/auth/:path*", destination: "/app/api/auth/:path*", permanent: false, basePath: false },
     ];
   },
